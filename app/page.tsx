@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const STORAGE_KEY = "vrstudiolab-inventory-v1";
 
 type Equipment = {
   id: number;
@@ -9,7 +11,7 @@ type Equipment = {
   category: string;
   assetNumber: string;
   location: string;
-  status: "Disponível" | "Em uso" | "Manutenção";
+  status: "Disponível" | "Em uso" | "Manutenção" | "Baixado";
 };
 
 const initialEquipment: Equipment[] = [
@@ -67,6 +69,36 @@ export default function Home() {
   const [location, setLocation] = useState("");
   const [status, setStatus] =
     useState<Equipment["status"]>("Disponível");
+  
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved !== null) {
+        const parsed: unknown = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          setEquipment(parsed as Equipment[]);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar os equipamentos:", error);
+    } finally {
+      setStorageReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
+    } catch (error) {
+      console.error("Erro ao salvar os equipamentos:", error);
+    }
+  }, [equipment, storageReady]);
 
   const filteredEquipment = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -148,7 +180,14 @@ export default function Home() {
             {navigation.map((item) => (
               <button
                 key={item.name}
-                onClick={() => setActivePage(item.name)}
+                onClick={() => {
+                  if (item.name === "Equipamentos") {
+                    window.location.href = "/inventario";
+                    return;
+                  }
+
+                  setActivePage(item.name);
+                }}
                 className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${
                   activePage === item.name
                     ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-cyan-300"
@@ -201,7 +240,14 @@ export default function Home() {
               {navigation.map((item) => (
                 <button
                   key={item.name}
-                  onClick={() => setActivePage(item.name)}
+                  onClick={() => {
+                    if (item.name === "Equipamentos") {
+                      window.location.href = "/inventario";
+                      return;
+                    }
+
+                    setActivePage(item.name);
+                  }}
                   className={`shrink-0 rounded-lg px-3 py-2 text-sm ${
                     activePage === item.name
                       ? "bg-cyan-400/10 text-cyan-300"
