@@ -447,11 +447,12 @@ export default function InventoryPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowForm(false)}
-                  aria-label="Fechar formulário"
-                  className="text-xl text-slate-400 hover:text-white"
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
+                    aria-label="Fechar formulário"
                 >
-                  ×
+                    ✕
                 </button>
               </div>
 

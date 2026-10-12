@@ -181,8 +181,14 @@ export default function Home() {
               <button
                 key={item.name}
                 onClick={() => {
+                                    
                   if (item.name === "Equipamentos") {
                     window.location.href = "/inventario";
+                    return;
+                  }
+
+                  if (item.name === "Manutenção") {
+                    window.location.href = "/manutencao";
                     return;
                   }
 
@@ -243,6 +249,11 @@ export default function Home() {
                   onClick={() => {
                     if (item.name === "Equipamentos") {
                       window.location.href = "/inventario";
+                      return;
+                    }
+
+                    if (item.name === "Manutenção") {
+                      window.location.href = "/manutencao";
                       return;
                     }
 
