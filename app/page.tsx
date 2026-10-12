@@ -192,6 +192,11 @@ export default function Home() {
                     return;
                   }
 
+                  if (item.name === "Relatórios") {
+                    window.location.href = "/relatorios";
+                    return;
+                  }
+
                   setActivePage(item.name);
                 }}
                 className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${
@@ -254,6 +259,11 @@ export default function Home() {
 
                     if (item.name === "Manutenção") {
                       window.location.href = "/manutencao";
+                      return;
+                    }
+
+                    if (item.name === "Relatórios") {
+                      window.location.href = "/relatorios";
                       return;
                     }
 
