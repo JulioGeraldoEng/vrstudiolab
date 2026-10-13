@@ -1,7 +1,10 @@
 
+
 "use client";
 
 import { useEffect, useState } from "react";
+import Sidebar from "../components/Sidebar";
+
 
 type InventoryStatus =
   | "Disponível"
@@ -112,9 +115,17 @@ export default function RelatoriosPage() {
     { label: "Ordens concluídas", value: completedOrders },
   ];
 
-  return (
-    <main className="min-h-screen bg-[#0b1120] px-4 py-8 text-white sm:px-8">
-      <div className="mx-auto max-w-7xl">
+  
+return (
+  <main className="min-h-screen bg-[#0b1120] text-white">
+    
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+
+      <Sidebar activePage="Relatórios" />
+
+      <section className="min-w-0 flex-1 px-4 py-8 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+
         <a
           href="/"
           className="mb-6 inline-flex text-sm text-cyan-300 hover:text-cyan-200"
@@ -214,8 +225,12 @@ export default function RelatoriosPage() {
               )}
             </section>
           </>
+        
         )}
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
+  </main>
   );
 }
+

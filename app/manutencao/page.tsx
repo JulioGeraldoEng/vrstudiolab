@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Sidebar from "../components/Sidebar";
 
 type MaintenanceStatus =
   | "Aberta"
@@ -674,8 +675,15 @@ export default function ManutencaoPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1120] p-4 text-white sm:p-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+
+  <main className="min-h-screen bg-[#0b1120] text-white">
+    
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+
+        <Sidebar activePage="Manutenção" />
+
+    <section className="min-w-0 flex-1 p-4 sm:p-8">
+      <div className="mx-auto max-w-7xl space-y-8"> 
         <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <a
@@ -1348,7 +1356,10 @@ export default function ManutencaoPage() {
         <p className="text-xs text-slate-500">
           VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
         </p>
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
+
+  </main>
   );
 }

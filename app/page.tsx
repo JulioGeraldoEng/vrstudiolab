@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Sidebar from "./components/Sidebar";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 
@@ -158,74 +159,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0b1120] text-slate-100">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-5 md:flex">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-xl text-cyan-300">
-              ◈
-            </div>
-            <div>
-              <h1 className="font-bold tracking-wide">VR STUDIO LAB</h1>
-              <p className="text-xs text-slate-400">
-                Gestão de equipamentos
-              </p>
-            </div>
-          </div>
+      
+      <div className="flex min-h-screen w-full flex-col lg:flex-row">
 
-          <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Menu principal
-          </p>
+        <Sidebar activePage={activePage} />
 
-          <nav className="flex flex-col gap-2">
-            {navigation.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => {
-                                    
-                  if (item.name === "Equipamentos") {
-                    window.location.href = "/inventario";
-                    return;
-                  }
-
-                  if (item.name === "Manutenção") {
-                    window.location.href = "/manutencao";
-                    return;
-                  }
-
-                  if (item.name === "Relatórios") {
-                    window.location.href = "/relatorios";
-                    return;
-                  }
-
-                  setActivePage(item.name);
-                }}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${
-                  activePage === item.name
-                    ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-cyan-300"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <span className="w-5 text-center text-lg">
-                  {item.icon}
-                </span>
-                {item.name}
-              </button>
-            ))}
-          </nav>
-
-          <div className="mt-auto rounded-2xl border border-white/10 bg-[#111e33] p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <span className="text-cyan-300">●</span>
-              Ambiente de testes
-            </div>
-            <p className="text-xs leading-5 text-slate-400">
-              Protótipo local. Os dados ainda não são compartilhados
-              nem salvos permanentemente.
-            </p>
-          </div>
-        </aside>
-
-        <section className="min-w-0 flex-1">
+        <section className="min-w-0 flex-1 w-full">
           <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-8">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-400">
@@ -245,41 +184,6 @@ export default function Home() {
               </div>
             </div>
           </header>
-
-          <div className="border-b border-white/10 px-5 py-3 md:hidden">
-            <div className="flex gap-2 overflow-x-auto">
-              {navigation.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    if (item.name === "Equipamentos") {
-                      window.location.href = "/inventario";
-                      return;
-                    }
-
-                    if (item.name === "Manutenção") {
-                      window.location.href = "/manutencao";
-                      return;
-                    }
-
-                    if (item.name === "Relatórios") {
-                      window.location.href = "/relatorios";
-                      return;
-                    }
-
-                    setActivePage(item.name);
-                  }}
-                  className={`shrink-0 rounded-lg px-3 py-2 text-sm ${
-                    activePage === item.name
-                      ? "bg-cyan-400/10 text-cyan-300"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="mx-auto max-w-7xl p-5 sm:p-8">
             <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

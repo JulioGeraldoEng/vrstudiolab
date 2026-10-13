@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import Sidebar from "../components/Sidebar";
 
 type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
 
@@ -272,8 +273,14 @@ export default function InventoryPage() {
   ).length;
 
   return (
-    <main className="min-h-screen bg-[#07111f] text-slate-100">
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+  <main className="min-h-screen bg-[#0b1120] text-slate-100">
+    
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+
+      <Sidebar activePage="Equipamentos" />
+
+      <section className="min-w-0 flex-1">
+        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <a
@@ -573,8 +580,10 @@ export default function InventoryPage() {
               </form>
             </section>
           </div>
-        )}
-      </div>
-    </main>
+                )}
+        </div>
+      </section>
+    </div>
+  </main>
   );
 }
