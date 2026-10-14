@@ -5,7 +5,7 @@ const navigation = [
   { name: "Visão geral", icon: "▦", href: "/" },
   { name: "Equipamentos", icon: "▣", href: "/inventario" },
   { name: "Manutenção", icon: "⚙", href: "/manutencao" },
-  { name: "QR Codes", icon: "▦", href: "/?pagina=qrcodes" },
+  { name: "Pessoas", icon: "♙", href: "/pessoas" },
   { name: "Relatórios", icon: "▤", href: "/relatorios" },
 ];
 
@@ -31,16 +31,14 @@ export default function Sidebar({
         onClick={() => navigate(item.href)}
         className={
           mobile
-            ? `shrink-0 rounded-lg px-3 py-2 text-sm ${
-                active
-                  ? "bg-cyan-400/10 text-cyan-300"
-                  : "text-slate-400"
-              }`
-            : `flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${
-                active
-                  ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-cyan-300"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
-              }`
+            ? `shrink-0 rounded-lg px-3 py-2 text-sm ${active
+              ? "bg-cyan-400/10 text-cyan-300"
+              : "text-slate-400"
+            }`
+            : `flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${active
+              ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-cyan-300"
+              : "text-slate-400 hover:bg-white/5 hover:text-white"
+            }`
         }
       >
         {!mobile && (

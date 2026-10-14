@@ -1,8 +1,9 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./components/Sidebar";
+import Cards from "./components/Cards";
+import Footer from "./components/Footer";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 
@@ -63,14 +64,6 @@ export default function Home() {
     useState<Equipment[]>(initialEquipment);
   const [search, setSearch] = useState("");
   const [activePage, setActivePage] = useState("Visão geral");
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("Óculos VR");
-  const [assetNumber, setAssetNumber] = useState("");
-  const [location, setLocation] = useState("");
-  const [status, setStatus] =
-    useState<Equipment["status"]>("Disponível");
-  
   const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
@@ -125,33 +118,9 @@ export default function Home() {
     (item) => item.status === "Manutenção"
   ).length;
 
-  function addEquipment(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!name.trim()) return;
-
-    const newEquipment: Equipment = {
-      id: Date.now(),
-      name: name.trim(),
-      category,
-      assetNumber: assetNumber.trim() || "Sem patrimônio",
-      location: location.trim() || "Não informado",
-      status,
-    };
-
-    setEquipment((current) => [newEquipment, ...current]);
-    setName("");
-    setAssetNumber("");
-    setLocation("");
-    setCategory("Óculos VR");
-    setStatus("Disponível");
-    setShowForm(false);
-    setActivePage("Equipamentos");
-  }
-
   const pageDescription: Record<string, string> = {
     "Visão geral": "Acompanhe os equipamentos e a operação do laboratório.",
-    Equipamentos: "Consulte e cadastre os ativos do laboratório.",
+    Equipamentos: "Consulte os ativos cadastrados no laboratório.",
     Manutenção: "Acompanhe os equipamentos que precisam de manutenção.",
     "QR Codes": "Prepare a identificação individual dos equipamentos.",
     Relatórios: "Consulte o resumo do inventário do laboratório.",
@@ -159,9 +128,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0b1120] text-slate-100">
-      
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
-
         <Sidebar activePage={activePage} />
 
         <section className="min-w-0 flex-1 w-full">
@@ -195,75 +162,44 @@ export default function Home() {
                   {pageDescription[activePage]}
                 </p>
               </div>
-
-              <button
-                onClick={() => setShowForm(true)}
-                className="rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-[#07111f] shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-300"
-              >
-                + Novo equipamento
-              </button>
             </div>
 
             {activePage === "Visão geral" ||
             activePage === "Equipamentos" ? (
               <>
                 <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {[
-                    {
-                      title: "Total de equipamentos",
-                      value: equipment.length,
-                      detail: "Itens cadastrados",
-                      icon: "▣",
-                      color: "text-cyan-300",
-                      bg: "bg-cyan-400/10",
-                    },
-                    {
-                      title: "Disponíveis",
-                      value: available,
-                      detail: "Prontos para utilização",
-                      icon: "✓",
-                      color: "text-emerald-300",
-                      bg: "bg-emerald-400/10",
-                    },
-                    {
-                      title: "Em utilização",
-                      value: inUse,
-                      detail: "Em uso no laboratório",
-                      icon: "⌁",
-                      color: "text-blue-300",
-                      bg: "bg-blue-400/10",
-                    },
-                    {
-                      title: "Em manutenção",
-                      value: maintenance,
-                      detail: "Precisam de atenção",
-                      icon: "⚙",
-                      color: "text-amber-300",
-                      bg: "bg-amber-400/10",
-                    },
-                  ].map((card) => (
-                    <div
-                      key={card.title}
-                      className="rounded-2xl border border-white/10 bg-[#111b2d] p-5 transition hover:border-cyan-400/30"
-                    >
-                      <div className="flex items-start justify-between">
-                        <p className="text-sm text-slate-400">
-                          {card.title}
-                        </p>
-                        <span
-                          className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${card.bg} ${card.color}`}
-                        >
-                          {card.icon}
-                        </span>
-                      </div>
-                      <p className="mt-5 text-3xl font-bold tracking-tight">
-                        {card.value.toString().padStart(2, "0")}
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500">
-                        {card.detail}
-                      </p>
-                    </div>
-                  ))}
+                  <Cards
+                    title="Total de equipamentos"
+                    value={equipment.length}
+                    detail="Itens cadastrados"
+                    icon="▣"
+                    color="text-cyan-300"
+                    bg="bg-cyan-400/10"
+                  />
+                  <Cards
+                    title="Disponíveis"
+                    value={available}
+                    detail="Prontos para utilização"
+                    icon="✓"
+                    color="text-emerald-300"
+                    bg="bg-emerald-400/10"
+                  />
+                  <Cards
+                    title="Em utilização"
+                    value={inUse}
+                    detail="Em uso no laboratório"
+                    icon="⌁"
+                    color="text-blue-300"
+                    bg="bg-blue-400/10"
+                  />
+                  <Cards
+                    title="Em manutenção"
+                    value={maintenance}
+                    detail="Precisam de atenção"
+                    icon="⚙"
+                    color="text-amber-300"
+                    bg="bg-amber-400/10"
+                  />
                 </div>
 
                 <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -327,8 +263,8 @@ export default function Home() {
                                     item.status === "Disponível"
                                       ? "bg-emerald-400/10 text-emerald-300"
                                       : item.status === "Em uso"
-                                        ? "bg-blue-400/10 text-blue-300"
-                                        : "bg-amber-400/10 text-amber-300"
+                                      ? "bg-blue-400/10 text-blue-300"
+                                      : "bg-amber-400/10 text-amber-300"
                                   }`}
                                 >
                                   {item.status}
@@ -452,128 +388,10 @@ export default function Home() {
               </div>
             )}
 
-            <footer className="mt-8 flex flex-wrap justify-between gap-2 border-t border-white/10 pt-5 text-xs text-slate-500">
-              <span>VR Studio Lab · Gestão de ativos</span>
-              <span>Protótipo de desenvolvimento</span>
-            </footer>
+            <Footer />
           </div>
         </section>
       </div>
-
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-          <div className="my-auto w-full max-w-lg rounded-2xl border border-white/10 bg-[#111b2d] p-6 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold">
-                  Novo equipamento
-                </h3>
-                <p className="mt-1 text-sm text-slate-400">
-                  Preencha os dados para adicionar ao protótipo.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-                aria-label="Fechar formulário"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={addEquipment} className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Nome do equipamento *
-                </label>
-                <input
-                  required
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Ex.: Meta Quest 3"
-                  className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400/60"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Categoria
-                </label>
-                <select
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400/60"
-                >
-                  <option>Óculos VR</option>
-                  <option>Computadores</option>
-                  <option>Acessórios</option>
-                  <option>Sensores</option>
-                  <option>Áudio e vídeo</option>
-                  <option>Outros</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Número patrimonial institucional
-                </label>
-                <input
-                  value={assetNumber}
-                  onChange={(event) => setAssetNumber(event.target.value)}
-                  placeholder="Opcional — pode ficar sem patrimônio"
-                  className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400/60"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Localização
-                </label>
-                <input
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="Ex.: Armário A1"
-                  className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400/60"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Status
-                </label>
-                <select
-                  value={status}
-                  onChange={(event) =>
-                    setStatus(event.target.value as Equipment["status"])
-                  }
-                  className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400/60"
-                >
-                  <option>Disponível</option>
-                  <option>Em uso</option>
-                  <option>Manutenção</option>
-                </select>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-[#07111f] hover:bg-cyan-300"
-                >
-                  Cadastrar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
