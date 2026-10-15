@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
+import BackToDashboard from "../components/BackToDashboard";
 
 type InventoryStatus =
   | "Disponível"
@@ -109,12 +110,7 @@ export default function RelatoriosPage() {
 
         <section className="min-w-0 flex-1 px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-7xl">
-            <a
-              href="/"
-              className="mb-6 inline-flex text-sm text-cyan-300 hover:text-cyan-200"
-            >
-              ← Voltar ao Dashboard
-            </a>
+            <BackToDashboard />
 
             <header className="mb-8">
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-400">

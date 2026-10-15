@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import Cards from "../components/Cards";
 import { Pagination } from "../components/Pagination";
+import BackToDashboard from "../components/BackToDashboard";
 
 type PersonRole =
     | "Aluno"
@@ -247,12 +248,7 @@ export default function PessoasPage() {
                     <div className="mx-auto max-w-7xl space-y-8">
                         <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                             <div>
-                                <a
-                                    href="/"
-                                    className="mb-3 inline-flex text-sm text-cyan-300 hover:text-cyan-200"
-                                >
-                                    ← Voltar ao Dashboard
-                                </a>
+                                <BackToDashboard />
 
                                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
                                     VR STUDIO LAB / GESTÃO

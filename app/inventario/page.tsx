@@ -7,6 +7,7 @@ import Cards from "../components/Cards";
 import EquipmentModal from "../components/EquipmentModal";
 import Footer from "../components/Footer";
 import { Pagination } from "../components/Pagination";
+import BackToDashboard from "../components/BackToDashboard";
 
 type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
 
@@ -232,12 +233,7 @@ export default function InventoryPage() {
           <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
             <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <a
-                  href="/"
-                  className="mb-3 inline-flex text-sm text-cyan-300 hover:text-cyan-200"
-                >
-                  ← Voltar ao Dashboard
-                </a>
+                <BackToDashboard />
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400">
                   VR STUDIO LAB
                 </p>
