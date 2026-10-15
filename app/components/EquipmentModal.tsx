@@ -7,6 +7,7 @@ type EquipmentFormValues = {
   serialNumber: string;
   location: string;
   status: Status;
+  operatingSystem: string;
   notes: string;
 };
 
@@ -157,6 +158,31 @@ export default function EquipmentModal({
               placeholder="Ex.: Armário A1"
               className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-400"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="equipment-operating-system"
+              className="mb-2 block text-sm text-slate-300"
+            >
+              Sistema operacional
+            </label>
+            <select
+              id="equipment-operating-system"
+              value={form.operatingSystem}
+              onChange={(event) =>
+                setForm({ ...form, operatingSystem: event.target.value })
+              }
+              className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-400"
+            >
+              <option value="">Não se aplica / Não informado</option>
+              <option value="Windows 10">Windows 10</option>
+              <option value="Windows 11">Windows 11</option>
+              <option value="Linux">Linux</option>
+              <option value="macOS">macOS</option>
+              <option value="Android">Android</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
 
           <div className="sm:col-span-2">

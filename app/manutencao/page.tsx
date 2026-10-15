@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
+import { Pagination } from "../components/Pagination";
 
 type MaintenanceStatus =
   | "Aberta"
@@ -83,6 +84,8 @@ export default function ManutencaoPage() {
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [equipmentId, setEquipmentId] = useState("");
   const [problem, setProblem] = useState("");
@@ -537,10 +540,10 @@ export default function ManutencaoPage() {
     const updatedOrders = orders.map((order) =>
       order.id === orderId
         ? {
-            ...order,
-            releasedByPersonId: authorizer.id,
-            releasedByName: authorizer.name,
-          }
+          ...order,
+          releasedByPersonId: authorizer.id,
+          releasedByName: authorizer.name,
+        }
         : order
     );
 
@@ -569,6 +572,15 @@ export default function ManutencaoPage() {
     `${order.orderNumber || ""} ${order.equipment} ${order.problem} ${order.responsible} ${order.status}`
       .toLowerCase()
       .includes(search.toLowerCase())
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const selectedHistoryEquipment = inventory.find(
@@ -983,7 +995,7 @@ export default function ManutencaoPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {filteredOrders.map((order) => (
+                      {paginatedOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-white/[0.02]">
                           <td className="px-5 py-4">
                             <p className="text-xs font-semibold text-cyan-300">
@@ -1030,7 +1042,14 @@ export default function ManutencaoPage() {
                     </tbody>
                   </table>
                 </div>
+
               )}
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredOrders.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
             </section>
 
             <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
@@ -1088,9 +1107,8 @@ export default function ManutencaoPage() {
                           <h3 className="mt-1 font-semibold">{order.equipment}</h3>
                         </div>
                         <span
-                          className={`rounded-full border px-3 py-1 text-xs ${
-                            statusStyles[order.status]
-                          }`}
+                          className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
+                            }`}
                         >
                           {order.status}
                         </span>

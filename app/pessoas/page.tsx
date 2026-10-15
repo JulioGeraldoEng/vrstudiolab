@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import Cards from "../components/Cards";
+import { Pagination } from "../components/Pagination";
 
 type PersonRole =
     | "Aluno"
@@ -55,6 +56,8 @@ export default function PessoasPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState(emptyForm);
     const [filter, setFilter] = useState("Todas");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     useEffect(() => {
         try {
@@ -215,6 +218,15 @@ export default function PessoasPage() {
         return matchesSearch && matchesFilter;
     });
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, filter]);
+
+    const paginatedPeople = filteredPeople.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     const activeCount = people.filter((person) => person.active).length;
     const inactiveCount = people.length - activeCount;
 
@@ -359,7 +371,7 @@ export default function PessoasPage() {
                                         </thead>
 
                                         <tbody className="divide-y divide-white/5">
-                                            {filteredPeople.map((person) => (
+                                            {paginatedPeople.map((person) => (
                                                 <tr
                                                     key={person.id}
                                                     className="transition hover:bg-white/[0.02]"
@@ -423,7 +435,9 @@ export default function PessoasPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                
                             )}
+                            
                         </section>
 
                         <p className="text-xs text-slate-500">

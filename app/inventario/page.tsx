@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import EquipmentModal from "../components/EquipmentModal";
 import Footer from "../components/Footer";
+import { Pagination } from "../components/Pagination";
 
 type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
 
@@ -17,6 +18,7 @@ type Equipment = {
   serialNumber: string;
   location: string;
   status: Status;
+  operatingSystem: string;
   notes: string;
 };
 
@@ -29,18 +31,23 @@ const emptyForm = {
   serialNumber: "",
   location: "",
   status: "Disponível" as Status,
+  operatingSystem: "",
   notes: "",
 };
 
 const categories = [
   "Óculos VR",
   "Computadores",
+  "Notebooks",
+  "Televisores",
+  "Monitores",
   "Acessórios",
   "Sensores",
   "Áudio e vídeo",
   "Iluminação",
   "Outros",
 ];
+
 
 const statuses: Status[] = [
   "Disponível",
@@ -65,6 +72,12 @@ export default function InventoryPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, categoryFilter]);
 
   useEffect(() => {
     try {
@@ -88,6 +101,7 @@ export default function InventoryPage() {
           serialNumber: "",
           location: "Armário A1",
           status: "Disponível",
+          operatingSystem: "",
           notes: "",
         },
         {
@@ -98,6 +112,7 @@ export default function InventoryPage() {
           serialNumber: "",
           location: "Sala VR",
           status: "Em uso",
+          operatingSystem: "",
           notes: "",
         },
         {
@@ -108,6 +123,7 @@ export default function InventoryPage() {
           serialNumber: "",
           location: "Bancada 01",
           status: "Disponível",
+          operatingSystem: "",
           notes: "",
         },
         {
@@ -118,6 +134,7 @@ export default function InventoryPage() {
           serialNumber: "",
           location: "Armário A2",
           status: "Manutenção",
+          operatingSystem: "",
           notes: "",
         },
       ];
@@ -188,6 +205,11 @@ export default function InventoryPage() {
     });
   }, [items, search, statusFilter, categoryFilter]);
 
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   function openNewForm() {
     setForm({ ...emptyForm });
     setEditingId(null);
@@ -202,6 +224,7 @@ export default function InventoryPage() {
       serialNumber: item.serialNumber,
       location: item.location,
       status: item.status,
+      operatingSystem: item.operatingSystem || "",
       notes: item.notes,
     });
     setEditingId(item.id);
@@ -403,13 +426,16 @@ export default function InventoryPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredItems.map((item) => (
+                      paginatedItems.map((item) => (
                         <tr key={item.id} className="transition hover:bg-white/[0.02]">
                           <td className="px-5 py-4">
                             <p className="font-semibold">{item.name}</p>
                             <p className="mt-1 text-xs text-slate-400">
                               {item.category}
                               {item.serialNumber ? ` · Série: ${item.serialNumber}` : ""}
+                              {item.operatingSystem
+                                ? ` · SO: ${item.operatingSystem}`
+                                : ""}
                             </p>
                           </td>
                           <td className="px-5 py-4 text-slate-300">
@@ -446,9 +472,12 @@ export default function InventoryPage() {
                 </table>
               </div>
 
-              <div className="border-t border-white/10 px-5 py-4 text-xs text-slate-400">
-                Exibindo {filteredItems.length} de {items.length} equipamentos
-              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredItems.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
             </section>
 
             <EquipmentModal
