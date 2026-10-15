@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   basePath: "/vrstudiolab",
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },
