@@ -1,7 +1,9 @@
 
 "use client";
 
+
 import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const navigation = [
   { name: "Visão geral", icon: "dashboard", href: "/" },
@@ -81,6 +83,8 @@ export default function Sidebar({
   activePage = "",
 }: SidebarProps) {
 
+  const router = useRouter();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
 
@@ -104,13 +108,14 @@ export default function Sidebar({
   }, [collapsed, preferenceLoaded]);
 
 
-  function navigate(href: string) {
-    const basePath = "/vrstudiolab";
-    const destination =
-      href === "/" ? `${basePath}/` : `${basePath}${href}/`;
 
-    window.location.href = destination;
+
+  function navigate(href: string) {
+    const destination = href === "/" ? "/" : `${href}/`;
+    router.push(destination);
   }
+
+
 
   function renderLink(
     item: (typeof navigation)[number],
@@ -158,9 +163,15 @@ export default function Sidebar({
 
   return (
     <>
-      <aside
-        className={`hidden shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-4 transition-[width] duration-200 lg:flex ${collapsed ? "w-20" : "w-56 xl:w-64 xl:p-5"
+      <div
+        className={`hidden shrink-0 ${preferenceLoaded ? "lg:block" : "lg:hidden"} ${preferenceLoaded
+          ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"}`
+          : "w-56 xl:w-64"
           }`}
+      >
+      </div>
+      <aside
+        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-4 ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-20" : "w-56 xl:w-64 xl:p-5"}`}
       >
         <div
           className={`mb-8 flex items-center ${collapsed ? "flex-col gap-4" : "justify-between gap-3"
@@ -278,7 +289,7 @@ export default function Sidebar({
             </p>
           )}
         </div>
-      </aside>
+      </aside >
 
       <div className="w-full min-w-0 border-b border-white/10 px-4 py-3 lg:hidden">
         <nav className="flex w-full min-w-0 gap-2 overflow-x-auto">
