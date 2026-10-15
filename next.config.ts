@@ -1,3 +1,4 @@
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -5,6 +6,17 @@ const nextConfig: NextConfig = {
   basePath: "/vrstudiolab",
   images: {
     unoptimized: true,
+  },
+  experimental: {
+    agentFeedback: true,
+  },
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
   },
 };
 

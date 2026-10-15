@@ -17,7 +17,11 @@ export default function Sidebar({
   activePage = "",
 }: SidebarProps) {
   function navigate(href: string) {
-    window.location.href = href;
+    const basePath = "/vrstudiolab";
+    const destination =
+      href === "/" ? `${basePath}/` : `${basePath}${href}/`;
+
+    window.location.href = destination;
   }
 
   function renderLink(item: (typeof navigation)[number], mobile = false) {
