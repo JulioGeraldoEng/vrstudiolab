@@ -225,7 +225,7 @@ export default function InventoryPage() {
   ).length;
 
   return (
-    <main className="min-h-screen bg-[#0b1120] text-slate-100">
+    <main className="min-h-screen bg-[#0b1120] text-white">
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
         <Sidebar activePage="Equipamentos" />
 

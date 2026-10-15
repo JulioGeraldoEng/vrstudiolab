@@ -107,15 +107,10 @@ export default function Sidebar({
     }
   }, [collapsed, preferenceLoaded]);
 
-
-
-
   function navigate(href: string) {
     const destination = href === "/" ? "/" : `${href}/`;
     router.push(destination);
   }
-
-
 
   function renderLink(
     item: (typeof navigation)[number],
@@ -164,11 +159,13 @@ export default function Sidebar({
   return (
     <>
       <div
-        className={`hidden shrink-0 ${preferenceLoaded ? "lg:block" : "lg:hidden"} ${preferenceLoaded
-          ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"}`
-          : "w-56 xl:w-64"
+        className={`hidden shrink-0 lg:block ${preferenceLoaded
+            ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"
+            }`
+            : "w-20"
           }`}
       >
+
       </div>
       <aside
         className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-4 ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-20" : "w-56 xl:w-64 xl:p-5"}`}
