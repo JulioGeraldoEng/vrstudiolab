@@ -26,57 +26,12 @@ type MaintenanceOrder = {
   status: "Aberta" | "Em andamento" | "Aguardando peças" | "Concluída";
 };
 
-
-const initialEquipment: Equipment[] = [
-  {
-    id: 1,
-    name: "Meta Quest 3",
-    category: "Óculos VR",
-    assetNumber: "PAT-001",
-    location: "Armário A1",
-    status: "Disponível",
-  },
-  {
-    id: 2,
-    name: "Meta Quest 2",
-    category: "Óculos VR",
-    assetNumber: "Sem patrimônio",
-    location: "Sala VR",
-    status: "Em uso",
-  },
-  {
-    id: 3,
-    name: "Notebook de Alto Desempenho",
-    category: "Computadores",
-    assetNumber: "PAT-003",
-    location: "Bancada 01",
-    status: "Disponível",
-  },
-  {
-    id: 4,
-    name: "Controle VR",
-    category: "Acessórios",
-    assetNumber: "PAT-004",
-    location: "Armário A2",
-    status: "Manutenção",
-  },
-];
-
-const navigation = [
-  { name: "Visão geral", icon: "▦" },
-  { name: "Equipamentos", icon: "▣" },
-  { name: "Manutenção", icon: "⚙" },
-  { name: "QR Codes", icon: "▦" },
-  { name: "Relatórios", icon: "▤" },
-];
-
 export default function Home() {
-  const [equipment, setEquipment] =
-    useState<Equipment[]>(initialEquipment);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [maintenanceOrders, setMaintenanceOrders] =
     useState<MaintenanceOrder[]>([]);
   const [search, setSearch] = useState("");
-  const [activePage, setActivePage] = useState("Visão geral");
+  const activePage = "Visão geral";
   const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
@@ -164,17 +119,9 @@ export default function Home() {
     (order) => order.status === "Concluída"
   ).length;
 
-
   const recentOrders = maintenanceOrders.slice(0, 5);
-
-
-  const pageDescription: Record<string, string> = {
-    "Visão geral": "Acompanhe os equipamentos e a operação do laboratório.",
-    Equipamentos: "Consulte os ativos cadastrados no laboratório.",
-    Manutenção: "Acompanhe os equipamentos que precisam de manutenção.",
-    "QR Codes": "Prepare a identificação individual dos equipamentos.",
-    Relatórios: "Consulte o resumo do inventário do laboratório.",
-  };
+  const pageDescription =
+    "Acompanhe os equipamentos e a operação do laboratório.";
 
   return (
     <main className="min-h-screen bg-[#0b1120] text-slate-100">
@@ -209,348 +156,317 @@ export default function Home() {
                   Olá! Bem-vindo ao VR Studio Lab
                 </h3>
                 <p className="mt-1 text-sm text-slate-400">
-                  {pageDescription[activePage]}
+                  {pageDescription}
                 </p>
               </div>
             </div>
 
-            {activePage === "Visão geral" ||
-              activePage === "Equipamentos" ? (
-              <>
-                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <Cards
-                    title="Total de equipamentos"
-                    value={equipment.length}
-                    detail="Itens cadastrados"
-                    icon="▣"
-                    color="text-cyan-300"
-                    bg="bg-cyan-400/10"
-                  />
-                  <Cards
-                    title="Disponíveis"
-                    value={available}
-                    detail="Prontos para utilização"
-                    icon="✓"
-                    color="text-emerald-300"
-                    bg="bg-emerald-400/10"
-                  />
-                  <Cards
-                    title="Em utilização"
-                    value={inUse}
-                    detail="Em uso no laboratório"
-                    icon="⌁"
-                    color="text-blue-300"
-                    bg="bg-blue-400/10"
-                  />
-                  <Cards
-                    title="Em manutenção"
-                    value={maintenance}
-                    detail="Precisam de atenção"
-                    icon="⚙"
-                    color="text-amber-300"
-                    bg="bg-amber-400/10"
-                  />
-                </div>
+
+            <>
+              <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Cards
+                  title="Total de equipamentos"
+                  value={equipment.length}
+                  detail="Itens cadastrados"
+                  icon="▣"
+                  color="text-cyan-300"
+                  bg="bg-cyan-400/10"
+                />
+                <Cards
+                  title="Disponíveis"
+                  value={available}
+                  detail="Prontos para utilização"
+                  icon="✓"
+                  color="text-emerald-300"
+                  bg="bg-emerald-400/10"
+                />
+                <Cards
+                  title="Em utilização"
+                  value={inUse}
+                  detail="Em uso no laboratório"
+                  icon="⌁"
+                  color="text-blue-300"
+                  bg="bg-blue-400/10"
+                />
+                <Cards
+                  title="Em manutenção"
+                  value={maintenance}
+                  detail="Precisam de atenção"
+                  icon="⚙"
+                  color="text-amber-300"
+                  bg="bg-amber-400/10"
+                />
+              </div>
 
 
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <Cards
-                    title="Ordens abertas"
-                    value={openOrders}
-                    detail="Aguardando atendimento"
-                    icon="⚙"
-                    color="text-cyan-300"
-                    bg="bg-cyan-400/10"
-                  />
+              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Cards
+                  title="Ordens abertas"
+                  value={openOrders}
+                  detail="Aguardando atendimento"
+                  icon="⚙"
+                  color="text-cyan-300"
+                  bg="bg-cyan-400/10"
+                />
 
-                  <Cards
-                    title="Em andamento"
-                    value={inProgressOrders}
-                    detail="Serviços em execução"
-                    icon="⌁"
-                    color="text-blue-300"
-                    bg="bg-blue-400/10"
-                  />
+                <Cards
+                  title="Em andamento"
+                  value={inProgressOrders}
+                  detail="Serviços em execução"
+                  icon="⌁"
+                  color="text-blue-300"
+                  bg="bg-blue-400/10"
+                />
 
-                  <Cards
-                    title="Aguardando peças"
-                    value={waitingOrders}
-                    detail="Aguardando materiais"
-                    icon="◷"
-                    color="text-amber-300"
-                    bg="bg-amber-400/10"
-                  />
+                <Cards
+                  title="Aguardando peças"
+                  value={waitingOrders}
+                  detail="Aguardando materiais"
+                  icon="◷"
+                  color="text-amber-300"
+                  bg="bg-amber-400/10"
+                />
 
-                  <Cards
-                    title="Ordens concluídas"
-                    value={completedOrders}
-                    detail="Serviços finalizados"
-                    icon="✓"
-                    color="text-emerald-300"
-                    bg="bg-emerald-400/10"
-                  />
-                </div>
+                <Cards
+                  title="Ordens concluídas"
+                  value={completedOrders}
+                  detail="Serviços finalizados"
+                  icon="✓"
+                  color="text-emerald-300"
+                  bg="bg-emerald-400/10"
+                />
+              </div>
 
 
-                <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5 lg:col-span-2">
-                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">
-                          Inventário de equipamentos
-                        </h3>
-                        <p className="mt-1 text-xs text-slate-400">
-                          Consulte os itens registrados no sistema
-                        </p>
-                      </div>
-                      <span className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
-                        {filteredEquipment.length} itens
-                      </span>
-                    </div>
-
-                    <div className="mb-5">
-                      <input
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Pesquisar nome, patrimônio, categoria..."
-                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/60"
-                      />
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[650px] text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
-                            <th className="pb-3 pr-4 font-medium">Equipamento</th>
-                            <th className="pb-3 pr-4 font-medium">Patrimônio</th>
-                            <th className="pb-3 pr-4 font-medium">Localização</th>
-                            <th className="pb-3 font-medium">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-
-                          {filteredEquipment.slice(0, 5).map((item) => (
-
-                            <tr
-                              key={item.id}
-                              className="border-b border-white/5 last:border-0"
-                            >
-                              <td className="py-4 pr-4">
-                                <p className="font-medium text-slate-200">
-                                  {item.name}
-                                </p>
-                                <p className="mt-1 text-xs text-slate-500">
-                                  {item.category}
-                                </p>
-                              </td>
-                              <td className="py-4 pr-4 text-slate-400">
-                                {item.assetNumber}
-                              </td>
-                              <td className="py-4 pr-4 text-slate-400">
-                                {item.location}
-                              </td>
-                              <td className="py-4">
-                                <span
-                                  className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs ${item.status === "Disponível"
-                                    ? "bg-emerald-400/10 text-emerald-300"
-                                    : item.status === "Em uso"
-                                      ? "bg-blue-400/10 text-blue-300"
-                                      : "bg-amber-400/10 text-amber-300"
-                                    }`}
-                                >
-                                  {item.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-
-                      {filteredEquipment.length === 0 && (
-                        <p className="py-10 text-center text-sm text-slate-500">
-                          Nenhum equipamento encontrado.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5">
-                    <h3 className="font-semibold">Resumo operacional</h3>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Situação atual dos itens
-                    </p>
-
-                    <div className="mt-7 flex items-center justify-center">
-                      <div
-                        className="flex h-40 w-40 items-center justify-center rounded-full"
-                        style={{
-                          background: `conic-gradient(#34d399 0% ${equipment.length
-                            ? (available / equipment.length) * 100
-                            : 0
-                            }%, #60a5fa ${equipment.length
-                              ? (available / equipment.length) * 100
-                              : 0
-                            }% ${equipment.length
-                              ? ((available + inUse) / equipment.length) * 100
-                              : 0
-                            }%, #fbbf24 ${equipment.length
-                              ? ((available + inUse) / equipment.length) * 100
-                              : 0
-                            }% 100%)`,
-                        }}
-                      >
-                        <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[#111b2d]">
-                          <span className="text-3xl font-bold">
-                            {equipment.length}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            equipamentos
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-7 space-y-4">
-                      {[
-                        {
-                          label: "Disponíveis",
-                          value: available,
-                          color: "bg-emerald-400",
-                        },
-                        {
-                          label: "Em uso",
-                          value: inUse,
-                          color: "bg-blue-400",
-                        },
-                        {
-                          label: "Manutenção",
-                          value: maintenance,
-                          color: "bg-amber-400",
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="flex items-center gap-2 text-slate-400">
-                            <span
-                              className={`h-2.5 w-2.5 rounded-full ${item.color}`}
-                            />
-                            {item.label}
-                          </span>
-                          <span className="font-semibold">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Últimas ordens de serviço */}
-                <div className="mb-6 rounded-2xl border border-white/10 bg-[#111b2d] p-5">
+              <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5 lg:col-span-2">
                   <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="font-semibold">
-                        Últimas ordens de serviço
+                        Inventário de equipamentos
                       </h3>
                       <p className="mt-1 text-xs text-slate-400">
-                        As 5 ordens mais recentes registradas
+                        Consulte os itens registrados no sistema
                       </p>
                     </div>
-
                     <span className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
-                      {maintenanceOrders.length} ordens
+                      {filteredEquipment.length} itens
                     </span>
                   </div>
 
-                  {recentOrders.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-slate-500">
-                      Nenhuma ordem de serviço cadastrada.
-                    </p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[600px] text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
-                            <th className="pb-3 pr-4 font-medium">Ordem</th>
-                            <th className="pb-3 pr-4 font-medium">Equipamento</th>
-                            <th className="pb-3 pr-4 font-medium">Abertura</th>
-                            <th className="pb-3 font-medium">Status</th>
+                  <div className="mb-5">
+                    <input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Pesquisar nome, patrimônio, categoria..."
+                      className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/60"
+                    />
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[650px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                          <th className="pb-3 pr-4 font-medium">Equipamento</th>
+                          <th className="pb-3 pr-4 font-medium">Patrimônio</th>
+                          <th className="pb-3 pr-4 font-medium">Localização</th>
+                          <th className="pb-3 font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+
+                        {filteredEquipment.slice(0, 5).map((item) => (
+
+                          <tr
+                            key={item.id}
+                            className="border-b border-white/5 last:border-0"
+                          >
+                            <td className="py-4 pr-4">
+                              <p className="font-medium text-slate-200">
+                                {item.name}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {item.category}
+                              </p>
+                            </td>
+                            <td className="py-4 pr-4 text-slate-400">
+                              {item.assetNumber}
+                            </td>
+                            <td className="py-4 pr-4 text-slate-400">
+                              {item.location}
+                            </td>
+                            <td className="py-4">
+                              <span
+                                className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs ${item.status === "Disponível"
+                                  ? "bg-emerald-400/10 text-emerald-300"
+                                  : item.status === "Em uso"
+                                    ? "bg-blue-400/10 text-blue-300"
+                                    : "bg-amber-400/10 text-amber-300"
+                                  }`}
+                              >
+                                {item.status}
+                              </span>
+                            </td>
                           </tr>
-                        </thead>
+                        ))}
+                      </tbody>
+                    </table>
 
-                        <tbody>
-                          {recentOrders.map((order) => (
-                            <tr
-                              key={order.id}
-                              className="border-b border-white/5 last:border-0"
-                            >
-                              <td className="py-4 pr-4 font-medium text-cyan-300">
-                                {order.orderNumber || "OS antiga"}
-                              </td>
-
-                              <td className="py-4 pr-4 text-slate-200">
-                                {order.equipment}
-                              </td>
-
-                              <td className="py-4 pr-4 text-slate-400">
-                                {order.openingDate
-                                  ? order.openingDate.split("-").reverse().join("/")
-                                  : "—"}
-                              </td>
-
-                              <td className="py-4">
-                                <span
-                                  className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs ${order.status === "Concluída"
-                                    ? "bg-emerald-400/10 text-emerald-300"
-                                    : order.status === "Em andamento"
-                                      ? "bg-blue-400/10 text-blue-300"
-                                      : order.status === "Aguardando peças"
-                                        ? "bg-amber-400/10 text-amber-300"
-                                        : "bg-cyan-400/10 text-cyan-300"
-                                    }`}
-                                >
-                                  {order.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </>
-
-            ) : (
-              <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-8 sm:p-12">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-300">
-                  {navigation.find((item) => item.name === activePage)?.icon}
-                </div>
-                <h3 className="text-xl font-semibold">{activePage}</h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-                  Esta área está preparada para a próxima etapa de
-                  desenvolvimento. Vamos implementar suas funções depois
-                  de validar o painel e o cadastro inicial.
-                </p>
-                {activePage === "Manutenção" && (
-                  <div className="mt-6 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4 text-sm text-amber-200">
-                    {maintenance} equipamento(s) em manutenção no protótipo.
+                    {filteredEquipment.length === 0 && (
+                      <p className="py-10 text-center text-sm text-slate-500">
+                        Nenhum equipamento encontrado.
+                      </p>
+                    )}
                   </div>
-                )}
-                {activePage === "Relatórios" && (
-                  <div className="mt-6 rounded-xl border border-white/10 p-4 text-sm text-slate-300">
-                    Total: {equipment.length} · Disponíveis: {available} ·
-                    Em uso: {inUse} · Em manutenção: {maintenance}
-                  </div>
-                )}
-                {activePage === "QR Codes" && (
-                  <p className="mt-5 text-sm text-slate-500">
-                    A geração dos QR Codes será adicionada em uma próxima etapa.
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5">
+                  <h3 className="font-semibold">Resumo operacional</h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Situação atual dos itens
                   </p>
+
+                  <div className="mt-7 flex items-center justify-center">
+                    <div
+                      className="flex h-40 w-40 items-center justify-center rounded-full"
+                      style={{
+                        background: `conic-gradient(#34d399 0% ${equipment.length
+                          ? (available / equipment.length) * 100
+                          : 0
+                          }%, #60a5fa ${equipment.length
+                            ? (available / equipment.length) * 100
+                            : 0
+                          }% ${equipment.length
+                            ? ((available + inUse) / equipment.length) * 100
+                            : 0
+                          }%, #fbbf24 ${equipment.length
+                            ? ((available + inUse) / equipment.length) * 100
+                            : 0
+                          }% 100%)`,
+                      }}
+                    >
+                      <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[#111b2d]">
+                        <span className="text-3xl font-bold">
+                          {equipment.length}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          equipamentos
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-7 space-y-4">
+                    {[
+                      {
+                        label: "Disponíveis",
+                        value: available,
+                        color: "bg-emerald-400",
+                      },
+                      {
+                        label: "Em uso",
+                        value: inUse,
+                        color: "bg-blue-400",
+                      },
+                      {
+                        label: "Manutenção",
+                        value: maintenance,
+                        color: "bg-amber-400",
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="flex items-center gap-2 text-slate-400">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${item.color}`}
+                          />
+                          {item.label}
+                        </span>
+                        <span className="font-semibold">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Últimas ordens de serviço */}
+              <div className="mb-6 rounded-2xl border border-white/10 bg-[#111b2d] p-5">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold">
+                      Últimas ordens de serviço
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      As 5 ordens mais recentes registradas
+                    </p>
+                  </div>
+
+                  <span className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
+                    {maintenanceOrders.length} ordens
+                  </span>
+                </div>
+
+                {recentOrders.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-slate-500">
+                    Nenhuma ordem de serviço cadastrada.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[600px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                          <th className="pb-3 pr-4 font-medium">Ordem</th>
+                          <th className="pb-3 pr-4 font-medium">Equipamento</th>
+                          <th className="pb-3 pr-4 font-medium">Abertura</th>
+                          <th className="pb-3 font-medium">Status</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {recentOrders.map((order) => (
+                          <tr
+                            key={order.id}
+                            className="border-b border-white/5 last:border-0"
+                          >
+                            <td className="py-4 pr-4 font-medium text-cyan-300">
+                              {order.orderNumber || "OS antiga"}
+                            </td>
+
+                            <td className="py-4 pr-4 text-slate-200">
+                              {order.equipment}
+                            </td>
+
+                            <td className="py-4 pr-4 text-slate-400">
+                              {order.openingDate
+                                ? order.openingDate.split("-").reverse().join("/")
+                                : "—"}
+                            </td>
+
+                            <td className="py-4">
+                              <span
+                                className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs ${order.status === "Concluída"
+                                  ? "bg-emerald-400/10 text-emerald-300"
+                                  : order.status === "Em andamento"
+                                    ? "bg-blue-400/10 text-blue-300"
+                                    : order.status === "Aguardando peças"
+                                      ? "bg-amber-400/10 text-amber-300"
+                                      : "bg-cyan-400/10 text-cyan-300"
+                                  }`}
+                              >
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
-            )}
+            </>
 
             <Footer />
           </div>
