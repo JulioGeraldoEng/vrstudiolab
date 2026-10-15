@@ -79,103 +79,32 @@ export default function InventoryPage() {
     setCurrentPage(1);
   }, [search, statusFilter, categoryFilter]);
 
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      let savedItems: Equipment[] = [];
 
       if (saved !== null) {
         const parsed: unknown = JSON.parse(saved);
 
         if (Array.isArray(parsed)) {
-          savedItems = parsed as Equipment[];
+          setItems(parsed as Equipment[]);
+        } else {
+          setItems([]);
         }
-      }
-
-      const initialEquipment: Equipment[] = [
-        {
-          id: 1,
-          name: "Meta Quest 3",
-          category: "Óculos VR",
-          assetNumber: "PAT-001",
-          serialNumber: "",
-          location: "Armário A1",
-          status: "Disponível",
-          operatingSystem: "",
-          notes: "",
-        },
-        {
-          id: 2,
-          name: "Meta Quest 2",
-          category: "Óculos VR",
-          assetNumber: "Sem patrimônio",
-          serialNumber: "",
-          location: "Sala VR",
-          status: "Em uso",
-          operatingSystem: "",
-          notes: "",
-        },
-        {
-          id: 3,
-          name: "Notebook de Alto Desempenho",
-          category: "Computadores",
-          assetNumber: "PAT-003",
-          serialNumber: "",
-          location: "Bancada 01",
-          status: "Disponível",
-          operatingSystem: "",
-          notes: "",
-        },
-        {
-          id: 4,
-          name: "Controle VR",
-          category: "Acessórios",
-          assetNumber: "PAT-004",
-          serialNumber: "",
-          location: "Armário A2",
-          status: "Manutenção",
-          operatingSystem: "",
-          notes: "",
-        },
-      ];
-
-      const existingNames = new Set(
-        savedItems.map((item) => item.name.toLowerCase())
-      );
-
-      const existingIds = new Set(savedItems.map((item) => item.id));
-
-      let nextId = Math.max(
-        Date.now(),
-        ...savedItems.map((item) => item.id + 1),
-        1
-      );
-
-      const missingEquipment = initialEquipment
-        .filter(
-          (item) => !existingNames.has(item.name.toLowerCase())
-        )
-        .map((item) => ({
-          ...item,
-          id: existingIds.has(item.id) ? nextId++ : item.id,
-        }));
-
-      const mergedItems = [...savedItems, ...missingEquipment];
-
-      setItems(mergedItems);
-
-      if (saved === null || missingEquipment.length > 0) {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(mergedItems)
-        );
+      } else {
+        setItems([]);
       }
     } catch (error) {
-      console.error("Não foi possível carregar o inventário salvo.", error);
+      console.error(
+        "Não foi possível carregar o inventário salvo.",
+        error
+      );
     } finally {
       setReady(true);
     }
   }, []);
+
 
   useEffect(() => {
     if (ready) {
