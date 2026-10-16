@@ -229,15 +229,15 @@ export default function InventoryPage() {
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
         <Sidebar activePage="Equipamentos" />
 
-        <section className="min-w-0 flex-1">
-          <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
-            <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <section className="min-w-0 flex-1 p-4 sm:p-8">
+          <div className="mx-auto max-w-7xl space-y-8">
+            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <BackToDashboard />
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
                   VR STUDIO LAB
                 </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                   Inventário
                 </h1>
                 <p className="mt-2 text-sm text-slate-400">
@@ -245,12 +245,14 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              <button
-                onClick={openNewForm}
-                className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-[#07111f] transition hover:bg-cyan-300"
-              >
-                + Novo equipamento
-              </button>
+              <div className="flex flex-wrap gap-3">  
+                <button
+                  onClick={openNewForm}
+                  className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                >
+                  + Novo equipamento
+                </button>
+              </div>
             </header>
 
             <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

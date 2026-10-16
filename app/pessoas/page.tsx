@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import Cards from "../components/Cards";
 import { Pagination } from "../components/Pagination";
 import BackToDashboard from "../components/BackToDashboard";
+import PersonModal from "../components/PersonModal";
 
 type PersonRole =
     | "Aluno"
@@ -246,12 +247,12 @@ export default function PessoasPage() {
 
                 <section className="min-w-0 flex-1 p-4 sm:p-8">
                     <div className="mx-auto max-w-7xl space-y-8">
-                        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
                                 <BackToDashboard />
 
                                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                                    VR STUDIO LAB / GESTÃO
+                                    VR STUDIO LAB
                                 </p>
 
                                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -263,13 +264,15 @@ export default function PessoasPage() {
                                 </p>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={openNewForm}
-                                className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] transition hover:bg-cyan-300"
-                            >
-                                + Cadastrar pessoa
-                            </button>
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    type="button"
+                                    onClick={openNewForm}
+                                    className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                                >
+                                    + Cadastrar pessoa
+                                </button>
+                            </div>
                         </header>
 
                         {/* Cards padronizados unificados */}
@@ -420,7 +423,6 @@ export default function PessoasPage() {
                                         </table>
                                     </div>
 
-
                                     <Pagination
                                         currentPage={currentPage}
                                         totalItems={filteredPeople.length}
@@ -430,8 +432,6 @@ export default function PessoasPage() {
 
                                 </div>
                             )}
-
-
                         </section>
 
                         <p className="text-xs text-slate-500">
@@ -443,149 +443,22 @@ export default function PessoasPage() {
                 </section>
             </div>
 
-            {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#151e30] p-5 shadow-2xl sm:p-6">
-                        <div className="mb-6 flex items-center justify-between gap-4">
-                            <div>
-                                <h2 className="text-xl font-semibold">
-                                    {editingId ? "Editar pessoa" : "Cadastrar pessoa"}
-                                </h2>
-                                <p className="mt-1 text-sm text-slate-400">
-                                    Preencha os dados da pessoa.
-                                </p>
-                            </div>
+            <PersonModal
+                open={showForm}
+                editing={editingId !== null}
+                form={form}
+                roles={roles}
+                inputClass={inputClass}
+                onFormChange={(field, value) =>
+                    setForm((current) => ({
+                        ...current,
+                        [field]: value,
+                    }))
+                }
+                onSubmit={savePerson}
+                onClose={() => setShowForm(false)}
+            />
 
-                            <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-                                aria-label="Fechar formulário"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <form onSubmit={savePerson} className="space-y-5">
-                            <div>
-                                <label className="mb-2 block text-sm text-slate-300">
-                                    Nome completo *
-                                </label>
-                                <input
-                                    className={inputClass}
-                                    value={form.name}
-                                    onChange={(event) =>
-                                        setForm((current) => ({
-                                            ...current,
-                                            name: event.target.value,
-                                        }))
-                                    }
-                                    placeholder="Digite o nome completo"
-                                    required
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div className="grid gap-5 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Função *
-                                    </label>
-                                    <select
-                                        className={inputClass}
-                                        value={form.role}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                role: event.target.value as PersonRole,
-                                            }))
-                                        }
-                                        required
-                                    >
-                                        {roles.map((role) => (
-                                            <option key={role} value={role}>
-                                                {role}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Setor / departamento
-                                    </label>
-                                    <input
-                                        className={inputClass}
-                                        value={form.sector}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                sector: event.target.value,
-                                            }))
-                                        }
-                                        placeholder="Ex.: Laboratório de informática"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid gap-5 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Telefone
-                                    </label>
-                                    <input
-                                        className={inputClass}
-                                        type="tel"
-                                        value={form.phone}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                phone: event.target.value,
-                                            }))
-                                        }
-                                        placeholder="Ex.: (18) 99999-9999"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        E-mail
-                                    </label>
-                                    <input
-                                        className={inputClass}
-                                        type="email"
-                                        value={form.email}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                email: event.target.value,
-                                            }))
-                                        }
-                                        placeholder="Ex.: nome@instituicao.com"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap justify-end gap-3 border-t border-white/10 pt-5">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowForm(false)}
-                                    className="rounded-xl border border-white/10 px-5 py-3 text-sm text-slate-300 hover:bg-white/5"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] hover:bg-cyan-300"
-                                >
-                                    {editingId ? "Salvar alterações" : "Cadastrar pessoa"}
-                                </button>
-                            </div>
-                        </form>
-                    </section>
-                </div>
-            )}
         </main>
     );
 }

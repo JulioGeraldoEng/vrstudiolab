@@ -16,7 +16,7 @@ export default function Cards({
   bg = "bg-cyan-400/10",
 }: CardProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5 transition hover:border-rose-500">
+    <div className="rounded-2xl border border-white/10 bg-[#111b2d] p-5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-[#1a2940] hover:shadow-lg hover:shadow-cyan-400/10">
       <div className="flex items-start justify-between">
         <p className="text-sm text-slate-400">{title}</p>
         <span

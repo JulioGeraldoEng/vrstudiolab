@@ -6,6 +6,7 @@ import Cards from "../components/Cards";
 import Footer from "../components/Footer";
 import { Pagination } from "../components/Pagination";
 import BackToDashboard from "../components/BackToDashboard";
+import MaintenanceModal from "../components/MaintenanceModal";
 
 type MaintenanceStatus =
   | "Aberta"
@@ -631,7 +632,7 @@ export default function ManutencaoPage() {
               <div>
                 <BackToDashboard />
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                  VR STUDIO LAB / GESTÃO
+                  VR STUDIO LAB
                 </p>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                   Manutenção
@@ -647,7 +648,7 @@ export default function ManutencaoPage() {
                   onClick={() => {
                     setShowForm(true);
                   }}
-                  className="rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-[#07111f] shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-300"
+                  className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
                 >
                   + Nova ordem de serviço
                 </button>
@@ -837,119 +838,20 @@ export default function ManutencaoPage() {
               </div>
             )}
 
-            {showForm && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-blue-400/20 bg-[#151e30] p-6 shadow-2xl">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h2 className="mb-5 text-xl font-semibold">
-                      Nova ordem de serviço
-                    </h2>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowForm(false)}
-                      className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-                      aria-label="Fechar formulário"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <form onSubmit={createOrder} className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Equipamento do inventário
-                      </label>
-
-                      <select
-                        className={inputClass}
-                        value={equipmentId}
-                        onChange={(event) => setEquipmentId(event.target.value)}
-                        required
-                      >
-                        <option value="">Selecione um equipamento</option>
-
-                        {inventory
-                          .filter((item) => item.status !== "Baixado")
-                          .map((item) => (
-                            <option key={item.id} value={String(item.id)}>
-                              {item.name} — {item.assetNumber || "Sem patrimônio"}
-                            </option>
-                          ))}
-                      </select>
-
-                      {inventory.length === 0 && (
-                        <p className="mt-2 text-xs text-amber-300">
-                          Nenhum equipamento carregado. Cadastre ou confira os itens no inventário.
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Responsável pelo atendimento
-                      </label>
-
-                      <select
-                        className={inputClass}
-                        value={assignedPersonId}
-                        onChange={(event) =>
-                          setAssignedPersonId(event.target.value)
-                        }
-                        required
-                      >
-                        <option value="">
-                          Selecione uma pessoa cadastrada
-                        </option>
-
-                        {people
-                          .filter((person) => person.active)
-                          .map((person) => (
-                            <option key={person.id} value={person.id}>
-                              {person.name} — {person.role}
-                            </option>
-                          ))}
-                      </select>
-
-                      {people.filter((person) => person.active).length === 0 && (
-                        <p className="mt-2 text-sm text-amber-300">
-                          Cadastre uma pessoa ativa antes de abrir uma ordem.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Descrição do problema
-                      </label>
-                      <textarea
-                        className={inputClass}
-                        value={problem}
-                        onChange={(event) => setProblem(event.target.value)}
-                        placeholder="Descreva o defeito ou serviço necessário"
-                        rows={3}
-                        required
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap gap-3 sm:col-span-2">
-                      <button
-                        type="submit"
-                        className="flex-1 rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-[#07111f] hover:bg-cyan-300"
-                      >
-                        Criar ordem
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowForm(false)}
-                        className="rounded-xl border border-white/10 px-5 py-3 text-sm text-slate-300 hover:bg-white/5"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </form>
-                </section>
-              </div>
-            )}
+            <MaintenanceModal
+              open={showForm}
+              equipmentId={equipmentId}
+              problem={problem}
+              assignedPersonId={assignedPersonId}
+              inventory={inventory}
+              people={people}
+              inputClass={inputClass}
+              onEquipmentChange={setEquipmentId}
+              onProblemChange={setProblem}
+              onPersonChange={setAssignedPersonId}
+              onSubmit={createOrder}
+              onClose={() => setShowForm(false)}
+            />
 
             <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
               <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
