@@ -145,29 +145,34 @@ export default function RelatoriosPage() {
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
         <Sidebar activePage="Relatórios" />
 
-        <section className="min-w-0 flex-1 px-4 py-8 sm:px-8">
-          <div className="mx-auto max-w-7xl">
-            <BackToDashboard />
+        <section className="min-w-0 flex-1 p-4 sm:p-8">
+          <div className="mx-auto max-w-7xl space-y-8">
 
-            <header className="mb-8">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-400">
-                VR Studio Lab
-              </p>
+            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <BackToDashboard />
 
-              <h1 className="mt-2 text-3xl font-bold">
-                Relatórios
-              </h1>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
+                  VR Studio Lab
+                </p>
 
-              <p className="mt-2 text-sm text-slate-400">
-                Resumo do inventário e das ordens de manutenção.
-              </p>
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Relatórios
+                </h1>
+
+                <p className="mt-2 text-sm text-slate-400">
+                  Resumo do inventário e das ordens de manutenção.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <ExportReportButtons
+                  onExportCSV={() => exportToCSV(equipment, orders, selectedFields)}
+                  onExportPDF={() => exportToPDF(equipment, orders, selectedFields)}
+                  disabled={!ready || selectedFields.length === 0}
+                />
+              </div>
             </header>
-
-            <ExportReportButtons
-              onExportCSV={() => exportToCSV(equipment, orders, selectedFields)}
-              onExportPDF={() => exportToPDF(equipment, orders, selectedFields)}
-              disabled={!ready || selectedFields.length === 0}
-            />
 
             {ready && (
               <section className="mb-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
@@ -338,7 +343,7 @@ export default function RelatoriosPage() {
                             .map((order) => (
                               <tr
                                 key={order.id}
-                                className="border-b border-white/5"
+                                className="border-b border-white/5 transition-colors duration-200 hover:bg-white/[0.08]"
                               >
                                 <td className="px-3 py-4 text-cyan-300">
                                   {order.orderNumber || "OS antiga"}

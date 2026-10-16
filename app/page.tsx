@@ -128,15 +128,17 @@ export default function Home() {
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
         <Sidebar activePage={activePage} />
 
-        <section className="min-w-0 flex-1 w-full">
+        <section className="min-w-0 flex-1 p-4 w-full">
           <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-8">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-400">
+
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400">
                 Laboratório de Realidade Virtual
               </p>
-              <h2 className="mt-1 text-xl font-semibold sm:text-2xl">
+              <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
                 {activePage}
               </h2>
+
             </div>
 
             <div className="flex items-center gap-3">
@@ -266,7 +268,7 @@ export default function Home() {
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[650px] text-left text-sm">
                       <thead>
-                        <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+                        <tr>
                           <th className="pb-3 pr-4 font-medium">Equipamento</th>
                           <th className="pb-3 pr-4 font-medium">Patrimônio</th>
                           <th className="pb-3 pr-4 font-medium">Localização</th>
@@ -279,7 +281,7 @@ export default function Home() {
 
                           <tr
                             key={item.id}
-                            className="border-b border-white/5 last:border-0"
+                            className="transition-colors duration-200 hover:bg-white/[0.08]"
                           >
                             <td className="py-4 pr-4">
                               <p className="font-medium text-slate-200">
@@ -429,8 +431,7 @@ export default function Home() {
                         {recentOrders.map((order) => (
                           <tr
                             key={order.id}
-                            className="border-b border-white/5 last:border-0"
-                          >
+                            className="transition-colors duration-200 hover:bg-white/[0.08]"                          >
                             <td className="py-4 pr-4 font-medium text-cyan-300">
                               {order.orderNumber || "OS antiga"}
                             </td>
