@@ -5,6 +5,8 @@ import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/BackToDashboard";
+import ExportReportButtons from "../components/ExportReportButtons";
+import { exportToCSV, exportToPDF } from "./reportExport";
 
 type InventoryStatus =
   | "Disponível"
@@ -17,6 +19,10 @@ type Equipment = {
   name: string;
   assetNumber?: string;
   status: InventoryStatus;
+  category?: string;
+  serialNumber?: string;
+  location?: string;
+  notes?: string;
 };
 
 type MaintenanceStatus =
@@ -34,15 +40,46 @@ type MaintenanceOrder = {
   responsible: string;
   openingDate: string;
   status: MaintenanceStatus;
+  assetNumber?: string;
+  serviceNotes?: string;
+  completionDate?: string;
+  assignedPersonName?: string;
+  performedByName?: string;
+  releasedByName?: string;
 };
 
 const inventoryKey = "vrstudiolab-inventory-v1";
 const maintenanceKey = "vrstudiolab-maintenance-v1";
 
+const exportFields = [
+  { id: "name", label: "Nome do equipamento", group: "inventory" },
+  { id: "assetNumber", label: "Patrimônio", group: "inventory" },
+  { id: "category", label: "Categoria", group: "inventory" },
+  { id: "serialNumber", label: "Número de série", group: "inventory" },
+  { id: "location", label: "Localização", group: "inventory" },
+  { id: "equipmentStatus", label: "Status do equipamento", group: "inventory" },
+  { id: "notes", label: "Observações do equipamento", group: "inventory" },
+  { id: "orderNumber", label: "Número da OS", group: "maintenance" },
+  { id: "equipment", label: "Equipamento da OS", group: "maintenance" },
+  { id: "problem", label: "Problema relatado", group: "maintenance" },
+  { id: "responsible", label: "Responsável", group: "maintenance" },
+  { id: "openingDate", label: "Data de abertura", group: "maintenance" },
+  { id: "orderStatus", label: "Status da OS", group: "maintenance" },
+  { id: "serviceNotes", label: "Serviço realizado", group: "maintenance" },
+  { id: "completionDate", label: "Data de conclusão", group: "maintenance" },
+] as const;
+
+type ExportFieldId = (typeof exportFields)[number]["id"];
+
 export default function RelatoriosPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [orders, setOrders] = useState<MaintenanceOrder[]>([]);
   const [ready, setReady] = useState(false);
+
+  const [selectedFields, setSelectedFields] = useState<ExportFieldId[]>(
+    exportFields.map((field) => field.id)
+  );
+
 
   useEffect(() => {
     try {
@@ -125,6 +162,72 @@ export default function RelatoriosPage() {
                 Resumo do inventário e das ordens de manutenção.
               </p>
             </header>
+
+            <ExportReportButtons
+              onExportCSV={() => exportToCSV(equipment, orders, selectedFields)}
+              onExportPDF={() => exportToPDF(equipment, orders, selectedFields)}
+              disabled={!ready || selectedFields.length === 0}
+            />
+
+            {ready && (
+              <section className="mb-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Campos do relatório
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Marque as informações que deseja incluir na exportação.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedFields(exportFields.map((field) => field.id))
+                    }
+                    className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+                  >
+                    Marcar todos
+                  </button>
+                </div>
+
+                {(["inventory", "maintenance"] as const).map((group) => (
+                  <div key={group} className="mb-5 last:mb-0">
+                    <h3 className="mb-3 font-medium text-slate-200">
+                      {group === "inventory"
+                        ? "Inventário de equipamentos"
+                        : "Ordens de manutenção"}
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {exportFields
+                        .filter((field) => field.group === group)
+                        .map((field) => (
+                          <label
+                            key={field.id}
+                            className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] p-3 text-sm text-slate-300 transition hover:bg-white/[0.07]"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedFields.includes(field.id)}
+                              onChange={(event) => {
+                                setSelectedFields((current) =>
+                                  event.target.checked
+                                    ? [...current, field.id]
+                                    : current.filter((id) => id !== field.id)
+                                );
+                              }}
+                              className="h-4 w-4 accent-cyan-400"
+                            />
+                            {field.label}
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
 
             {!ready ? (
               <p className="text-slate-400">Carregando relatórios...</p>
