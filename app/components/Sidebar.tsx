@@ -143,7 +143,7 @@ export default function Sidebar({
         aria-label={item.name}
         className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"
           } ${active
-            ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-cyan-300"
+            ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-red-300"
             : "text-slate-400 hover:bg-white/5 hover:text-white"
           }`}
       >
@@ -160,9 +160,9 @@ export default function Sidebar({
     <>
       <div
         className={`hidden shrink-0 lg:block ${preferenceLoaded
-            ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"
-            }`
-            : "w-20"
+          ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"
+          }`
+          : "w-20"
           }`}
       >
 
@@ -171,7 +171,9 @@ export default function Sidebar({
         className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-4 ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-20" : "w-56 xl:w-64 xl:p-5"}`}
       >
         <div
-          className={`mb-8 flex items-center ${collapsed ? "flex-col gap-4" : "justify-between gap-3"
+          className={`mb-8 flex ${collapsed
+            ? "flex-col items-center gap-4"
+            : "items-center justify-between gap-3"
             }`}
         >
           <div
@@ -232,8 +234,9 @@ export default function Sidebar({
             title={
               collapsed ? "Expandir menu" : "Recolher menu"
             }
-            className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"
-          >
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-cyan-300 ${collapsed ? "ml-0" : "ml-auto"
+            }`}          
+            >
             <svg
               width="19"
               height="19"
