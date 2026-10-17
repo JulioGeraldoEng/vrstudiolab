@@ -7,6 +7,9 @@ import Footer from "../components/Footer";
 import BackToDashboard from "../components/BackToDashboard";
 import ExportReportButtons from "../components/ExportReportButtons";
 import { exportToCSV, exportToPDF } from "./reportExport";
+import MaintenanceTable from "../components/MaintenanceTable";
+import InventoryTable from "../components/InventoryTable";
+import PeopleTable, { type Person } from "../components/PeopleTable";
 
 type InventoryStatus =
   | "Disponível"
@@ -22,6 +25,7 @@ type Equipment = {
   category?: string;
   serialNumber?: string;
   location?: string;
+  operatingSystem?: string;
   notes?: string;
 };
 
@@ -33,7 +37,7 @@ type MaintenanceStatus =
 
 type MaintenanceOrder = {
   id: string;
-  orderNumber?: string;
+  orderNumber: string;
   equipment: string;
   equipmentId?: number;
   problem: string;
@@ -67,6 +71,10 @@ const exportFields = [
   { id: "orderStatus", label: "Status da OS", group: "maintenance" },
   { id: "serviceNotes", label: "Serviço realizado", group: "maintenance" },
   { id: "completionDate", label: "Data de conclusão", group: "maintenance" },
+  { id: "personName", label: "Nome da pessoa", group: "people" },
+  { id: "personRole", label: "Função da pessoa", group: "people" },
+  { id: "personSector", label: "Setor da pessoa", group: "people" },
+  { id: "personStatus", label: "Situação do cadastro", group: "people" },
 ] as const;
 
 type ExportFieldId = (typeof exportFields)[number]["id"];
@@ -74,12 +82,19 @@ type ExportFieldId = (typeof exportFields)[number]["id"];
 export default function RelatoriosPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [orders, setOrders] = useState<MaintenanceOrder[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [peopleReady, setPeopleReady] = useState(false);
   const [ready, setReady] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const inventoryItemsPerPage = 5;
+  const [peoplePage, setPeoplePage] = useState(1);
+  const peopleItemsPerPage = 5;
 
   const [selectedFields, setSelectedFields] = useState<ExportFieldId[]>(
     exportFields.map((field) => field.id)
   );
-
 
   useEffect(() => {
     try {
@@ -105,6 +120,26 @@ export default function RelatoriosPage() {
       console.error("Erro ao carregar relatórios:", error);
     } finally {
       setReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const savedPeople = localStorage.getItem(
+        "vrstudiolab-maintenance-people-v1"
+      );
+
+      if (savedPeople) {
+        const parsedPeople = JSON.parse(savedPeople);
+
+        if (Array.isArray(parsedPeople)) {
+          setPeople(parsedPeople);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar pessoas:", error);
+    } finally {
+      setPeopleReady(true);
     }
   }, []);
 
@@ -140,6 +175,43 @@ export default function RelatoriosPage() {
     (order) => order.status === "Concluída"
   ).length;
 
+
+  const statusStyles: Record<MaintenanceStatus, string> = {
+    Aberta: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    "Em andamento": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    "Aguardando peças": "bg-orange-500/10 text-orange-400 border-orange-500/20",
+    Concluída: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  };
+
+  const sortedOrders = [...orders].sort((a, b) =>
+    b.openingDate.localeCompare(a.openingDate)
+  );
+
+  const paginatedOrders = sortedOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const paginatedEquipment = equipment
+    .slice(
+      (inventoryPage - 1) * inventoryItemsPerPage,
+      inventoryPage * inventoryItemsPerPage
+    )
+    .map((item) => ({
+      ...item,
+      category: item.category ?? "",
+      assetNumber: item.assetNumber ?? "",
+      serialNumber: item.serialNumber ?? "",
+      location: item.location ?? "",
+      operatingSystem: item.operatingSystem ?? "",
+      notes: item.notes ?? "",
+    }));
+
+  const paginatedPeople = people.slice(
+    (peoplePage - 1) * peopleItemsPerPage,
+    peoplePage * peopleItemsPerPage
+  );
+
   return (
     <main className="min-h-screen bg-[#0b1120] text-white">
       <div className="flex min-h-screen w-full flex-col lg:flex-row">
@@ -167,8 +239,8 @@ export default function RelatoriosPage() {
 
               <div className="flex flex-wrap gap-3">
                 <ExportReportButtons
-                  onExportCSV={() => exportToCSV(equipment, orders, selectedFields)}
-                  onExportPDF={() => exportToPDF(equipment, orders, selectedFields)}
+                  onExportCSV={() => exportToCSV(equipment, orders, selectedFields, people)}
+                  onExportPDF={() => exportToPDF(equipment, orders, selectedFields, people)}
                   disabled={!ready || selectedFields.length === 0}
                 />
               </div>
@@ -197,12 +269,14 @@ export default function RelatoriosPage() {
                   </button>
                 </div>
 
-                {(["inventory", "maintenance"] as const).map((group) => (
+                {(["inventory", "maintenance", "people"] as const).map((group) => (
                   <div key={group} className="mb-5 last:mb-0">
                     <h3 className="mb-3 font-medium text-slate-200">
                       {group === "inventory"
                         ? "Inventário de equipamentos"
-                        : "Ordens de manutenção"}
+                        : group === "maintenance"
+                          ? "Ordens de manutenção"
+                          : "Pessoas cadastradas"}
                     </h3>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -323,52 +397,55 @@ export default function RelatoriosPage() {
                       Nenhuma ordem de serviço cadastrada.
                     </p>
                   ) : (
-                    <div className="mt-4 overflow-x-auto">
-                      <table className="w-full min-w-[600px] text-left text-sm">
-                        <thead className="text-slate-400">
-                          <tr className="border-b border-white/10">
-                            <th className="px-3 py-3">Número da OS</th>
-                            <th className="px-3 py-3">Equipamento</th>
-                            <th className="px-3 py-3">Abertura</th>
-                            <th className="px-3 py-3">Status</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {[...orders]
-                            .sort((a, b) =>
-                              b.openingDate.localeCompare(a.openingDate)
-                            )
-                            .slice(0, 10)
-                            .map((order) => (
-                              <tr
-                                key={order.id}
-                                className="border-b border-white/5 transition-colors duration-200 hover:bg-white/[0.08]"
-                              >
-                                <td className="px-3 py-4 text-cyan-300">
-                                  {order.orderNumber || "OS antiga"}
-                                </td>
-
-                                <td className="px-3 py-4">
-                                  {order.equipment}
-                                </td>
-
-                                <td className="px-3 py-4 text-slate-300">
-                                  {order.openingDate
-                                    ? order.openingDate.split("-").reverse().join("/")
-                                    : "—"}
-                                </td>
-
-                                <td className="px-3 py-4 text-slate-300">
-                                  {order.status}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
+                    <div className="mt-4">
+                      <MaintenanceTable
+                        orders={paginatedOrders}
+                        statusStyles={statusStyles}
+                        currentPage={currentPage}
+                        itemsPerPage={itemsPerPage}
+                        totalItems={orders.length}
+                        onPageChange={setCurrentPage}
+                        showActions={false}
+                      />
                     </div>
                   )}
                 </section>
+
+                <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+                  <h2 className="text-lg font-semibold">
+                    Equipamentos cadastrados
+                  </h2>
+
+                  <div className="mt-4">
+                    <InventoryTable
+                      items={paginatedEquipment}
+                      ready={ready}
+                      currentPage={inventoryPage}
+                      itemsPerPage={inventoryItemsPerPage}
+                      totalItems={equipment.length}
+                      onPageChange={setInventoryPage}
+                      showActions={false}
+                    />
+                  </div>
+                </section>
+
+                <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+                  <h2 className="text-lg font-semibold">Pessoas cadastradas</h2>
+
+                  <div className="mt-4">
+                    <PeopleTable
+                      people={paginatedPeople}
+                      currentPage={peoplePage}
+                      itemsPerPage={peopleItemsPerPage}
+                      totalItems={people.length}
+                      onEdit={() => { }}
+                      onToggleStatus={() => { }}
+                      onPageChange={setPeoplePage}
+                      showActions={false}
+                    />
+                  </div>
+                </section>
+
               </>
             )}
             <Footer />

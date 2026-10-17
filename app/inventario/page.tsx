@@ -6,8 +6,8 @@ import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import EquipmentModal from "../components/EquipmentModal";
 import Footer from "../components/Footer";
-import { Pagination } from "../components/Pagination";
 import BackToDashboard from "../components/BackToDashboard";
+import InventoryTable from "../components/InventoryTable";
 
 type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
 
@@ -245,7 +245,7 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">  
+              <div className="flex flex-wrap gap-3">
                 <button
                   onClick={openNewForm}
                   className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
@@ -325,86 +325,17 @@ export default function InventoryPage() {
                 </select>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[850px] text-left text-sm">
-                  <thead className="bg-white/[0.03] text-xs uppercase tracking-wider text-slate-400">
-                    <tr>
-                      <th className="px-5 py-4">Equipamento</th>
-                      <th className="px-5 py-4">Patrimônio</th>
-                      <th className="px-5 py-4">Localização</th>
-                      <th className="px-5 py-4">Status</th>
-                      <th className="px-5 py-4">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {!ready ? (
-                      <tr>
-                        <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
-                          Carregando inventário...
-                        </td>
-                      </tr>
-                    ) : filteredItems.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-5 py-12 text-center">
-                          <p className="font-medium">Nenhum equipamento encontrado</p>
-                          <p className="mt-2 text-slate-400">
-                            Cadastre um equipamento ou ajuste os filtros.
-                          </p>
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedItems.map((item) => (
-                        <tr key={item.id} className="transition hover:bg-white/[0.02]">
-                          <td className="px-5 py-4">
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="mt-1 text-xs text-slate-400">
-                              {item.category}
-                              {item.serialNumber ? ` · Série: ${item.serialNumber}` : ""}
-                              {item.operatingSystem
-                                ? ` · SO: ${item.operatingSystem}`
-                                : ""}
-                            </p>
-                          </td>
-                          <td className="px-5 py-4 text-slate-300">
-                            {item.assetNumber || "Não informado"}
-                          </td>
-                          <td className="px-5 py-4 text-slate-300">
-                            {item.location || "Não informada"}
-                          </td>
-                          <td className="px-5 py-4">
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyles[item.status]}`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => openEditForm(item)}
-                                className="text-cyan-300 hover:text-cyan-200"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => deleteEquipment(item)}
-                                className="text-rose-300 hover:text-rose-200"
-                              >
-                                Excluir
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <Pagination
+              <InventoryTable
+                items={paginatedItems}
+                ready={ready}
+                onEdit={openEditForm}
+                onDelete={deleteEquipment}
                 currentPage={currentPage}
-                totalItems={filteredItems.length}
                 itemsPerPage={itemsPerPage}
+                totalItems={filteredItems.length}
                 onPageChange={setCurrentPage}
               />
+
             </section>
 
             <EquipmentModal
