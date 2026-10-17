@@ -25,6 +25,14 @@ type ExportMaintenanceOrder = {
   releasedByName?: string;
 };
 
+type ExportPerson = {
+  id: string;
+  name: string;
+  role: string;
+  sector?: string;
+  active: boolean;
+};
+
 const fieldLabels: Record<string, string> = {
   name: "Nome do equipamento",
   assetNumber: "Patrimônio",
@@ -41,6 +49,10 @@ const fieldLabels: Record<string, string> = {
   orderStatus: "Status da OS",
   serviceNotes: "Serviço realizado",
   completionDate: "Data de conclusão",
+  personName: "Nome da pessoa",
+  personRole: "Função da pessoa",
+  personSector: "Setor da pessoa",
+  personStatus: "Situação do cadastro",
 };
 
 function getEquipmentValue(
@@ -96,10 +108,25 @@ function getOrderValue(
   return values[field] ?? "";
 }
 
+function getPersonValue(
+  person: ExportPerson,
+  field: string
+): string {
+  const values: Record<string, string> = {
+    personName: person.name,
+    personRole: person.role,
+    personSector: person.sector ?? "",
+    personStatus: person.active ? "Ativo" : "Inativo",
+  };
+
+  return values[field] ?? "";
+}
+
 export function exportToCSV(
   equipment: ExportEquipment[],
   orders: ExportMaintenanceOrder[],
-  selectedFields: string[]
+  selectedFields: string[],
+  people: ExportPerson[]
 ) {
   const inventoryFields = [
     "name",
@@ -120,6 +147,13 @@ export function exportToCSV(
     "orderStatus",
     "serviceNotes",
     "completionDate",
+  ].filter((field) => selectedFields.includes(field));
+
+  const peopleFields = [
+    "personName",
+    "personRole",
+    "personSector",
+    "personStatus",
   ].filter((field) => selectedFields.includes(field));
 
   const rows: string[][] = [];
@@ -149,6 +183,17 @@ export function exportToCSV(
     });
   }
 
+  if (peopleFields.length > 0) {
+    rows.push(["PESSOAS CADASTRADAS"]);
+    rows.push(peopleFields.map((field) => fieldLabels[field]));
+
+    people.forEach((person) => {
+      rows.push(
+        peopleFields.map((field) => getPersonValue(person, field))
+      );
+    });
+  }
+
   const csv = rows
     .map((row) =>
       row
@@ -174,7 +219,8 @@ export function exportToCSV(
 export async function exportToPDF(
   equipment: ExportEquipment[],
   orders: ExportMaintenanceOrder[],
-  selectedFields: string[]
+  selectedFields: string[],
+  people: ExportPerson[]
 ) {
   const { default: jsPDF } = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
@@ -198,6 +244,13 @@ export async function exportToPDF(
     "orderStatus",
     "serviceNotes",
     "completionDate",
+  ].filter((field) => selectedFields.includes(field));
+
+  const peopleFields = [
+    "personName",
+    "personRole",
+    "personSector",
+    "personStatus",
   ].filter((field) => selectedFields.includes(field));
 
   const doc = new jsPDF();
@@ -246,6 +299,27 @@ export async function exportToPDF(
       head: [maintenanceFields.map((field) => fieldLabels[field])],
       body: orders.map((order) =>
         maintenanceFields.map((field) => getOrderValue(order, field))
+      ),
+      styles: { fontSize: 8, overflow: "linebreak" },
+      headStyles: { fillColor: [14, 23, 41] },
+      horizontalPageBreak: true,
+    });
+  }
+
+  if (peopleFields.length > 0) {
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 20;
+    }
+
+    doc.setFontSize(12);
+    doc.text("Pessoas cadastradas", 14, currentY);
+
+    autoTable(doc, {
+      startY: currentY + 5,
+      head: [peopleFields.map((field) => fieldLabels[field])],
+      body: people.map((person) =>
+        peopleFields.map((field) => getPersonValue(person, field))
       ),
       styles: { fontSize: 8, overflow: "linebreak" },
       headStyles: { fillColor: [14, 23, 41] },

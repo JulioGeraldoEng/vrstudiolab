@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
-import { Pagination } from "../components/Pagination";
 import BackToDashboard from "../components/BackToDashboard";
 import MaintenanceModal from "../components/MaintenanceModal";
+import MaintenanceTable from "../components/MaintenanceTable";
 
 type MaintenanceStatus =
   | "Aberta"
@@ -85,6 +85,7 @@ export default function ManutencaoPage() {
     useState<MaintenanceOrder[]>(initialOrders);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Todos");
   const [showForm, setShowForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -570,11 +571,18 @@ export default function ManutencaoPage() {
     }
   }
 
-  const filteredOrders = orders.filter((order) =>
-    `${order.orderNumber || ""} ${order.equipment} ${order.problem} ${order.responsible} ${order.status}`
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = `${order.orderNumber || ""} ${order.equipment} ${order.problem} ${order.responsible} ${order.status}`
       .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+      .includes(search.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "Todos" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
 
   useEffect(() => {
     setCurrentPage(1);
@@ -862,12 +870,29 @@ export default function ManutencaoPage() {
                   </p>
                 </div>
 
-                <input
-                  className={`${inputClass} sm:max-w-xs`}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar equipamento ou serviço..."
-                />
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <input
+                    className={`${inputClass} sm:max-w-xs`}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar equipamento ou serviço..."
+                  />
+
+                  <select
+                    className={`${inputClass} sm:w-52`}
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    aria-label="Filtrar ordens por status"
+                  >
+                    <option value="Todos">Todos os status</option>
+                    <option value="Aberta">Aberta</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Aguardando peças">Aguardando peças</option>
+                    <option value="Concluída">Concluída</option>
+                  </select>
+                </div>
+
               </div>
 
               {filteredOrders.length === 0 ? (
@@ -881,224 +906,167 @@ export default function ManutencaoPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[850px] text-left text-sm">
-                    <thead className="bg-white/[0.03] text-xs uppercase text-slate-400">
-                      <tr>
-                        <th className="px-5 py-4">Equipamento / problema</th>
-                        <th className="px-5 py-4">Responsável</th>
-                        <th className="px-5 py-4">Abertura</th>
-                        <th className="px-5 py-4">Status</th>
-                        <th className="px-5 py-4">Atualizar</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {paginatedOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-white/[0.02]">
-                          <td className="px-5 py-4">
+                <MaintenanceTable
+                  orders={paginatedOrders}
+                  statusStyles={statusStyles}
+                  onStatusChange={updateStatus}
+                  currentPage={currentPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredOrders.length}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </section>
+
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+                <div className="border-b border-white/10 p-5">
+                  <h2 className="text-lg font-semibold">
+                    Histórico por equipamento
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Consulte os defeitos e serviços anteriores de cada equipamento.
+                  </p>
+
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm text-slate-300">
+                      Selecione o equipamento
+                    </label>
+
+                    <select
+                      className={inputClass}
+                      value={historyEquipmentId}
+                      onChange={(event) =>
+                        setHistoryEquipmentId(event.target.value)
+                      }
+                    >
+                      <option value="">Escolha um equipamento</option>
+
+                      {inventory.map((item) => (
+                        <option key={item.id} value={String(item.id)}>
+                          {item.name} — {item.assetNumber || "Sem patrimônio"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {!historyEquipmentId ? (
+                  <p className="p-6 text-sm text-slate-400">
+                    Selecione um equipamento para consultar seu histórico.
+                  </p>
+                ) : historyOrders.length === 0 ? (
+                  <p className="p-6 text-sm text-slate-400">
+                    Nenhuma ordem de serviço encontrada para este equipamento.
+                  </p>
+                ) : (
+                  <div className="space-y-4 p-5">
+                    {historyOrders.map((order) => (
+                      <article
+                        key={order.id}
+                        className="rounded-xl border border-white/10 bg-[#111827] p-4"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
                             <p className="text-xs font-semibold text-cyan-300">
                               {order.orderNumber || "OS antiga"}
                             </p>
-                            <p className="mt-1 font-medium">{order.equipment}</p>
-                            <p className="mt-1 max-w-sm text-xs text-slate-400">
-                              {order.problem}
-                            </p>
-                          </td>
-                          <td className="px-5 py-4 text-slate-300">
-                            {order.responsible}
-                          </td>
-                          <td className="px-5 py-4 text-slate-300">
-                            {order.openingDate.split("-").reverse().join("/")}
-                          </td>
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${statusStyles[order.status]}`}
-                            >
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <select
-                              value={order.status}
-                              onChange={(event) =>
-                                updateStatus(
-                                  order.id,
-                                  event.target.value as MaintenanceStatus
-                                )
-                              }
-                              className="rounded-lg border border-white/10 bg-[#111827] px-3 py-2 text-xs text-white outline-none focus:border-blue-400"
-                              aria-label={`Status da ordem de ${order.equipment}`}
-                            >
-                              <option value="Aberta">Aberta</option>
-                              <option value="Em andamento">Em andamento</option>
-                              <option value="Aguardando peças">Aguardando peças</option>
-                              <option value="Concluída">Concluída</option>
-                            </select>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            <h3 className="mt-1 font-semibold">{order.equipment}</h3>
+                          </div>
+                          <span
+                            className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
+                              }`}
+                          >
+                            {order.status}
+                          </span>
+                        </div>
 
-              )}
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredOrders.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
-            </section>
+                        <p className="mt-3 text-xs text-slate-400">
+                          Abertura: {order.openingDate.split("-").reverse().join("/")}
+                        </p>
 
-            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
-              <div className="border-b border-white/10 p-5">
-                <h2 className="text-lg font-semibold">
-                  Histórico por equipamento
-                </h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Consulte os defeitos e serviços anteriores de cada equipamento.
-                </p>
-
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm text-slate-300">
-                    Selecione o equipamento
-                  </label>
-
-                  <select
-                    className={inputClass}
-                    value={historyEquipmentId}
-                    onChange={(event) =>
-                      setHistoryEquipmentId(event.target.value)
-                    }
-                  >
-                    <option value="">Escolha um equipamento</option>
-
-                    {inventory.map((item) => (
-                      <option key={item.id} value={String(item.id)}>
-                        {item.name} — {item.assetNumber || "Sem patrimônio"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {!historyEquipmentId ? (
-                <p className="p-6 text-sm text-slate-400">
-                  Selecione um equipamento para consultar seu histórico.
-                </p>
-              ) : historyOrders.length === 0 ? (
-                <p className="p-6 text-sm text-slate-400">
-                  Nenhuma ordem de serviço encontrada para este equipamento.
-                </p>
-              ) : (
-                <div className="space-y-4 p-5">
-                  {historyOrders.map((order) => (
-                    <article
-                      key={order.id}
-                      className="rounded-xl border border-white/10 bg-[#111827] p-4"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold text-cyan-300">
-                            {order.orderNumber || "OS antiga"}
+                        {order.completionDate && (
+                          <p className="mt-1 text-xs text-slate-400">
+                            Conclusão:{" "}
+                            {order.completionDate.split("-").reverse().join("/")}
                           </p>
-                          <h3 className="mt-1 font-semibold">{order.equipment}</h3>
-                        </div>
-                        <span
-                          className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
-                            }`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
+                        )}
 
-                      <p className="mt-3 text-xs text-slate-400">
-                        Abertura: {order.openingDate.split("-").reverse().join("/")}
-                      </p>
-
-                      {order.completionDate && (
-                        <p className="mt-1 text-xs text-slate-400">
-                          Conclusão:{" "}
-                          {order.completionDate.split("-").reverse().join("/")}
-                        </p>
-                      )}
-
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold uppercase text-slate-400">
-                          Defeito ou solicitação
-                        </p>
-                        <p className="mt-1 text-sm text-slate-200">
-                          {order.problem}
-                        </p>
-                      </div>
-
-                      <div className="mt-3">
-                        <p className="text-xs font-semibold uppercase text-slate-400">
-                          Responsável
-                        </p>
-                        <p className="mt-1 text-sm text-slate-200">
-                          {order.responsible}
-                        </p>
-                      </div>
-
-                      {order.status === "Concluída" && (
-                        <div className="mt-3 space-y-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-slate-400">
-                              Serviço executado por
-                            </p>
-                            <p className="mt-1 text-sm text-slate-200">
-                              {order.performedByName || "Não informado"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-slate-400">
-                              Liberação autorizada por
-                            </p>
-
-                            <p className="mt-1 text-sm text-slate-200">
-                              {order.releasedByName || "Não informado"}
-                            </p>
-
-                            {order.status === "Concluída" &&
-                              inventory.some(
-                                (item) =>
-                                  item.id === order.equipmentId &&
-                                  item.status === "Manutenção"
-                              ) && (
-                                <button
-                                  type="button"
-                                  onClick={() => releaseEquipment(order.id)}
-                                  className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                                >
-                                  Liberar equipamento
-                                </button>
-                              )}
-                          </div>
-                        </div>
-                      )}
-
-                      {order.status === "Concluída" && (
-                        <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
-                          <p className="text-xs font-semibold uppercase text-emerald-300">
-                            Serviço executado
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold uppercase text-slate-400">
+                            Defeito ou solicitação
                           </p>
                           <p className="mt-1 text-sm text-slate-200">
-                            {order.serviceNotes || "Sem observações registradas."}
+                            {order.problem}
                           </p>
                         </div>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
 
-            <p className="text-xs text-slate-500">
-              VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
-            </p>
-            <Footer />
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold uppercase text-slate-400">
+                            Responsável
+                          </p>
+                          <p className="mt-1 text-sm text-slate-200">
+                            {order.responsible}
+                          </p>
+                        </div>
+
+                        {order.status === "Concluída" && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase text-slate-400">
+                                Serviço executado por
+                              </p>
+                              <p className="mt-1 text-sm text-slate-200">
+                                {order.performedByName || "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-semibold uppercase text-slate-400">
+                                Liberação autorizada por
+                              </p>
+
+                              <p className="mt-1 text-sm text-slate-200">
+                                {order.releasedByName || "Não informado"}
+                              </p>
+
+                              {order.status === "Concluída" &&
+                                inventory.some(
+                                  (item) =>
+                                    item.id === order.equipmentId &&
+                                    item.status === "Manutenção"
+                                ) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => releaseEquipment(order.id)}
+                                    className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                                  >
+                                    Liberar equipamento
+                                  </button>
+                                )}
+                            </div>
+                          </div>
+                        )}
+
+                        {order.status === "Concluída" && (
+                          <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
+                            <p className="text-xs font-semibold uppercase text-emerald-300">
+                              Serviço executado
+                            </p>
+                            <p className="mt-1 text-sm text-slate-200">
+                              {order.serviceNotes || "Sem observações registradas."}
+                            </p>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <p className="text-xs text-slate-500">
+                VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
+              </p>
+              <Footer />
           </div>
         </section>
       </div>

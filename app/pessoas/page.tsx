@@ -7,25 +7,10 @@ import Cards from "../components/Cards";
 import { Pagination } from "../components/Pagination";
 import BackToDashboard from "../components/BackToDashboard";
 import PersonModal from "../components/PersonModal";
-
-type PersonRole =
-    | "Aluno"
-    | "Técnico"
-    | "Responsável autorizado"
-    | "Professor"
-    | "Gestor"
-    | "Colaborador";
-
-type Person = {
-    id: string;
-    name: string;
-    role: PersonRole;
-    sector?: string;
-    contact?: string;
-    phone?: string;
-    email?: string;
-    active: boolean;
-};
+import PeopleTable, {
+    type Person,
+    type PersonRole,
+} from "../components/PeopleTable";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -336,7 +321,6 @@ export default function PessoasPage() {
                                 </div>
                             </div>
 
-
                             {filteredPeople.length === 0 ? (
                                 <div className="px-6 py-16 text-center">
                                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-300">
@@ -357,81 +341,18 @@ export default function PessoasPage() {
                                 </div>
                             ) : (
                                 <div className="p-5">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full min-w-[760px] text-left text-sm">
-                                            <thead className="bg-white/[0.03] text-xs uppercase text-slate-400">
-                                                <tr>
-                                                    <th className="px-5 py-4">Nome</th>
-                                                    <th className="px-5 py-4">Função</th>
-                                                    <th className="px-5 py-4">Setor</th>
-                                                    <th className="px-5 py-4">Telefone</th>
-                                                    <th className="px-5 py-4">E-mail</th>
-                                                    <th className="px-5 py-4">Situação</th>
-                                                    <th className="px-5 py-4">Ações</th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody className="divide-y divide-white/5">
-                                                {paginatedPeople.map((person) => (
-                                                    <tr
-                                                        key={person.id}
-                                                        className="transition hover:bg-white/[0.02]"
-                                                    >
-                                                        <td className="px-5 py-4 font-medium">{person.name}</td>
-                                                        <td className="px-5 py-4 text-slate-300">{person.role}</td>
-                                                        <td className="px-5 py-4 text-slate-300">{person.sector || "—"}</td>
-                                                        <td className="px-5 py-4 text-slate-300">{person.phone || "—"}</td>
-                                                        <td className="px-5 py-4 text-slate-300">{person.email || "—"}</td>
-
-                                                        <td className="px-5 py-4">
-                                                            <span
-                                                                className={`inline-flex rounded-full border px-3 py-1 text-xs ${person.active
-                                                                    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                                                                    : "border-amber-400/20 bg-amber-400/10 text-amber-300"
-                                                                    }`}
-                                                            >
-                                                                {person.active ? "Ativa" : "Inativa"}
-                                                            </span>
-                                                        </td>
-
-                                                        <td className="px-5 py-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openEditForm(person)}
-                                                                    className="text-cyan-300 hover:text-cyan-200"
-                                                                >
-                                                                    Editar
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => togglePersonStatus(person.id)}
-                                                                    className={
-                                                                        person.active
-                                                                            ? "text-amber-300 hover:text-amber-200"
-                                                                            : "text-emerald-300 hover:text-emerald-200"
-                                                                    }
-                                                                >
-                                                                    {person.active ? "Inativar" : "Ativar"}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <Pagination
+                                    <PeopleTable
+                                        people={paginatedPeople}
                                         currentPage={currentPage}
-                                        totalItems={filteredPeople.length}
                                         itemsPerPage={itemsPerPage}
+                                        totalItems={filteredPeople.length}
+                                        onEdit={openEditForm}
+                                        onToggleStatus={togglePersonStatus}
                                         onPageChange={setCurrentPage}
                                     />
-
                                 </div>
                             )}
+
                         </section>
 
                         <p className="text-xs text-slate-500">
