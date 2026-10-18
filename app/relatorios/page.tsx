@@ -271,13 +271,31 @@ export default function RelatoriosPage() {
 
                 {(["inventory", "maintenance", "people"] as const).map((group) => (
                   <div key={group} className="mb-5 last:mb-0">
-                    <h3 className="mb-3 font-medium text-slate-200">
-                      {group === "inventory"
-                        ? "Inventário de equipamentos"
-                        : group === "maintenance"
-                          ? "Ordens de manutenção"
-                          : "Pessoas cadastradas"}
-                    </h3>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-medium text-slate-200">
+                        {group === "inventory"
+                          ? "Inventário de equipamentos"
+                          : group === "maintenance"
+                            ? "Ordens de manutenção"
+                            : "Pessoas cadastradas"}
+                      </h3>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const groupFieldIds = exportFields
+                            .filter((field) => field.group === group)
+                            .map((field) => field.id);
+
+                          setSelectedFields((current) =>
+                            current.filter((id) => !groupFieldIds.includes(id))
+                          );
+                        }}
+                        className="text-sm font-medium text-slate-400 transition hover:text-cyan-300"
+                      >
+                        Desmarcar todos
+                      </button>
+                    </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {exportFields
