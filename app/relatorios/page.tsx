@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/BackToDashboard";
 import ExportReportButtons from "../components/ExportReportButtons";
+import BackupButton from "../components/BackupButton";
+import ImportBackupButton from "../components/ImportBackupButton";
 import { exportToCSV, exportToPDF } from "./reportExport";
+import { exportBackup } from "./backup";
+import { importBackup } from "./import";
 import MaintenanceTable from "../components/MaintenanceTable";
 import InventoryTable from "../components/InventoryTable";
 import PeopleTable, { type Person } from "../components/PeopleTable";
@@ -95,6 +99,42 @@ export default function RelatoriosPage() {
   const [selectedFields, setSelectedFields] = useState<ExportFieldId[]>(
     exportFields.map((field) => field.id)
   );
+
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
+
+
+  async function handleImportBackup(file: File) {
+    try {
+      const imported = await importBackup(file);
+
+      if (!imported) {
+        return;
+      }
+
+      const inventoryData = localStorage.getItem(
+        "vrstudiolab-inventory-v1"
+      );
+      const maintenanceData = localStorage.getItem(
+        "vrstudiolab-maintenance-v1"
+      );
+      const peopleData = localStorage.getItem(
+        "vrstudiolab-maintenance-people-v1"
+      );
+
+      setEquipment(inventoryData ? JSON.parse(inventoryData) : []);
+      setOrders(maintenanceData ? JSON.parse(maintenanceData) : []);
+      setPeople(peopleData ? JSON.parse(peopleData) : []);
+
+      alert("Backup importado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao importar backup:", error);
+
+      alert(
+        "Não foi possível importar o backup. Verifique se o arquivo é válido."
+      );
+    }
+  }
+
 
   useEffect(() => {
     try {
@@ -242,6 +282,29 @@ export default function RelatoriosPage() {
                   onExportCSV={() => exportToCSV(equipment, orders, selectedFields, people)}
                   onExportPDF={() => exportToPDF(equipment, orders, selectedFields, people)}
                   disabled={!ready || selectedFields.length === 0}
+                />
+                <BackupButton
+                  onClick={exportBackup}
+                  disabled={!ready || !peopleReady}
+                />
+                <ImportBackupButton
+                  onClick={() => backupFileInputRef.current?.click()}
+                  disabled={!ready || !peopleReady}
+                />
+                <input
+                  ref={backupFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+
+                    if (file) {
+                      void handleImportBackup(file);
+                    }
+
+                    event.target.value = "";
+                  }}
                 />
               </div>
             </header>
