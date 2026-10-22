@@ -1,35 +1,15 @@
-
 "use client";
 
-type InventoryStatus =
-  | "Disponível"
-  | "Em uso"
-  | "Manutenção"
-  | "Baixado";
-
-type InventoryEquipment = {
-  id: number;
-  name: string;
-  assetNumber: string;
-  status: InventoryStatus;
-};
-
-type PersonRole = "Aluno" | "Técnico" | "Responsável autorizado";
-
-type MaintenancePerson = {
-  id: string;
-  name: string;
-  role: PersonRole;
-  active: boolean;
-};
+import type { Equipment } from "../../../types/equipment";
+import type { Person } from "../../../types/person";
 
 type MaintenanceModalProps = {
   open: boolean;
   equipmentId: string;
   problem: string;
   assignedPersonId: string;
-  inventory: InventoryEquipment[];
-  people: MaintenancePerson[];
+  inventory: Pick<Equipment, "id" | "name" | "assetNumber" | "status">[];
+  people: Person[];
   inputClass: string;
   onEquipmentChange: (value: string) => void;
   onProblemChange: (value: string) => void;

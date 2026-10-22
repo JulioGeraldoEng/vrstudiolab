@@ -4,57 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
-import BackToDashboard from "../components/BackToDashboard";
-import ExportReportButtons from "../components/ExportReportButtons";
-import BackupButton from "../components/BackupButton";
-import ImportBackupButton from "../components/ImportBackupButton";
+import BackToDashboard from "../components/buttons/BackToDashboard";
+import ExportReportButtons from "../components/buttons/ExportReportButtons";
+import BackupButton from "../components/buttons/BackupButton";
+import ImportBackupButton from "../components/buttons/ImportBackupButton";
 import { exportToCSV, exportToPDF } from "./reportExport";
 import { exportBackup } from "./backup";
 import { importBackup } from "./import";
-import MaintenanceTable from "../components/MaintenanceTable";
-import InventoryTable from "../components/InventoryTable";
-import PeopleTable, { type Person } from "../components/PeopleTable";
-
-type InventoryStatus =
-  | "Disponível"
-  | "Em uso"
-  | "Manutenção"
-  | "Baixado";
-
-type Equipment = {
-  id: number;
-  name: string;
-  assetNumber?: string;
-  status: InventoryStatus;
-  category?: string;
-  serialNumber?: string;
-  location?: string;
-  operatingSystem?: string;
-  notes?: string;
-};
-
-type MaintenanceStatus =
-  | "Aberta"
-  | "Em andamento"
-  | "Aguardando peças"
-  | "Concluída";
-
-type MaintenanceOrder = {
-  id: string;
-  orderNumber: string;
-  equipment: string;
-  equipmentId?: number;
-  problem: string;
-  responsible: string;
-  openingDate: string;
-  status: MaintenanceStatus;
-  assetNumber?: string;
-  serviceNotes?: string;
-  completionDate?: string;
-  assignedPersonName?: string;
-  performedByName?: string;
-  releasedByName?: string;
-};
+import MaintenanceTable from "../components/tables/MaintenanceTable";
+import InventoryTable from "../components/tables/EquipmentTable";
+import PeopleTable from "../components/tables/PeopleTable";
+import type { Person } from "../../types/person";
+import type { Equipment, Status } from "../../types/equipment";
+import type {
+  MaintenanceOrder,
+  MaintenanceStatus,
+} from "../../types/maintenance";
 
 const inventoryKey = "vrstudiolab-inventory-v1";
 const maintenanceKey = "vrstudiolab-maintenance-v1";
@@ -260,7 +225,7 @@ export default function RelatoriosPage() {
         <section className="min-w-0 flex-1 p-4 sm:p-8">
           <div className="mx-auto max-w-7xl space-y-8">
 
-            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <header>
               <div>
                 <BackToDashboard />
 
@@ -276,42 +241,12 @@ export default function RelatoriosPage() {
                   Resumo do inventário e das ordens de manutenção.
                 </p>
               </div>
-
-              <div className="flex flex-wrap gap-3">
-                <ExportReportButtons
-                  onExportCSV={() => exportToCSV(equipment, orders, selectedFields, people)}
-                  onExportPDF={() => exportToPDF(equipment, orders, selectedFields, people)}
-                  disabled={!ready || selectedFields.length === 0}
-                />
-                <BackupButton
-                  onClick={exportBackup}
-                  disabled={!ready || !peopleReady}
-                />
-                <ImportBackupButton
-                  onClick={() => backupFileInputRef.current?.click()}
-                  disabled={!ready || !peopleReady}
-                />
-                <input
-                  ref={backupFileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-
-                    if (file) {
-                      void handleImportBackup(file);
-                    }
-
-                    event.target.value = "";
-                  }}
-                />
-              </div>
             </header>
 
             {ready && (
               <section className="mb-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+
+                <div className="mb-5 flex flex-col gap-4">
                   <div>
                     <h2 className="text-lg font-semibold">
                       Campos do relatório
@@ -319,17 +254,59 @@ export default function RelatoriosPage() {
                     <p className="mt-1 text-sm text-slate-400">
                       Marque as informações que deseja incluir na exportação.
                     </p>
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                    <h2 className="mt-1 text-sm text-slate-400">
+                      Exportação e backup
+                    </h2>
+                    </div>
+                  </div>
+                  
+
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    <ExportReportButtons
+                      onExportCSV={() => exportToCSV(equipment, orders, selectedFields, people)}
+                      onExportPDF={() => exportToPDF(equipment, orders, selectedFields, people)}
+                      disabled={!ready || selectedFields.length === 0}
+                    />
+
+                    <BackupButton
+                      onClick={exportBackup}
+                      disabled={!ready || !peopleReady}
+                    />
+
+                    <ImportBackupButton
+                      onClick={() => backupFileInputRef.current?.click()}
+                      disabled={!ready || !peopleReady}
+                    />
+
+                    <input
+                      ref={backupFileInputRef}
+                      type="file"
+                      accept=".json,application/json"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+
+                        if (file) {
+                          void handleImportBackup(file);
+                        }
+
+                        event.target.value = "";
+                      }}
+                    />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedFields(exportFields.map((field) => field.id))
-                    }
-                    className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
-                  >
-                    Marcar todos
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedFields(exportFields.map((field) => field.id))
+                      }
+                      className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+                    >
+                      Marcar todos
+                    </button>
+                  </div>
                 </div>
 
                 {(["inventory", "maintenance", "people"] as const).map((group) => (

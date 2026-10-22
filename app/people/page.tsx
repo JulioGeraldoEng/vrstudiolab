@@ -4,13 +4,10 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import Cards from "../components/Cards";
-import { Pagination } from "../components/Pagination";
-import BackToDashboard from "../components/BackToDashboard";
-import PersonModal from "../components/PersonModal";
-import PeopleTable, {
-    type Person,
-    type PersonRole,
-} from "../components/PeopleTable";
+import BackToDashboard from "../components/buttons/BackToDashboard";
+import PersonModal from "../components/modals/PersonModal";
+import PeopleTable from "../components/tables/PeopleTable";
+import type { Person, PersonRole } from "../../types/person";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -249,15 +246,7 @@ export default function PessoasPage() {
                                 </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-3">
-                                <button
-                                    type="button"
-                                    onClick={openNewForm}
-                                    className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                                >
-                                    + Cadastrar pessoa
-                                </button>
-                            </div>
+
                         </header>
 
                         {/* Cards padronizados unificados */}
@@ -299,9 +288,10 @@ export default function PessoasPage() {
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col gap-3 sm:flex-row">
+
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                     <input
-                                        className={inputClass}
+                                        className={`${inputClass} sm:w-64 sm:flex-none`}
                                         value={search}
                                         onChange={(event) => setSearch(event.target.value)}
                                         placeholder="Buscar nome, função ou setor..."
@@ -309,7 +299,7 @@ export default function PessoasPage() {
                                     />
 
                                     <select
-                                        className={inputClass}
+                                        className={`${inputClass} sm:w-64 sm:flex-none`}
                                         value={filter}
                                         onChange={(event) => setFilter(event.target.value)}
                                         aria-label="Filtrar pessoas por situação"
@@ -318,7 +308,16 @@ export default function PessoasPage() {
                                         <option value="Ativas">Somente ativas</option>
                                         <option value="Inativas">Somente inativas</option>
                                     </select>
+
+                                    <button
+                                        type="button"
+                                        onClick={openNewForm}
+                                        className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                                    >
+                                        + Cadastrar pessoa
+                                    </button>
                                 </div>
+
                             </div>
 
                             {filteredPeople.length === 0 ? (

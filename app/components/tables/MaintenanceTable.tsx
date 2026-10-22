@@ -1,20 +1,8 @@
-import { Pagination } from "./Pagination";
-
-type MaintenanceStatus =
-  | "Aberta"
-  | "Em andamento"
-  | "Aguardando peças"
-  | "Concluída";
-
-type MaintenanceOrder = {
-  id: string;
-  orderNumber: string;
-  equipment: string;
-  problem: string;
-  responsible: string;
-  openingDate: string;
-  status: MaintenanceStatus;
-};
+import { Pagination } from "../Pagination";
+import type {
+  MaintenanceOrder,
+  MaintenanceStatus,
+} from "../../../types/maintenance";
 
 type MaintenanceTableProps = {
   orders: MaintenanceOrder[];
@@ -88,7 +76,7 @@ export default function MaintenanceTable({
                 </span>
               </td>
 
-              {showActions && onStatusChange&& (
+              {showActions && onStatusChange && (
                 <td className="px-5 py-4">
                   <select
                     value={order.status}

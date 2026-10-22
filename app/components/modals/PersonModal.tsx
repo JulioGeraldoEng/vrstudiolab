@@ -1,13 +1,6 @@
-
 "use client";
 
-type PersonRole =
-    | "Aluno"
-    | "Técnico"
-    | "Responsável autorizado"
-    | "Professor"
-    | "Gestor"
-    | "Colaborador";
+import type { PersonRole } from "../../../types/person";
 
 type PersonFormData = {
     name: string;
