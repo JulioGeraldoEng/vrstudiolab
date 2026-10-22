@@ -1,25 +1,9 @@
 "use client";
 
-import { Pagination } from "./Pagination";
-
-export type PersonRole =
-    | "Aluno"
-    | "Técnico"
-    | "Responsável autorizado"
-    | "Professor"
-    | "Gestor"
-    | "Colaborador";
-
-export type Person = {
-    id: string;
-    name: string;
-    role: PersonRole;
-    sector?: string;
-    contact?: string;
-    phone?: string;
-    email?: string;
-    active: boolean;
-};
+import { Pagination } from "../Pagination";
+import EditButton from "../buttons/EditButton";
+import ToggleStatusButton from "../buttons/ToggleStatusButton";
+import type { Person } from "../../../types/person";
 
 type PeopleTableProps = {
     people: Person[];
@@ -100,27 +84,12 @@ export default function PeopleTable({
                                 {showActions && (
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => onEdit(person)}
-                                                className="text-cyan-300 transition-colors hover:text-cyan-200"
-                                            >
-                                                Editar
-                                            </button>
+                                            <EditButton onClick={() => onEdit(person)} />
 
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    onToggleStatus(person.id)
-                                                }
-                                                className={
-                                                    person.active
-                                                        ? "text-amber-300 transition-colors hover:text-amber-200"
-                                                        : "text-emerald-300 transition-colors hover:text-emerald-200"
-                                                }
-                                            >
-                                                {person.active ? "Inativar" : "Ativar"}
-                                            </button>
+                                            <ToggleStatusButton
+                                                active={person.active}
+                                                onClick={() => onToggleStatus(person.id)}
+                                            />
                                         </div>
                                     </td>
                                 )}

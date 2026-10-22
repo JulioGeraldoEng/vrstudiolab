@@ -5,6 +5,7 @@ import {
   seedEquipments,
   seedPeople,
   seedMaintenanceOrders,
+  seedRooms,
 } from "./dados";
 
 export default function SeedPage() {
@@ -12,7 +13,7 @@ export default function SeedPage() {
 
   function loadSeedData() {
     const confirmed = window.confirm(
-      "Atenção: os registros atuais de equipamentos, pessoas e manutenção serão substituídos pelos dados de teste. Deseja continuar?"
+      "Atenção: os registros atuais de equipamentos, pessoas, salas e manutenção serão substituídos pelos dados de teste. Deseja continuar?"
     );
 
     if (!confirmed) return;
@@ -51,8 +52,13 @@ export default function SeedPage() {
         JSON.stringify(seedMaintenanceOrders)
       );
 
+      localStorage.setItem(
+        "vrstudiolab-rooms-v1",
+        JSON.stringify(seedRooms)
+      );
+
       setMessage(
-        "Dados de teste carregados! Atualize as páginas de inventário, pessoas e manutenção para visualizar os registros."
+        "Dados de teste carregados! Atualize as páginas de equipamentos, pessoas, manutenção e reservas para visualizar os registros."
       );
     } catch (error) {
       console.error("Erro ao carregar os dados de teste:", error);
@@ -72,7 +78,7 @@ export default function SeedPage() {
 
         <p className="mb-6 text-slate-300">
           Esta ferramenta substitui os registros atuais por 20 equipamentos,
-          20 pessoas e 20 ordens de manutenção fictícias.
+          20 pessoas, 20 ordens de manutenção e 3 salas fictícias.
         </p>
 
         <button

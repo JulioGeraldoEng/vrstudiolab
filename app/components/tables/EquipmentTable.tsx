@@ -1,19 +1,8 @@
-
-import { Pagination } from "./Pagination";
-
-type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
-
-type Equipment = {
-  id: number;
-  name: string;
-  category: string;
-  assetNumber: string;
-  serialNumber: string;
-  location: string;
-  status: Status;
-  operatingSystem: string;
-  notes: string;
-};
+import { Pagination } from "../Pagination";
+import EditButton from "../buttons/EditButton";
+import DeleteButton from "../buttons/DeleteButton";
+import type { Status } from "../../../types/equipment";
+import type { Equipment } from "../../../types/equipment";
 
 type InventoryTableProps = {
   items: Equipment[];
@@ -128,23 +117,11 @@ export default function InventoryTable({
                   <td className="px-5 py-4">
                     <div className="flex gap-3">
                       {onEdit && (
-                        <button
-                          type="button"
-                          onClick={() => onEdit(item)}
-                          className="text-blue-400 transition-colors duration-200 hover:text-blue-300"
-                        >
-                          Editar
-                        </button>
+                        <EditButton onClick={() => onEdit(item)} />
                       )}
 
                       {onDelete && (
-                        <button
-                          type="button"
-                          onClick={() => onDelete(item)}
-                          className="text-red-400 transition-colors duration-200 hover:text-red-300"
-                        >
-                          Excluir
-                        </button>
+                        <DeleteButton onClick={() => onDelete(item)} />
                       )}
                     </div>
                   </td>

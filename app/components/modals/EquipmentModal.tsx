@@ -1,4 +1,5 @@
-type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
+import { categories, statuses } from "../../../types/equipment";
+import type { Status } from "../../../types/equipment";
 
 type EquipmentFormValues = {
   name: string;
@@ -19,18 +20,6 @@ type EquipmentModalProps = {
   setForm: (form: EquipmentFormValues) => void;
   isEditing: boolean;
 };
-
-const categories = [
-  "Óculos VR",
-  "Computadores",
-  "Acessórios",
-  "Sensores",
-  "Áudio e vídeo",
-  "Iluminação",
-  "Outros",
-];
-
-const statuses: Status[] = ["Disponível", "Em uso", "Manutenção", "Baixado"];
 
 export default function EquipmentModal({
   isOpen,

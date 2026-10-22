@@ -1,15 +1,9 @@
+import type { Equipment } from "../../types/equipment";
+import type { Person } from "../../types/person";
+import type { MaintenanceOrder } from "../../types/maintenance";
+import type { Room } from "../../types/room";
 
-export type SeedEquipment = {
-  id: number;
-  name: string;
-  category: string;
-  assetNumber: string;
-  serialNumber: string;
-  location: string;
-  status: "Disponível" | "Em uso" | "Manutenção" | "Baixado";
-  operatingSystem: string;
-  notes: string;
-};
+export type SeedEquipment = Equipment;
 
 export const seedEquipments: SeedEquipment[] = [
   { id: 1001, name: "Meta Quest 3 - Unidade 01", category: "Óculos VR", assetNumber: "VR-001", serialNumber: "MQ3-TEST-001", location: "Armário A1", status: "Disponível", operatingSystem: "Meta Horizon OS", notes: "Equipamento de teste" },
@@ -34,23 +28,7 @@ export const seedEquipments: SeedEquipment[] = [
   { id: 1020, name: "Câmera de gravação 01", category: "Outros", assetNumber: "OUT-001", serialNumber: "CAM-TEST-001", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Gravação de atividades" },
 ];
 
-
-export type SeedPerson = {
-  id: string;
-  name: string;
-  role:
-    | "Aluno"
-    | "Técnico"
-    | "Responsável autorizado"
-    | "Professor"
-    | "Gestor"
-    | "Colaborador";
-  sector?: string;
-  contact?: string;
-  phone?: string;
-  email?: string;
-  active: boolean;
-};
+export type SeedPerson = Person;
 
 export const seedPeople: SeedPerson[] = [
   { id: "seed-person-001", name: "Ana Souza", role: "Técnico", sector: "Suporte técnico", phone: "(18) 99100-0001", email: "ana.souza@example.com", active: true },
@@ -75,31 +53,33 @@ export const seedPeople: SeedPerson[] = [
   { id: "seed-person-020", name: "Tiago Fernandes", role: "Responsável autorizado", sector: "Coordenação", phone: "(18) 99100-0020", email: "tiago.fernandes@example.com", active: true },
 ];
 
+export type SeedRoom = Room;
 
-export type SeedMaintenanceOrder = {
-  id: string;
-  orderNumber: string;
-  equipment: string;
-  equipmentId?: number;
-  assetNumber?: string;
-  previousEquipmentStatus?: SeedEquipment["status"];
-  problem: string;
-  responsible: string;
-  openingDate: string;
-  status:
-    | "Aberta"
-    | "Em andamento"
-    | "Aguardando peças"
-    | "Concluída";
-  serviceNotes?: string;
-  completionDate?: string;
-  assignedPersonId?: string;
-  assignedPersonName?: string;
-  performedByPersonId?: string;
-  performedByName?: string;
-  releasedByPersonId?: string;
-  releasedByName?: string;
-};
+export const seedRooms: SeedRoom[] = [
+  {
+    id: "seed-room-001",
+    name: "Sala de Realidade Virtual 01",
+    location: "Bloco de Laboratórios",
+    capacity: 10,
+    active: true,
+  },
+  {
+    id: "seed-room-002",
+    name: "Estúdio Audiovisual",
+    location: "Bloco de Laboratórios",
+    capacity: 8,
+    active: true,
+  },
+  {
+    id: "seed-room-003",
+    name: "Sala de Edição",
+    location: "Laboratório Audiovisual",
+    capacity: 6,
+    active: true,
+  },
+];
+
+export type SeedMaintenanceOrder = MaintenanceOrder;
 
 export const seedMaintenanceOrders: SeedMaintenanceOrder[] = [
   { id: "seed-order-001", orderNumber: "OS-SEED-001", equipment: "Meta Quest 3 - Unidade 01", equipmentId: 1001, assetNumber: "VR-001", previousEquipmentStatus: "Disponível", problem: "Falha intermitente no rastreamento", responsible: "Ana Souza", openingDate: "2026-01-05", status: "Concluída", serviceNotes: "Sensores testados e funcionamento validado.", completionDate: "2026-01-06", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza", performedByPersonId: "seed-person-002", performedByName: "Bruno Oliveira", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },

@@ -4,24 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
-import EquipmentModal from "../components/EquipmentModal";
+import EquipmentModal from "../components/modals/EquipmentModal";
 import Footer from "../components/Footer";
-import BackToDashboard from "../components/BackToDashboard";
-import InventoryTable from "../components/InventoryTable";
-
-type Status = "Disponível" | "Em uso" | "Manutenção" | "Baixado";
-
-type Equipment = {
-  id: number;
-  name: string;
-  category: string;
-  assetNumber: string;
-  serialNumber: string;
-  location: string;
-  status: Status;
-  operatingSystem: string;
-  notes: string;
-};
+import BackToDashboard from "../components/buttons/BackToDashboard";
+import EquipmentTable from "../components/tables/EquipmentTable";
+import { categories, statuses } from "../../types/equipment";
+import type { Equipment, Status } from "../../types/equipment";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 
@@ -35,27 +23,6 @@ const emptyForm = {
   operatingSystem: "",
   notes: "",
 };
-
-const categories = [
-  "Óculos VR",
-  "Computadores",
-  "Notebooks",
-  "Televisores",
-  "Monitores",
-  "Acessórios",
-  "Sensores",
-  "Áudio e vídeo",
-  "Iluminação",
-  "Outros",
-];
-
-
-const statuses: Status[] = [
-  "Disponível",
-  "Em uso",
-  "Manutenção",
-  "Baixado",
-];
 
 const statusStyles: Record<Status, string> = {
   "Disponível": "bg-emerald-400/10 text-emerald-300",
@@ -80,7 +47,6 @@ export default function InventoryPage() {
     setCurrentPage(1);
   }, [search, statusFilter, categoryFilter]);
 
-
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -98,14 +64,13 @@ export default function InventoryPage() {
       }
     } catch (error) {
       console.error(
-        "Não foi possível carregar o inventário salvo.",
+        "Não foi possível carregar o equipamento salvo.",
         error
       );
     } finally {
       setReady(true);
     }
   }, []);
-
 
   useEffect(() => {
     if (ready) {
@@ -191,7 +156,7 @@ export default function InventoryPage() {
       setEditingId(null);
       setForm({ ...emptyForm });
     } catch (error) {
-      console.error("Erro ao salvar o inventário:", error);
+      console.error("Erro ao salvar o equipamento:", error);
       window.alert(
         "Não foi possível salvar os dados. Verifique o armazenamento do navegador."
       );
@@ -214,7 +179,7 @@ export default function InventoryPage() {
       setItems(updatedItems);
     } catch (error) {
       console.error("Erro ao excluir equipamento:", error);
-      window.alert("Não foi possível atualizar o inventário salvo.");
+      window.alert("Não foi possível atualizar o equipamento salvo.");
     }
   }
 
@@ -238,20 +203,11 @@ export default function InventoryPage() {
                   VR STUDIO LAB
                 </p>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Inventário
+                  Equipamentos
                 </h1>
                 <p className="mt-2 text-sm text-slate-400">
                   Gerencie equipamentos, patrimônio e localização.
                 </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={openNewForm}
-                  className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                >
-                  + Novo equipamento
-                </button>
               </div>
             </header>
 
@@ -291,41 +247,61 @@ export default function InventoryPage() {
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-[#101c2e]">
-              <div className="grid gap-3 border-b border-white/10 p-4 md:grid-cols-3">
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Pesquisar equipamentos..."
-                  aria-label="Pesquisar equipamentos"
-                  className="rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400"
-                />
 
-                <select
-                  value={categoryFilter}
-                  onChange={(event) => setCategoryFilter(event.target.value)}
-                  aria-label="Filtrar por categoria"
-                  className="rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400"
-                >
-                  <option value="Todas">Todas as categorias</option>
-                  {categories.map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
+              <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Cadastro de equipamentos
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {filteredItems.length} registro(s) encontrado(s)
+                    </p>
+                  </div>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Pesquisar equipamentos..."
+                    aria-label="Pesquisar equipamentos"
+                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-64"
+                  />
 
-                <select
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value)}
-                  aria-label="Filtrar por status"
-                  className="rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none focus:border-cyan-400"
+                  <select
+                    value={categoryFilter}
+                    onChange={(event) => setCategoryFilter(event.target.value)}
+                    aria-label="Filtrar por categoria"
+                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-56"
+                  >
+                    <option value="Todas">Todas as categorias</option>
+                    {categories.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    aria-label="Filtrar por status"
+                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-48"
+                  >
+                    <option value="Todos">Todos os status</option>
+                    {statuses.map((status) => (
+                      <option key={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openNewForm}
+                  className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
                 >
-                  <option value="Todos">Todos os status</option>
-                  {statuses.map((status) => (
-                    <option key={status}>{status}</option>
-                  ))}
-                </select>
+                  + Novo equipamento
+                </button>
               </div>
 
-              <InventoryTable
+
+              <EquipmentTable
                 items={paginatedItems}
                 ready={ready}
                 onEdit={openEditForm}

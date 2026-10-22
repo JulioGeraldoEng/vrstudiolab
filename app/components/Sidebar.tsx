@@ -1,16 +1,15 @@
-
 "use client";
-
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 const navigation = [
   { name: "Visão geral", icon: "dashboard", href: "/" },
-  { name: "Equipamentos", icon: "equipment", href: "/inventario" },
-  { name: "Manutenção", icon: "maintenance", href: "/manutencao" },
-  { name: "Pessoas", icon: "people", href: "/pessoas" },
-  { name: "Relatórios", icon: "reports", href: "/relatorios" },
+  { name: "Equipamentos", icon: "equipment", href: "/equipment" },
+  { name: "Manutenção", icon: "maintenance", href: "/maintenance" },
+  { name: "Pessoas", icon: "people", href: "/people" },
+  { name: "Reservas", icon: "reservations", href: "/reservations" },
+  { name: "Relatórios", icon: "reports", href: "/reports" },
 ];
 
 type SidebarProps = {
@@ -66,6 +65,15 @@ function NavigationIcon({ name }: { name: string }) {
         </svg>
       );
 
+    case "reservations":
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M16 3v4M8 3v4M3 10h18" />
+          <path d="m9 15 2 2 4-4" />
+        </svg>
+      );
+
     case "reports":
       return (
         <svg {...common}>
@@ -117,8 +125,10 @@ export default function Sidebar({
     mobile = false,
   ) {
     const active =
-      activePage === item.name ||
-      (item.name === "Visão geral" && activePage === "");
+      pathname === item.href ||
+      pathname === `${item.href}/` ||
+      (activePage === item.name &&
+        (item.name !== "Visão geral" || pathname === "/"));
 
     if (mobile) {
       return (
@@ -235,8 +245,8 @@ export default function Sidebar({
               collapsed ? "Expandir menu" : "Recolher menu"
             }
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-cyan-300 ${collapsed ? "ml-0" : "ml-auto"
-            }`}          
-            >
+              }`}
+          >
             <svg
               width="19"
               height="19"

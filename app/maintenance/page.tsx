@@ -4,67 +4,17 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Cards from "../components/Cards";
 import Footer from "../components/Footer";
-import BackToDashboard from "../components/BackToDashboard";
-import MaintenanceModal from "../components/MaintenanceModal";
-import MaintenanceTable from "../components/MaintenanceTable";
-
-type MaintenanceStatus =
-  | "Aberta"
-  | "Em andamento"
-  | "Aguardando peças"
-  | "Concluída";
-
-type InventoryStatus =
-  | "Disponível"
-  | "Em uso"
-  | "Manutenção"
-  | "Baixado";
-
-type InventoryEquipment = {
-  id: number;
-  name: string;
-  category: string;
-  assetNumber: string;
-  serialNumber: string;
-  location: string;
-  status: InventoryStatus;
-  notes: string;
-};
-
-type PersonRole =
-  | "Aluno"
-  | "Técnico"
-  | "Responsável autorizado";
-
-type MaintenancePerson = {
-  id: string;
-  name: string;
-  role: PersonRole;
-  active: boolean;
-};
+import BackToDashboard from "../components/buttons/BackToDashboard";
+import MaintenanceModal from "../components/modals/MaintenanceModal";
+import MaintenanceTable from "../components/tables/MaintenanceTable";
+import type { Equipment, Status } from "../../types/equipment";
+import type { Person } from "../../types/person";
+import type {
+  MaintenanceOrder,
+  MaintenanceStatus,
+} from "../../types/maintenance";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
-
-type MaintenanceOrder = {
-  id: string;
-  orderNumber: string;
-  equipment: string;
-  equipmentId?: number;
-  assetNumber?: string;
-  previousEquipmentStatus?: InventoryStatus;
-  problem: string;
-  responsible: string;
-  openingDate: string;
-  status: MaintenanceStatus;
-  serviceNotes?: string;
-  completionDate?: string;
-  assignedPersonId?: string;
-  assignedPersonName?: string;
-  performedByPersonId?: string;
-  performedByName?: string;
-  releasedByPersonId?: string;
-  releasedByName?: string;
-};
 
 const STORAGE_KEY = "vrstudiolab-maintenance-v1";
 
@@ -93,12 +43,12 @@ export default function ManutencaoPage() {
   const [equipmentId, setEquipmentId] = useState("");
   const [problem, setProblem] = useState("");
   const [inventory, setInventory] =
-    useState<InventoryEquipment[]>([]);
+    useState<Equipment[]>([]);
 
   const [historyEquipmentId, setHistoryEquipmentId] =
     useState("");
 
-  const [people, setPeople] = useState<MaintenancePerson[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
 
   const [assignedPersonId, setAssignedPersonId] = useState("");
 
@@ -180,7 +130,7 @@ export default function ManutencaoPage() {
         const parsedInventory: unknown = JSON.parse(savedInventory);
 
         if (Array.isArray(parsedInventory)) {
-          setInventory(parsedInventory as InventoryEquipment[]);
+          setInventory(parsedInventory as Equipment[]);
         }
       }
 
@@ -190,7 +140,7 @@ export default function ManutencaoPage() {
         const parsedPeople: unknown = JSON.parse(savedPeople);
 
         if (Array.isArray(parsedPeople)) {
-          setPeople(parsedPeople as MaintenancePerson[]);
+          setPeople(parsedPeople as Person[]);
         }
       }
     } catch (error) {
@@ -218,7 +168,7 @@ export default function ManutencaoPage() {
       "vrstudiolab-inventory-v1"
     );
 
-    const currentInventory: InventoryEquipment[] = savedInventory
+    const currentInventory: Equipment[] = savedInventory
       ? JSON.parse(savedInventory)
       : [];
 
@@ -293,7 +243,7 @@ export default function ManutencaoPage() {
 
     const updatedInventory = currentInventory.map((item) =>
       item.id === selectedEquipment.id
-        ? { ...item, status: "Manutenção" as InventoryStatus }
+        ? { ...item, status: "Manutenção" as Status }
         : item
     );
 
@@ -375,7 +325,7 @@ export default function ManutencaoPage() {
       "vrstudiolab-inventory-v1"
     );
 
-    const currentInventory: InventoryEquipment[] = savedInventory
+    const currentInventory: Equipment[] = savedInventory
       ? JSON.parse(savedInventory)
       : [];
 
@@ -392,13 +342,13 @@ export default function ManutencaoPage() {
       if (!completionIsReleased || hasAnotherActiveOrder) {
         return {
           ...item,
-          status: "Manutenção" as InventoryStatus,
+          status: "Manutenção" as Status,
         };
       }
 
       return {
         ...item,
-        status: "Disponível" as InventoryStatus,
+        status: "Disponível" as Status,
       };
     });
 
@@ -464,7 +414,7 @@ export default function ManutencaoPage() {
       "vrstudiolab-inventory-v1"
     );
 
-    const currentInventory: InventoryEquipment[] = savedInventory
+    const currentInventory: Equipment[] = savedInventory
       ? JSON.parse(savedInventory)
       : [];
 
@@ -536,7 +486,7 @@ export default function ManutencaoPage() {
 
     const updatedInventory = currentInventory.map((item) =>
       item.id === equipmentId
-        ? { ...item, status: "Disponível" as InventoryStatus }
+        ? { ...item, status: "Disponível" as Status }
         : item
     );
 
@@ -648,18 +598,6 @@ export default function ManutencaoPage() {
                 <p className="mt-2 text-sm text-slate-400">
                   Controle de serviços e ordens de manutenção.
                 </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(true);
-                  }}
-                  className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                >
-                  + Nova ordem de serviço
-                </button>
               </div>
             </header>
 
@@ -871,17 +809,14 @@ export default function ManutencaoPage() {
                 </div>
 
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <input
-                    className={`${inputClass} sm:max-w-xs`}
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar equipamento ou serviço..."
-                  />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">                  <input
+                  className={`${inputClass} sm:w-64 sm:flex-none`} value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar equipamento ou serviço..."
+                />
 
                   <select
-                    className={`${inputClass} sm:w-52`}
-                    value={statusFilter}
+                    className={`${inputClass} sm:w-64 sm:flex-none`} value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
                     aria-label="Filtrar ordens por status"
                   >
@@ -891,6 +826,17 @@ export default function ManutencaoPage() {
                     <option value="Aguardando peças">Aguardando peças</option>
                     <option value="Concluída">Concluída</option>
                   </select>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForm(true);
+                      }}
+                      className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
+                      + Nova ordem de serviço
+                    </button>
+                  </div>
                 </div>
 
               </div>
@@ -918,155 +864,155 @@ export default function ManutencaoPage() {
               )}
             </section>
 
-              <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
-                <div className="border-b border-white/10 p-5">
-                  <h2 className="text-lg font-semibold">
-                    Histórico por equipamento
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Consulte os defeitos e serviços anteriores de cada equipamento.
-                  </p>
+            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+              <div className="border-b border-white/10 p-5">
+                <h2 className="text-lg font-semibold">
+                  Histórico por equipamento
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Consulte os defeitos e serviços anteriores de cada equipamento.
+                </p>
 
-                  <div className="mt-4">
-                    <label className="mb-2 block text-sm text-slate-300">
-                      Selecione o equipamento
-                    </label>
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm text-slate-300">
+                    Selecione o equipamento
+                  </label>
 
-                    <select
-                      className={inputClass}
-                      value={historyEquipmentId}
-                      onChange={(event) =>
-                        setHistoryEquipmentId(event.target.value)
-                      }
-                    >
-                      <option value="">Escolha um equipamento</option>
+                  <select
+                    className={inputClass}
+                    value={historyEquipmentId}
+                    onChange={(event) =>
+                      setHistoryEquipmentId(event.target.value)
+                    }
+                  >
+                    <option value="">Escolha um equipamento</option>
 
-                      {inventory.map((item) => (
-                        <option key={item.id} value={String(item.id)}>
-                          {item.name} — {item.assetNumber || "Sem patrimônio"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    {inventory.map((item) => (
+                      <option key={item.id} value={String(item.id)}>
+                        {item.name} — {item.assetNumber || "Sem patrimônio"}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+              </div>
 
-                {!historyEquipmentId ? (
-                  <p className="p-6 text-sm text-slate-400">
-                    Selecione um equipamento para consultar seu histórico.
-                  </p>
-                ) : historyOrders.length === 0 ? (
-                  <p className="p-6 text-sm text-slate-400">
-                    Nenhuma ordem de serviço encontrada para este equipamento.
-                  </p>
-                ) : (
-                  <div className="space-y-4 p-5">
-                    {historyOrders.map((order) => (
-                      <article
-                        key={order.id}
-                        className="rounded-xl border border-white/10 bg-[#111827] p-4"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-semibold text-cyan-300">
-                              {order.orderNumber || "OS antiga"}
-                            </p>
-                            <h3 className="mt-1 font-semibold">{order.equipment}</h3>
-                          </div>
-                          <span
-                            className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
-                              }`}
-                          >
-                            {order.status}
-                          </span>
+              {!historyEquipmentId ? (
+                <p className="p-6 text-sm text-slate-400">
+                  Selecione um equipamento para consultar seu histórico.
+                </p>
+              ) : historyOrders.length === 0 ? (
+                <p className="p-6 text-sm text-slate-400">
+                  Nenhuma ordem de serviço encontrada para este equipamento.
+                </p>
+              ) : (
+                <div className="space-y-4 p-5">
+                  {historyOrders.map((order) => (
+                    <article
+                      key={order.id}
+                      className="rounded-xl border border-white/10 bg-[#111827] p-4"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold text-cyan-300">
+                            {order.orderNumber || "OS antiga"}
+                          </p>
+                          <h3 className="mt-1 font-semibold">{order.equipment}</h3>
                         </div>
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
+                            }`}
+                        >
+                          {order.status}
+                        </span>
+                      </div>
 
-                        <p className="mt-3 text-xs text-slate-400">
-                          Abertura: {order.openingDate.split("-").reverse().join("/")}
+                      <p className="mt-3 text-xs text-slate-400">
+                        Abertura: {order.openingDate.split("-").reverse().join("/")}
+                      </p>
+
+                      {order.completionDate && (
+                        <p className="mt-1 text-xs text-slate-400">
+                          Conclusão:{" "}
+                          {order.completionDate.split("-").reverse().join("/")}
                         </p>
+                      )}
 
-                        {order.completionDate && (
-                          <p className="mt-1 text-xs text-slate-400">
-                            Conclusão:{" "}
-                            {order.completionDate.split("-").reverse().join("/")}
-                          </p>
-                        )}
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold uppercase text-slate-400">
+                          Defeito ou solicitação
+                        </p>
+                        <p className="mt-1 text-sm text-slate-200">
+                          {order.problem}
+                        </p>
+                      </div>
 
-                        <div className="mt-4">
-                          <p className="text-xs font-semibold uppercase text-slate-400">
-                            Defeito ou solicitação
-                          </p>
-                          <p className="mt-1 text-sm text-slate-200">
-                            {order.problem}
-                          </p>
-                        </div>
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold uppercase text-slate-400">
+                          Responsável
+                        </p>
+                        <p className="mt-1 text-sm text-slate-200">
+                          {order.responsible}
+                        </p>
+                      </div>
 
-                        <div className="mt-3">
-                          <p className="text-xs font-semibold uppercase text-slate-400">
-                            Responsável
-                          </p>
-                          <p className="mt-1 text-sm text-slate-200">
-                            {order.responsible}
-                          </p>
-                        </div>
-
-                        {order.status === "Concluída" && (
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <p className="text-xs font-semibold uppercase text-slate-400">
-                                Serviço executado por
-                              </p>
-                              <p className="mt-1 text-sm text-slate-200">
-                                {order.performedByName || "Não informado"}
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-semibold uppercase text-slate-400">
-                                Liberação autorizada por
-                              </p>
-
-                              <p className="mt-1 text-sm text-slate-200">
-                                {order.releasedByName || "Não informado"}
-                              </p>
-
-                              {order.status === "Concluída" &&
-                                inventory.some(
-                                  (item) =>
-                                    item.id === order.equipmentId &&
-                                    item.status === "Manutenção"
-                                ) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => releaseEquipment(order.id)}
-                                    className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                                  >
-                                    Liberar equipamento
-                                  </button>
-                                )}
-                            </div>
-                          </div>
-                        )}
-
-                        {order.status === "Concluída" && (
-                          <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
-                            <p className="text-xs font-semibold uppercase text-emerald-300">
-                              Serviço executado
+                      {order.status === "Concluída" && (
+                        <div className="mt-3 space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-slate-400">
+                              Serviço executado por
                             </p>
                             <p className="mt-1 text-sm text-slate-200">
-                              {order.serviceNotes || "Sem observações registradas."}
+                              {order.performedByName || "Não informado"}
                             </p>
                           </div>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </section>
 
-              <p className="text-xs text-slate-500">
-                VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
-              </p>
-              <Footer />
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-slate-400">
+                              Liberação autorizada por
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-200">
+                              {order.releasedByName || "Não informado"}
+                            </p>
+
+                            {order.status === "Concluída" &&
+                              inventory.some(
+                                (item) =>
+                                  item.id === order.equipmentId &&
+                                  item.status === "Manutenção"
+                              ) && (
+                                <button
+                                  type="button"
+                                  onClick={() => releaseEquipment(order.id)}
+                                  className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                                >
+                                  Liberar equipamento
+                                </button>
+                              )}
+                          </div>
+                        </div>
+                      )}
+
+                      {order.status === "Concluída" && (
+                        <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
+                          <p className="text-xs font-semibold uppercase text-emerald-300">
+                            Serviço executado
+                          </p>
+                          <p className="mt-1 text-sm text-slate-200">
+                            {order.serviceNotes || "Sem observações registradas."}
+                          </p>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <p className="text-xs text-slate-500">
+              VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
+            </p>
+            <Footer />
           </div>
         </section>
       </div>
