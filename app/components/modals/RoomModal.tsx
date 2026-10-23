@@ -3,6 +3,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { Room } from "../../../types/room";
+import CloseModalButton from "../buttons/CloseModalButton";
 
 type RoomFormData = Omit<Room, "id">;
 
@@ -68,14 +69,10 @@ export default function RoomModal({
             {room ? "Editar sala" : "Cadastrar sala"}
           </h2>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-3 py-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label="Fechar modal"
-          >
-            ✕
-          </button>
+          <CloseModalButton
+            onClose={onClose}
+            ariaLabel="Fechar formulário de reserva"
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

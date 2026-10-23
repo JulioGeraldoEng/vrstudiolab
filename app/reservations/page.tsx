@@ -9,8 +9,15 @@ import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import RoomModal from "../components/modals/RoomModal";
 import Cards from "../components/Cards";
-import RoomsTable from "../components/tables/RoomsTable";
+import ReservationsTable, {
+    getReservationDisplayStatus,
+} from "../components/tables/ReservationsTable";
+import ReservationForm from "../components/forms/ReservationForm";
 import type { Equipment } from "../../types/equipment";
+import type { Person } from "../../types/person";
+import RoomsSection from "../components/sections/RoomsSection";
+import ReservationModal from "../components/modals/ReservationModal";
+import { Pagination } from "../components/Pagination";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
@@ -21,6 +28,8 @@ export default function ReservasPage() {
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
+    const [people, setPeople] = useState<Person[]>([]);
+    const [confirmerName, setConfirmerName] = useState("");
     const [resourceType, setResourceType] = useState<"Sala" | "Equipamento">("Sala");
     const [resourceId, setResourceId] = useState("");
     const [reservedBy, setReservedBy] = useState("");
@@ -29,6 +38,11 @@ export default function ReservasPage() {
     const [endTime, setEndTime] = useState("");
     const [reservationNotes, setReservationNotes] = useState("");
     const [reservationsReady, setReservationsReady] = useState(false);
+    const [reservationSearch, setReservationSearch] = useState("");
+    const [reservationTypeFilter, setReservationTypeFilter] = useState("Todos");
+    const [reservationStatusFilter, setReservationStatusFilter] = useState("Todos");
+    const [reservationCurrentPage, setReservationCurrentPage] = useState(1);
+    const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
     useEffect(() => {
         try {
@@ -74,6 +88,19 @@ export default function ReservasPage() {
             }
         } catch (error) {
             console.error("Não foi possível carregar os equipamentos.", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("vrstudiolab-maintenance-people-v1");
+
+            if (saved !== null) {
+                const parsed: unknown = JSON.parse(saved);
+                setPeople(Array.isArray(parsed) ? (parsed as Person[]) : []);
+            }
+        } catch (error) {
+            console.error("Não foi possível carregar as pessoas cadastradas.", error);
         }
     }, []);
 
@@ -262,6 +289,10 @@ export default function ReservasPage() {
             status: "Confirmada",
             notes: reservationNotes.trim(),
             createdAt: new Date().toISOString(),
+            returnStatus:
+                resourceType === "Equipamento"
+                    ? "Aguardando devolução"
+                    : "Não se aplica",
         };
 
         setReservations((current) => [...current, newReservation]);
@@ -292,6 +323,120 @@ export default function ReservasPage() {
         );
     }
 
+    function reportEquipmentReturn(reservation: Reservation) {
+        if (reservation.resourceType !== "Equipamento") {
+            return;
+        }
+
+        if (
+            reservation.status === "Cancelada" ||
+            reservation.returnStatus === "Devolvida" ||
+            reservation.returnStatus === "Devolução informada"
+        ) {
+            window.alert("Esta devolução já foi informada ou concluída.");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Deseja informar a devolução do equipamento "${reservation.resourceName}"? A devolução ainda precisará ser confirmada por um responsável.`
+        );
+
+        if (!confirmed) return;
+
+        setReservations((current) =>
+            current.map((item) =>
+                item.id === reservation.id
+                    ? {
+                        ...item,
+                        returnStatus: "Devolução informada",
+                        returnReportedAt: new Date().toISOString(),
+                    }
+                    : item
+            )
+        );
+
+        window.alert(
+            "Devolução informada. Aguarde a confirmação de um responsável."
+        );
+    }
+
+    function confirmEquipmentReturn(
+        reservation: Reservation,
+        confirmerName: string
+    ) {
+        if (reservation.resourceType !== "Equipamento") {
+            return;
+        }
+
+        if (reservation.returnStatus !== "Devolução informada") {
+            window.alert("A pessoa precisa informar a devolução antes da confirmação.");
+            return;
+        }
+
+        const confirmer = people.find(
+            (person) =>
+                person.name.trim().toLocaleLowerCase() ===
+                confirmerName.trim().toLocaleLowerCase() &&
+                person.active &&
+                ["Técnico", "Responsável autorizado", "Gestor"].includes(
+                    person.role
+                )
+        );
+
+        if (!confirmer) {
+            window.alert(
+                "Somente um técnico, responsável autorizado ou gestor ativo pode confirmar a devolução."
+            );
+            return;
+        }
+
+        setReservations((current) =>
+            current.map((item) =>
+                item.id === reservation.id
+                    ? {
+                        ...item,
+                        returnStatus: "Devolvida",
+                        returnConfirmedAt: new Date().toISOString(),
+                        returnConfirmedBy: confirmer.name,
+                    }
+                    : item
+            )
+        );
+
+        window.alert("Devolução confirmada com sucesso!");
+    }
+
+    const filteredReservations = reservations.filter((reservation) => {
+        const searchTerm = reservationSearch.trim().toLowerCase();
+
+        const matchesSearch =
+            !searchTerm ||
+            reservation.resourceName.toLowerCase().includes(searchTerm) ||
+            reservation.reservedBy.toLowerCase().includes(searchTerm);
+
+        const matchesType =
+            reservationTypeFilter === "Todos" ||
+            reservation.resourceType === reservationTypeFilter;
+
+        const matchesStatus =
+            reservationStatusFilter === "Todos" ||
+            getReservationDisplayStatus(reservation) === reservationStatusFilter;
+
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
+    const reservationsPerPage = 10;
+
+    const totalReservationPages = Math.max(
+        1,
+        Math.ceil(filteredReservations.length / reservationsPerPage)
+    );
+
+    const paginatedReservations = filteredReservations.slice(
+        (reservationCurrentPage - 1) * reservationsPerPage,
+        reservationCurrentPage * reservationsPerPage
+    );
+
     return (
         <main className="min-h-screen bg-[#0b1120] text-white">
             <div className="flex min-h-screen w-full flex-col lg:flex-row">
@@ -316,138 +461,6 @@ export default function ReservasPage() {
                                 </p>
                             </div>
                         </header>
-
-                        <section className="rounded-2xl border border-white/10 bg-slate-900 p-5 sm:p-6">
-                            <div className="mb-6">
-                                <h2 className="text-xl font-semibold">Nova reserva</h2>
-                                <p className="mt-1 text-sm text-slate-400">
-                                    Reserve uma sala ou um equipamento escolhendo a data e o horário.
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Tipo de recurso
-                                    </label>
-                                    <select
-                                        value={resourceType}
-                                        onChange={(event) => {
-                                            setResourceType(event.target.value as "Sala" | "Equipamento");
-                                            setResourceId("");
-                                        }}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    >
-                                        <option value="Sala">Sala</option>
-                                        <option value="Equipamento">Equipamento</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Recurso
-                                    </label>
-                                    <select
-                                        value={resourceId}
-                                        onChange={(event) => setResourceId(event.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    >
-                                        <option value="">Selecione um recurso</option>
-                                        {resourceType === "Sala"
-                                            ? rooms
-                                                .filter((room) => room.active)
-                                                .map((room) => (
-                                                    <option key={room.id} value={room.id}>
-                                                        {room.name}
-                                                    </option>
-                                                ))
-                                            : equipment
-                                                .filter((item) => item.status === "Disponível")
-                                                .map((item) => (
-                                                    <option key={item.id} value={String(item.id)}>
-                                                        {item.name}
-                                                        {item.assetNumber ? ` — ${item.assetNumber}` : ""}
-                                                    </option>
-                                                ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Nome de quem está reservando
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={reservedBy}
-                                        onChange={(event) => setReservedBy(event.target.value)}
-                                        placeholder="Digite seu nome"
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Data da reserva
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={reservationDate}
-                                        onChange={(event) => setReservationDate(event.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Horário de início
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={startTime}
-                                        onChange={(event) => setStartTime(event.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-sm text-slate-300">
-                                        Horário de término
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={endTime}
-                                        onChange={(event) => setEndTime(event.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-4">
-                                <label className="mb-2 block text-sm text-slate-300">
-                                    Finalidade ou observações (opcional)
-                                </label>
-                                <textarea
-                                    value={reservationNotes}
-                                    onChange={(event) => setReservationNotes(event.target.value)}
-                                    placeholder="Informe a finalidade da reserva ou alguma observação..."
-                                    rows={3}
-                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white"
-                                />
-                            </div>
-
-                            <div className="mt-6 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={createReservation}
-                                    className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                                >
-                                    Confirmar reserva
-                                </button>
-                            </div>
-
-                        </section>
 
                         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                             <Cards
@@ -478,139 +491,189 @@ export default function ReservasPage() {
                             />
                         </section>
 
-                        <section className="rounded-2xl border border-white/10 bg-slate-900 p-5 sm:p-6">
-                            <div className="mb-6">
-                                <h2 className="text-xl font-semibold">Reservas realizadas</h2>
-                                <p className="mt-1 text-sm text-slate-400">
-                                    Consulte os horários e os recursos reservados.
-                                </p>
+                        <section className="rounded-2xl border border-white/10 bg-[#101c2e] p-5 sm:p-6">
+
+                            <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">
+                                        Reservas realizadas
+                                    </h2>
+
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        Consulte os horários e os recursos reservados.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsReservationModalOpen(true)}
+                                    className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                                >
+                                    <span>+ </span>
+                                    Realizar reserva
+                                </button>
                             </div>
 
+
+                            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <input
+                                    type="text"
+                                    value={reservationSearch}
+                                    onChange={(event) => {
+                                        setReservationSearch(event.target.value);
+                                        setReservationCurrentPage(1);
+                                    }}
+                                    placeholder="Pesquisar pessoa ou recurso..."
+                                    aria-label="Pesquisar reservas por pessoa ou recurso"
+                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500"
+                                />
+
+                                <select
+                                    value={reservationTypeFilter}
+                                    onChange={(event) => {
+                                        setReservationTypeFilter(event.target.value);
+                                        setReservationCurrentPage(1);
+                                    }}
+                                    aria-label="Filtrar reservas por tipo de recurso"
+                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-500"
+                                >
+                                    <option value="Todos">Todos os recursos</option>
+                                    <option value="Sala">Salas</option>
+                                    <option value="Equipamento">Equipamentos</option>
+                                </select>
+
+                                <select
+                                    value={reservationStatusFilter}
+                                    onChange={(event) => {
+                                        setReservationStatusFilter(event.target.value);
+                                        setReservationCurrentPage(1);
+                                    }}
+                                    aria-label="Filtrar reservas por status"
+                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-500"
+                                >
+                                    <option value="Todos">Todos os status</option>
+                                    <option value="Agendada">Agendada</option>
+                                    <option value="Em utilização">Em utilização</option>
+                                    <option value="Concluída">Concluída</option>
+                                    <option value="Atraso na devolução">Atraso na devolução</option>
+                                    <option value="Devolução informada">Devolução informada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setReservationSearch("");
+                                        setReservationTypeFilter("Todos");
+                                        setReservationStatusFilter("Todos");
+                                        setReservationCurrentPage(1);
+                                    }}
+                                    className="rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+                                >
+                                    Limpar filtros
+                                </button>
+                            </div>
+
+                            <p className="mb-4 text-sm text-slate-400">
+                                {filteredReservations.length}{" "}
+                                {filteredReservations.length === 1
+                                    ? "reserva encontrada"
+                                    : "reservas encontradas"}
+                            </p>
+
                             {!reservationsReady ? (
-                                <p className="py-6 text-center text-slate-400">
+                                <p className="py-6 text-center text-sm text-slate-400">
                                     Carregando reservas...
                                 </p>
                             ) : reservations.length === 0 ? (
                                 <div className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-center">
-                                    <p className="font-medium">Nenhuma reserva realizada</p>
+                                    <p className="font-medium text-white">
+                                        Nenhuma reserva realizada
+                                    </p>
                                     <p className="mt-2 text-sm text-slate-400">
                                         As reservas confirmadas aparecerão aqui.
                                     </p>
                                 </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-white/10 text-slate-400">
-                                            <tr>
-                                                <th className="px-4 py-3">Recurso</th>
-                                                <th className="px-4 py-3">Responsável</th>
-                                                <th className="px-4 py-3">Data</th>
-                                                <th className="px-4 py-3">Horário</th>
-                                                <th className="px-4 py-3">Status</th>
-                                                <th className="px-4 py-3">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {reservations.map((reservation) => (
-                                                <tr
-                                                    key={reservation.id}
-                                                    className="border-b border-white/5 transition-colors duration-200 hover:bg-white/[0.08]"
-                                                >
-                                                    <td className="px-4 py-3">
-                                                        <p className="font-medium">{reservation.resourceName}</p>
-                                                        <p className="text-xs text-slate-400">
-                                                            {reservation.resourceType}
-                                                        </p>
-                                                    </td>
-                                                    <td className="px-4 py-3">{reservation.reservedBy}</td>
-                                                    <td className="px-4 py-3">
-                                                        {reservation.date.split("-").reverse().join("/")}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {reservation.startTime}–{reservation.endTime}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-                                                            {reservation.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {reservation.status === "Confirmada" && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => cancelReservation(reservation)}
-                                                                className="rounded-lg border border-red-400/20 px-3 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-400/10"
-                                                            >
-                                                                Cancelar
-                                                            </button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </section>
-
-                        <section className="rounded-2xl border border-white/10 bg-slate-900 p-5 sm:p-6">
-                            <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                                <div>
-                                    <h2 className="text-xl font-semibold">Salas cadastradas</h2>
-                                    <p className="mt-1 text-sm text-slate-400">
-                                        Salas inativas continuam registradas para preservar o histórico.
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-wrap gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={openNewRoom}
-                                        className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                                >
-                                        + Cadastrar sala
-                                    </button>
-                                </div>
-                            </div>
-
-                            {!ready ? (
-                                <p className="py-10 text-center text-slate-400">
-                                    Carregando salas...
+                            ) : filteredReservations.length === 0 ? (
+                                <p className="py-6 text-center text-sm text-slate-400">
+                                    Nenhuma reserva encontrada com os filtros selecionados.
                                 </p>
-                            ) : rooms.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-white/10 px-4 py-12 text-center">
-                                    <p className="font-medium">Nenhuma sala cadastrada</p>
-                                    <p className="mt-2 text-sm text-slate-400">
-                                        Cadastre a primeira sala para começar.
-                                    </p>
-                                </div>
                             ) : (
-                                <RoomsTable
-                                    rooms={rooms}
-                                    onEdit={openEditRoom}
-                                    onToggleStatus={toggleRoomStatus}
-                                />
+                                <>
+                                    <ReservationsTable
+                                        reservations={paginatedReservations}
+                                        people={people}
+                                        confirmerName={confirmerName}
+                                        onConfirmerChange={setConfirmerName}
+                                        onReportReturn={reportEquipmentReturn}
+                                        onConfirmReturn={confirmEquipmentReturn}
+                                        onCancel={cancelReservation}
+                                    />
+
+                                    <Pagination
+                                        currentPage={reservationCurrentPage}
+                                        totalItems={filteredReservations.length}
+                                        itemsPerPage={reservationsPerPage}
+                                        onPageChange={setReservationCurrentPage}
+                                    />
+                                </>
                             )}
                         </section>
+
+                        <RoomsSection
+                            rooms={rooms}
+                            ready={ready}
+                            onNewRoom={openNewRoom}
+                            onEditRoom={openEditRoom}
+                            onToggleStatus={toggleRoomStatus}
+                        />
 
                         <p className="text-xs text-slate-500">
                             VR Studio Lab · Cadastro de salas · Dados salvos neste navegador
                         </p>
 
+
                         <Footer />
+
+                        <ReservationModal
+                            isOpen={isReservationModalOpen}
+                            onClose={() => setIsReservationModalOpen(false)}
+                            rooms={rooms}
+                            equipment={equipment}
+                            resourceType={resourceType}
+                            resourceId={resourceId}
+                            reservedBy={reservedBy}
+                            reservationDate={reservationDate}
+                            startTime={startTime}
+                            endTime={endTime}
+                            reservationNotes={reservationNotes}
+                            onResourceTypeChange={(value) => {
+                                setResourceType(value);
+                                setResourceId("");
+                            }}
+                            onResourceIdChange={setResourceId}
+                            onReservedByChange={setReservedBy}
+                            onReservationDateChange={setReservationDate}
+                            onStartTimeChange={setStartTime}
+                            onEndTimeChange={setEndTime}
+                            onReservationNotesChange={setReservationNotes}
+                            onSubmit={createReservation}
+                        />
+
+                        {showModal && (
+                            <RoomModal
+                                room={editingRoom}
+                                onSave={saveRoom}
+                                onClose={() => {
+                                    setShowModal(false);
+                                    setEditingRoom(null);
+                                }}
+                            />
+                        )}
                     </div>
                 </section>
-
-                {showModal && (
-                    <RoomModal
-                        room={editingRoom}
-                        onSave={saveRoom}
-                        onClose={() => {
-                            setShowModal(false);
-                            setEditingRoom(null);
-                        }}
-                    />
-                )}
             </div>
         </main>
+
     );
 }

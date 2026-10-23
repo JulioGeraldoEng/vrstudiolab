@@ -2,6 +2,7 @@
 
 import type { Equipment } from "../../../types/equipment";
 import type { Person } from "../../../types/person";
+import CloseModalButton from "../buttons/CloseModalButton";
 
 type MaintenanceModalProps = {
   open: boolean;
@@ -52,14 +53,10 @@ export default function MaintenanceModal({
             Nova ordem de serviço
           </h2>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-            aria-label="Fechar formulário"
-          >
-            ✕
-          </button>
+          <CloseModalButton
+            onClose={onClose}
+            ariaLabel="Fechar formulário de reserva"
+          />
         </div>
 
         <form onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-2">

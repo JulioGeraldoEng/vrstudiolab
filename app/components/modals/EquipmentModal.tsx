@@ -1,5 +1,6 @@
 import { categories, statuses } from "../../../types/equipment";
 import type { Status } from "../../../types/equipment";
+import CloseModalButton from "../buttons/CloseModalButton";
 
 type EquipmentFormValues = {
   name: string;
@@ -48,14 +49,10 @@ export default function EquipmentModal({
               Preencha os dados do equipamento.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-            aria-label="Fechar formulário"
-          >
-            ✕
-          </button>
+          <CloseModalButton
+            onClose={onClose}
+            ariaLabel="Fechar formulário de reserva"
+          />
         </div>
 
         <form onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-2">
