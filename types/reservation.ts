@@ -5,6 +5,12 @@ export type ReservationStatus =
 
 export type ReservationResourceType = "Sala" | "Equipamento";
 
+export type EquipmentReturnStatus =
+  | "Não se aplica"
+  | "Aguardando devolução"
+  | "Devolução informada"
+  | "Devolvida";
+
 export type Reservation = {
   id: string;
   resourceType: ReservationResourceType;
@@ -17,4 +23,9 @@ export type Reservation = {
   status: ReservationStatus;
   notes: string;
   createdAt: string;
+
+  returnStatus?: EquipmentReturnStatus;
+  returnReportedAt?: string;
+  returnConfirmedAt?: string;
+  returnConfirmedBy?: string;
 };
