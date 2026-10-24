@@ -7,25 +7,18 @@ import { RESERVATIONS_STORAGE_KEY, hasReservationConflict } from "./storage";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
-import RoomModal from "../components/modals/RoomModal";
 import Cards from "../components/Cards";
-import ReservationsTable, {
-    getReservationDisplayStatus,
-} from "../components/tables/ReservationsTable";
-import ReservationForm from "../components/forms/ReservationForm";
+import { getReservationDisplayStatus } from "../components/tables/ReservationsTable";
 import type { Equipment } from "../../types/equipment";
 import type { Person } from "../../types/person";
-import RoomsSection from "../components/sections/RoomsSection";
 import ReservationModal from "../components/modals/ReservationModal";
-import { Pagination } from "../components/Pagination";
+import ReservationsSection from "../components/sections/ReservationsSection";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
 export default function ReservasPage() {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [ready, setReady] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [editingRoom, setEditingRoom] = useState<Room | null>(null);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
@@ -41,7 +34,6 @@ export default function ReservasPage() {
     const [reservationSearch, setReservationSearch] = useState("");
     const [reservationTypeFilter, setReservationTypeFilter] = useState("Todos");
     const [reservationStatusFilter, setReservationStatusFilter] = useState("Todos");
-    const [reservationCurrentPage, setReservationCurrentPage] = useState(1);
     const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
     useEffect(() => {
@@ -105,17 +97,6 @@ export default function ReservasPage() {
     }, []);
 
     useEffect(() => {
-        if (!ready) return;
-
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
-        } catch (error) {
-            console.error("Não foi possível salvar as salas.", error);
-            window.alert("Não foi possível salvar as salas no navegador.");
-        }
-    }, [rooms, ready]);
-
-    useEffect(() => {
         if (!reservationsReady) return;
 
         try {
@@ -128,64 +109,6 @@ export default function ReservasPage() {
             window.alert("Não foi possível salvar as reservas no navegador.");
         }
     }, [reservations, reservationsReady]);
-
-    function openNewRoom() {
-        setEditingRoom(null);
-        setShowModal(true);
-    }
-
-    function openEditRoom(room: Room) {
-        setEditingRoom(room);
-        setShowModal(true);
-    }
-
-    function saveRoom(data: Omit<Room, "id">) {
-        const nameExists = rooms.some(
-            (room) =>
-                room.name.trim().toLocaleLowerCase() ===
-                data.name.trim().toLocaleLowerCase() &&
-                room.id !== editingRoom?.id
-        );
-
-        if (nameExists) {
-            window.alert("Já existe uma sala cadastrada com esse nome.");
-            return;
-        }
-
-        if (editingRoom) {
-            setRooms((current) =>
-                current.map((room) =>
-                    room.id === editingRoom.id ? { ...room, ...data } : room
-                )
-            );
-        } else {
-            const newRoom: Room = {
-                ...data,
-                id: crypto.randomUUID(),
-            };
-
-            setRooms((current) => [newRoom, ...current]);
-        }
-
-        setShowModal(false);
-        setEditingRoom(null);
-    }
-
-    function toggleRoomStatus(room: Room) {
-        const action = room.active ? "desativar" : "ativar";
-
-        const confirmed = window.confirm(
-            `Deseja ${action} a sala "${room.name}"?`
-        );
-
-        if (!confirmed) return;
-
-        setRooms((current) =>
-            current.map((item) =>
-                item.id === room.id ? { ...item, active: !item.active } : item
-            )
-        );
-    }
 
     function createReservation() {
         if (
@@ -425,18 +348,6 @@ export default function ReservasPage() {
         return matchesSearch && matchesType && matchesStatus;
     });
 
-    const reservationsPerPage = 10;
-
-    const totalReservationPages = Math.max(
-        1,
-        Math.ceil(filteredReservations.length / reservationsPerPage)
-    );
-
-    const paginatedReservations = filteredReservations.slice(
-        (reservationCurrentPage - 1) * reservationsPerPage,
-        reservationCurrentPage * reservationsPerPage
-    );
-
     return (
         <main className="min-h-screen bg-[#0b1120] text-white">
             <div className="flex min-h-screen w-full flex-col lg:flex-row">
@@ -462,176 +373,33 @@ export default function ReservasPage() {
                             </div>
                         </header>
 
-                        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            <Cards
-                                title="Total de salas"
-                                value={rooms.length}
-                                detail="Salas cadastradas"
-                                icon="🏢"
-                                color="text-blue-300"
-                                bg="bg-blue-400/10"
-                            />
-
-                            <Cards
-                                title="Salas ativas"
-                                value={rooms.filter((room) => room.active).length}
-                                detail="Disponíveis para novas reservas"
-                                icon="✓"
-                                color="text-emerald-300"
-                                bg="bg-emerald-400/10"
-                            />
-
-                            <Cards
-                                title="Salas inativas"
-                                value={rooms.filter((room) => !room.active).length}
-                                detail="Não recebem novas reservas"
-                                icon="⏸"
-                                color="text-red-300"
-                                bg="bg-red-400/10"
-                            />
-                        </section>
-
-                        <section className="rounded-2xl border border-white/10 bg-[#101c2e] p-5 sm:p-6">
-
-                            <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                                <div>
-                                    <h2 className="text-xl font-bold text-white">
-                                        Reservas realizadas
-                                    </h2>
-
-                                    <p className="mt-1 text-sm text-slate-400">
-                                        Consulte os horários e os recursos reservados.
-                                    </p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsReservationModalOpen(true)}
-                                    className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                                >
-                                    <span>+ </span>
-                                    Realizar reserva
-                                </button>
-                            </div>
-
-
-                            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                <input
-                                    type="text"
-                                    value={reservationSearch}
-                                    onChange={(event) => {
-                                        setReservationSearch(event.target.value);
-                                        setReservationCurrentPage(1);
-                                    }}
-                                    placeholder="Pesquisar pessoa ou recurso..."
-                                    aria-label="Pesquisar reservas por pessoa ou recurso"
-                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500"
-                                />
-
-                                <select
-                                    value={reservationTypeFilter}
-                                    onChange={(event) => {
-                                        setReservationTypeFilter(event.target.value);
-                                        setReservationCurrentPage(1);
-                                    }}
-                                    aria-label="Filtrar reservas por tipo de recurso"
-                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-500"
-                                >
-                                    <option value="Todos">Todos os recursos</option>
-                                    <option value="Sala">Salas</option>
-                                    <option value="Equipamento">Equipamentos</option>
-                                </select>
-
-                                <select
-                                    value={reservationStatusFilter}
-                                    onChange={(event) => {
-                                        setReservationStatusFilter(event.target.value);
-                                        setReservationCurrentPage(1);
-                                    }}
-                                    aria-label="Filtrar reservas por status"
-                                    className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-white outline-none focus:border-cyan-500"
-                                >
-                                    <option value="Todos">Todos os status</option>
-                                    <option value="Agendada">Agendada</option>
-                                    <option value="Em utilização">Em utilização</option>
-                                    <option value="Concluída">Concluída</option>
-                                    <option value="Atraso na devolução">Atraso na devolução</option>
-                                    <option value="Devolução informada">Devolução informada</option>
-                                    <option value="Cancelada">Cancelada</option>
-                                </select>
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setReservationSearch("");
-                                        setReservationTypeFilter("Todos");
-                                        setReservationStatusFilter("Todos");
-                                        setReservationCurrentPage(1);
-                                    }}
-                                    className="rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
-                                >
-                                    Limpar filtros
-                                </button>
-                            </div>
-
-                            <p className="mb-4 text-sm text-slate-400">
-                                {filteredReservations.length}{" "}
-                                {filteredReservations.length === 1
-                                    ? "reserva encontrada"
-                                    : "reservas encontradas"}
-                            </p>
-
-                            {!reservationsReady ? (
-                                <p className="py-6 text-center text-sm text-slate-400">
-                                    Carregando reservas...
-                                </p>
-                            ) : reservations.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-center">
-                                    <p className="font-medium text-white">
-                                        Nenhuma reserva realizada
-                                    </p>
-                                    <p className="mt-2 text-sm text-slate-400">
-                                        As reservas confirmadas aparecerão aqui.
-                                    </p>
-                                </div>
-                            ) : filteredReservations.length === 0 ? (
-                                <p className="py-6 text-center text-sm text-slate-400">
-                                    Nenhuma reserva encontrada com os filtros selecionados.
-                                </p>
-                            ) : (
-                                <>
-                                    <ReservationsTable
-                                        reservations={paginatedReservations}
-                                        people={people}
-                                        confirmerName={confirmerName}
-                                        onConfirmerChange={setConfirmerName}
-                                        onReportReturn={reportEquipmentReturn}
-                                        onConfirmReturn={confirmEquipmentReturn}
-                                        onCancel={cancelReservation}
-                                    />
-
-                                    <Pagination
-                                        currentPage={reservationCurrentPage}
-                                        totalItems={filteredReservations.length}
-                                        itemsPerPage={reservationsPerPage}
-                                        onPageChange={setReservationCurrentPage}
-                                    />
-                                </>
-                            )}
-                        </section>
-
-                        <RoomsSection
-                            rooms={rooms}
-                            ready={ready}
-                            onNewRoom={openNewRoom}
-                            onEditRoom={openEditRoom}
-                            onToggleStatus={toggleRoomStatus}
+                        <ReservationsSection
+                            reservations={filteredReservations}
+                            people={people}
+                            ready={reservationsReady}
+                            search={reservationSearch}
+                            typeFilter={reservationTypeFilter}
+                            statusFilter={reservationStatusFilter}
+                            confirmerName={confirmerName}
+                            resetPageKey={`${reservationSearch}|${reservationTypeFilter}|${reservationStatusFilter}`}
+                            onSearchChange={setReservationSearch}
+                            onTypeFilterChange={setReservationTypeFilter}
+                            onStatusFilterChange={setReservationStatusFilter}
+                            onClearFilters={() => {
+                                setReservationSearch("");
+                                setReservationTypeFilter("Todos");
+                                setReservationStatusFilter("Todos");
+                            }}
+                            onNewReservation={() => setIsReservationModalOpen(true)}
+                            onConfirmerChange={setConfirmerName}
+                            onReportReturn={reportEquipmentReturn}
+                            onConfirmReturn={confirmEquipmentReturn}
+                            onCancel={cancelReservation}
                         />
 
                         <p className="text-xs text-slate-500">
                             VR Studio Lab · Cadastro de salas · Dados salvos neste navegador
                         </p>
-
 
                         <Footer />
 
@@ -659,17 +427,6 @@ export default function ReservasPage() {
                             onReservationNotesChange={setReservationNotes}
                             onSubmit={createReservation}
                         />
-
-                        {showModal && (
-                            <RoomModal
-                                room={editingRoom}
-                                onSave={saveRoom}
-                                onClose={() => {
-                                    setShowModal(false);
-                                    setEditingRoom(null);
-                                }}
-                            />
-                        )}
                     </div>
                 </section>
             </div>
