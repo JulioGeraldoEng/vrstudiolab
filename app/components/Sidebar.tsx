@@ -8,6 +8,7 @@ const navigation = [
   { name: "Equipamentos", icon: "equipment", href: "/equipment" },
   { name: "Manutenção", icon: "maintenance", href: "/maintenance" },
   { name: "Pessoas", icon: "people", href: "/people" },
+  { name: "Salas", icon: "rooms", href: "/rooms" },
   { name: "Reservas", icon: "reservations", href: "/reservations" },
   { name: "Relatórios", icon: "reports", href: "/reports" },
 ];
@@ -62,6 +63,18 @@ function NavigationIcon({ name }: { name: string }) {
           <circle cx="9" cy="8" r="3.5" />
           <path d="M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20z" />
           <path d="M16 5.5a3.5 3.5 0 0 1 0 6.8M19 14a5 5 0 0 1 2.5 4.5V20" />
+        </svg>
+      );
+
+    case "rooms":
+      return (
+        <svg {...common}>
+          <path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16" />
+          <path d="M3 21h18" />
+          <rect x="7" y="7" width="4" height="4" rx="0.5" />
+          <rect x="13" y="7" width="4" height="4" rx="0.5" />
+          <rect x="7" y="14" width="4" height="7" rx="0.5" />
+          <rect x="13" y="14" width="4" height="4" rx="0.5" />
         </svg>
       );
 
