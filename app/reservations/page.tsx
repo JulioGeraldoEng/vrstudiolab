@@ -348,6 +348,25 @@ export default function ReservasPage() {
         return matchesSearch && matchesType && matchesStatus;
     });
 
+    const totalReservations = reservations.length;
+
+    const scheduledReservations = reservations.filter((reservation) => {
+        const status = getReservationDisplayStatus(reservation);
+        return status === "Agendada";
+    }).length;
+
+    const activeReservations = reservations.filter((reservation) => {
+        return getReservationDisplayStatus(reservation) === "Em utilização";
+    }).length;
+
+    const pendingReturns = reservations.filter((reservation) => {
+        return (
+            reservation.resourceType === "Equipamento" &&
+            reservation.returnStatus === "Devolução informada" &&
+            reservation.status !== "Cancelada"
+        );
+    }).length;
+
     return (
         <main className="min-h-screen bg-[#0b1120] text-white">
             <div className="flex min-h-screen w-full flex-col lg:flex-row">
@@ -372,6 +391,44 @@ export default function ReservasPage() {
                                 </p>
                             </div>
                         </header>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <Cards
+                                title="Total de reservas"
+                                value={totalReservations}
+                                detail="Reservas cadastradas"
+                                icon="📅"
+                                color="text-blue-300"
+                                bg="bg-blue-400/10"
+                            />
+
+                            <Cards
+                                title="Agendadas"
+                                value={scheduledReservations}
+                                detail="Reservas futuras"
+                                icon="🗓️"
+                                color="text-emerald-300"
+                                bg="bg-emerald-400/10"
+                            />
+
+                            <Cards
+                                title="Em utilização"
+                                value={activeReservations}
+                                detail="Reservas em andamento"
+                                icon="🏢"
+                                color="text-amber-300"
+                                bg="bg-amber-400/10"
+                            />
+
+                            <Cards
+                                title="Devoluções pendentes"
+                                value={pendingReturns}
+                                detail="Aguardando confirmação"
+                                icon="📦"
+                                color="text-purple-300"
+                                bg="bg-purple-400/10"
+                            />
+                        </div>
 
                         <ReservationsSection
                             reservations={filteredReservations}
