@@ -6,6 +6,7 @@ import {
   seedPeople,
   seedMaintenanceOrders,
   seedRooms,
+  seedReservations,
 } from "./dados";
 
 export default function SeedPage() {
@@ -13,9 +14,7 @@ export default function SeedPage() {
 
   function loadSeedData() {
     const confirmed = window.confirm(
-      "Atenção: os registros atuais de equipamentos, pessoas, salas e manutenção serão substituídos pelos dados de teste. Deseja continuar?"
-    );
-
+      "Atenção: os registros atuais de equipamentos, pessoas, salas, manutenção e reservas serão substituídos por 40 equipamentos, 30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias. Deseja continuar?");
     if (!confirmed) return;
 
     try {
@@ -57,8 +56,13 @@ export default function SeedPage() {
         JSON.stringify(seedRooms)
       );
 
+      localStorage.setItem(
+        "vrstudiolab-reservations-v1",
+        JSON.stringify(seedReservations)
+      );
+
       setMessage(
-        "Dados de teste carregados! Atualize as páginas de equipamentos, pessoas, manutenção e reservas para visualizar os registros."
+        "Dados de teste carregados! Atualize as páginas de equipamentos, pessoas, manutenção, salas e reservas para visualizar os registros."
       );
     } catch (error) {
       console.error("Erro ao carregar os dados de teste:", error);
@@ -77,8 +81,8 @@ export default function SeedPage() {
         </h1>
 
         <p className="mb-6 text-slate-300">
-          Esta ferramenta substitui os registros atuais por 20 equipamentos,
-          20 pessoas, 20 ordens de manutenção e 3 salas fictícias.
+          Esta ferramenta substitui os registros atuais por 40 equipamentos,
+          30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias.
         </p>
 
         <button
@@ -86,7 +90,7 @@ export default function SeedPage() {
           onClick={loadSeedData}
           className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500"
         >
-          Carregar dados de teste
+          Atualizar ambiente de testes
         </button>
 
         {message && (
