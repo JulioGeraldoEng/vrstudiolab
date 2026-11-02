@@ -10,6 +10,7 @@ export default function CalendarSection() {
     const [showRooms, setShowRooms] = useState(true);
     const [showEquipment, setShowEquipment] = useState(true);
     const [showMaintenance, setShowMaintenance] = useState(true);
+    const [maintenanceFilter, setMaintenanceFilter] = useState<"open" | "completed" | "all">("open");
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [maintenanceOrders, setMaintenanceOrders] = useState<MaintenanceOrder[]>([]);
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
@@ -296,6 +297,42 @@ export default function CalendarSection() {
         );
     }
 
+    function getMaintenanceColor(status: MaintenanceOrder["status"]) {
+        switch (status) {
+            case "Aberta":
+                return {
+                    background: "bg-red-500/20",
+                    text: "text-red-300",
+                    border: "border-red-300/40",
+                    hover: "hover:bg-red-500/30",
+                };
+
+            case "Em andamento":
+                return {
+                    background: "bg-blue-500/20",
+                    text: "text-blue-300",
+                    border: "border-blue-300/40",
+                    hover: "hover:bg-blue-500/30",
+                };
+
+            case "Aguardando peças":
+                return {
+                    background: "bg-amber-500/20",
+                    text: "text-amber-300",
+                    border: "border-amber-300/40",
+                    hover: "hover:bg-amber-500/30",
+                };
+
+            case "Concluída":
+                return {
+                    background: "bg-emerald-500/20",
+                    text: "text-emerald-300",
+                    border: "border-emerald-300/40",
+                    hover: "hover:bg-emerald-500/30",
+                };
+        }
+    }
+
     const weekTitle = viewMode === "month" ? currentDate.toLocaleDateString("pt-BR", {
         month: "long",
         year: "numeric",
@@ -311,6 +348,22 @@ export default function CalendarSection() {
 
         return true;
     });
+
+    const visibleMaintenanceOrders = maintenanceOrders.filter((order) => {
+        if (maintenanceFilter === "open") {
+            return order.status !== "Concluída";
+        }
+
+        if (maintenanceFilter === "completed") {
+            return order.status === "Concluída";
+        }
+
+        return true;
+    });
+
+    const selectedMaintenanceColors = selectedMaintenance
+        ? getMaintenanceColor(selectedMaintenance.status)
+        : null;
 
     return (
         <section className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
@@ -409,6 +462,17 @@ export default function CalendarSection() {
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
                         <input
                             type="checkbox"
+                            checked={showInUse}
+                            onChange={(event) => setShowInUse(event.target.checked)}
+                            className="accent-orange-500"
+                        />
+                        <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
+                        Em uso
+                    </label>
+
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                        <input
+                            type="checkbox"
                             checked={showMaintenance}
                             onChange={(event) => setShowMaintenance(event.target.checked)}
                             className="accent-red-500"
@@ -417,16 +481,31 @@ export default function CalendarSection() {
                         Manutenção
                     </label>
 
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
-                        <input
-                            type="checkbox"
-                            checked={showInUse}
-                            onChange={(event) => setShowInUse(event.target.checked)}
-                            className="accent-orange-500"
-                        />
-                        <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
-                        Em uso
-                    </label>
+                    {showMaintenance && (
+                        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-[#0d1728] p-1">
+                            {[
+                                { value: "open", label: "Em aberto" },
+                                { value: "completed", label: "Concluídas" },
+                                { value: "all", label: "Todas" },
+                            ].map((filter) => (
+                                <button
+                                    key={filter.value}
+                                    type="button"
+                                    onClick={() =>
+                                        setMaintenanceFilter(
+                                            filter.value as "open" | "completed" | "all"
+                                        )
+                                    }
+                                    className={`rounded-md px-3 py-2 text-xs font-semibold transition ${maintenanceFilter === filter.value
+                                        ? "bg-red-700 text-white"
+                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                        }`}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {viewMode === "month" && (
@@ -455,7 +534,7 @@ export default function CalendarSection() {
                                 );
 
                                 const dayMaintenance = showMaintenance
-                                    ? maintenanceOrders.filter((order) =>
+                                    ? visibleMaintenanceOrders.filter((order) =>
                                         isMaintenanceOnDate(order, day)
                                     )
                                     : [];
@@ -484,17 +563,21 @@ export default function CalendarSection() {
                                         <div className="mt-2 space-y-1">
                                             {dayMaintenance
                                                 .slice(0, maxVisibleEvents)
-                                                .map((order) => (
-                                                    <button
-                                                        key={order.id}
-                                                        type="button"
-                                                        onClick={() => setSelectedMaintenance(order)}
-                                                        className="w-full truncate rounded bg-red-500/20 px-1.5 py-1 text-left text-[10px] font-medium text-red-300 transition hover:bg-red-500/30"
-                                                        title={`${order.orderNumber} - ${order.equipment}`}
-                                                    >
-                                                        {order.orderNumber}
-                                                    </button>
-                                                ))}
+                                                .map((order) => {
+                                                    const colors = getMaintenanceColor(order.status);
+
+                                                    return (
+                                                        <button
+                                                            key={order.id}
+                                                            type="button"
+                                                            onClick={() => setSelectedMaintenance(order)}
+                                                            className={`w-full truncate rounded border px-1.5 py-1 text-left text-[10px] font-medium transition ${colors.background} ${colors.text} ${colors.border} ${colors.hover}`}
+                                                            title={`${order.orderNumber} - ${order.equipment} - ${order.status}`}
+                                                        >
+                                                            {order.orderNumber}
+                                                        </button>
+                                                    );
+                                                })}
 
                                             {dayReservations
                                                 .slice(
@@ -561,7 +644,7 @@ export default function CalendarSection() {
                                 );
 
                             const dayMaintenance = showMaintenance
-                                ? maintenanceOrders.filter((order) =>
+                                ? visibleMaintenanceOrders.filter((order) =>
                                     isMaintenanceOnDate(order, day)
                                 )
                                 : [];
@@ -604,28 +687,30 @@ export default function CalendarSection() {
                                         </p>
                                     ) : (
                                         <div className="divide-y divide-white/5">
-                                            {dayMaintenance.map((order) => (
-                                                <button
-                                                    key={order.id}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setSelectedMaintenance(order)
-                                                    }
-                                                    className="flex w-full flex-col gap-1 px-4 py-3 text-left transition hover:bg-red-500/10 sm:flex-row sm:items-center sm:gap-4"
-                                                >
-                                                    <span className="text-xs font-semibold text-red-400 sm:w-24">
-                                                        Dia inteiro
-                                                    </span>
+                                            {dayMaintenance.map((order) => {
+                                                const colors = getMaintenanceColor(order.status);
 
-                                                    <span className="text-sm font-medium text-red-300">
-                                                        {order.orderNumber} · {order.equipment}
-                                                    </span>
+                                                return (
+                                                    <button
+                                                        key={order.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedMaintenance(order)}
+                                                        className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition sm:flex-row sm:items-center sm:gap-4 ${colors.hover}`}
+                                                    >
+                                                        <span className={`text-xs font-semibold sm:w-24 ${colors.text}`}>
+                                                            Dia inteiro
+                                                        </span>
 
-                                                    <span className="text-xs text-slate-400">
-                                                        {order.status}
-                                                    </span>
-                                                </button>
-                                            ))}
+                                                        <span className={`text-sm font-medium ${colors.text}`}>
+                                                            {order.orderNumber} · {order.equipment}
+                                                        </span>
+
+                                                        <span className={`text-xs ${colors.text}`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
 
                                             {dayReservations.map((reservation) => {
                                                 const isEquipment =
@@ -749,18 +834,22 @@ export default function CalendarSection() {
                                         className="min-h-8 border-r border-white/10 p-1 last:border-r-0"
                                     >
                                         {showMaintenance &&
-                                            maintenanceOrders
+                                            visibleMaintenanceOrders
                                                 .filter((order) => isMaintenanceOnDate(order, day))
-                                                .map((order) => (
-                                                    <button
-                                                        key={order.id}
-                                                        type="button"
-                                                        onClick={() => setSelectedMaintenance(order)}
-                                                        title={`${order.orderNumber} | ${order.equipment}`}
-                                                        aria-label={`Ver ordem de serviço ${order.orderNumber}`}
-                                                        className="mb-1 block h-3 w-full rounded-md border border-red-300/40 bg-red-500/50 transition hover:bg-red-500"
-                                                    />
-                                                ))}
+                                                .map((order) => {
+                                                    const colors = getMaintenanceColor(order.status);
+
+                                                    return (
+                                                        <button
+                                                            key={order.id}
+                                                            type="button"
+                                                            onClick={() => setSelectedMaintenance(order)}
+                                                            title={`${order.orderNumber} | ${order.equipment} | ${order.status}`}
+                                                            aria-label={`Ver ordem de serviço ${order.orderNumber}`}
+                                                            className={`mb-1 block h-3 w-full rounded-md border transition ${colors.background} ${colors.border} ${colors.hover}`}
+                                                        />
+                                                    );
+                                                })}
                                     </div>
                                 ))}
                             </div>
@@ -976,7 +1065,7 @@ export default function CalendarSection() {
                         {/* Cabeçalho */}
                         <div className="flex items-center justify-between border-b border-white/10 p-5">
                             <div>
-                                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-red-400">
+                                <p className={`mb-1 text-xs font-semibold uppercase tracking-wider ${selectedMaintenanceColors?.text}`}>
                                     VR Studio Lab
                                 </p>
                                 <h3 className="text-lg font-semibold text-white">
@@ -999,17 +1088,19 @@ export default function CalendarSection() {
                         <div className="space-y-4 p-5">
 
                             {/* Número da OS - linha inteira */}
-                            <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                            <div className={`rounded-xl border p-4 ${selectedMaintenanceColors?.border} ${selectedMaintenanceColors?.background}`}>
                                 <p className="mb-1 text-xs text-slate-400">
                                     Número da ordem de serviço
                                 </p>
 
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <h4 className="text-xl font-semibold text-red-300">
+                                    <h4 className={`text-xl font-semibold ${selectedMaintenanceColors?.text}`}>
                                         {selectedMaintenance.orderNumber}
                                     </h4>
 
-                                    <span className="inline-flex rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-300">
+                                    <span
+                                        className={`inline-flex rounded-lg border px-3 py-1.5 text-xs font-semibold ${selectedMaintenanceColors?.background} ${selectedMaintenanceColors?.text} ${selectedMaintenanceColors?.border}`}
+                                    >
                                         {selectedMaintenance.status}
                                     </span>
                                 </div>

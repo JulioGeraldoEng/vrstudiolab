@@ -2,6 +2,7 @@ import type { Equipment } from "../../types/equipment";
 import type { Person } from "../../types/person";
 import type { MaintenanceOrder } from "../../types/maintenance";
 import type { Room } from "../../types/room";
+import type { Reservation } from "../../types/reservation";
 
 export type SeedEquipment = Equipment;
 
@@ -26,6 +27,26 @@ export const seedEquipments: SeedEquipment[] = [
   { id: 1018, name: "Microfone USB 01", category: "Áudio e vídeo", assetNumber: "AUD-002", serialNumber: "MIC-TEST-001", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Captação de voz" },
   { id: 1019, name: "Kit de iluminação 01", category: "Iluminação", assetNumber: "ILU-001", serialNumber: "ILU-TEST-001", location: "Estúdio", status: "Baixado", operatingSystem: "", notes: "Simulação de equipamento baixado" },
   { id: 1020, name: "Câmera de gravação 01", category: "Outros", assetNumber: "OUT-001", serialNumber: "CAM-TEST-001", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Gravação de atividades" },
+  { id: 1021, name: "Meta Quest 3 - Unidade 03", category: "Óculos VR", assetNumber: "VR-005", serialNumber: "MQ3-TEST-003", location: "Armário A2", status: "Disponível", operatingSystem: "Meta Horizon OS", notes: "Equipamento para testes de realidade virtual" },
+  { id: 1022, name: "Meta Quest 3 - Unidade 04", category: "Óculos VR", assetNumber: "VR-006", serialNumber: "MQ3-TEST-004", location: "Armário A2", status: "Disponível", operatingSystem: "Meta Horizon OS", notes: "Equipamento para atividades práticas" },
+  { id: 1023, name: "Meta Quest 2 - Unidade 03", category: "Óculos VR", assetNumber: "VR-007", serialNumber: "MQ2-TEST-003", location: "Armário A1", status: "Disponível", operatingSystem: "Meta Horizon OS", notes: "Equipamento para treinamento" },
+  { id: 1024, name: "Notebook de Alto Desempenho 03", category: "Notebooks", assetNumber: "TI-005", serialNumber: "NOTE-TEST-003", location: "Bancada 03", status: "Disponível", operatingSystem: "Windows 11", notes: "Estação para edição audiovisual" },
+  { id: 1025, name: "Notebook de Alto Desempenho 04", category: "Notebooks", assetNumber: "TI-006", serialNumber: "NOTE-TEST-004", location: "Bancada 04", status: "Disponível", operatingSystem: "Windows 11", notes: "Estação para aplicações VR" },
+  { id: 1026, name: "Computador de Edição 01", category: "Computadores", assetNumber: "TI-007", serialNumber: "PC-TEST-003", location: "Estúdio", status: "Disponível", operatingSystem: "Windows 11", notes: "Estação de edição de vídeo" },
+  { id: 1027, name: "Computador de Edição 02", category: "Computadores", assetNumber: "TI-008", serialNumber: "PC-TEST-004", location: "Estúdio", status: "Disponível", operatingSystem: "Windows 11", notes: "Estação de edição audiovisual" },
+  { id: 1028, name: "Monitor 32 polegadas 01", category: "Monitores", assetNumber: "MON-003", serialNumber: "MON-TEST-003", location: "Bancada 03", status: "Disponível", operatingSystem: "", notes: "Monitor para edição" },
+  { id: 1029, name: "Monitor 24 polegadas 01", category: "Monitores", assetNumber: "MON-004", serialNumber: "MON-TEST-004", location: "Bancada 04", status: "Disponível", operatingSystem: "", notes: "Monitor auxiliar" },
+  { id: 1030, name: "Televisor de apoio 03", category: "Televisores", assetNumber: "TV-003", serialNumber: "TV-TEST-003", location: "Sala VR", status: "Disponível", operatingSystem: "", notes: "Exibição de apresentações" },
+  { id: 1031, name: "Projetor multimídia 01", category: "Televisores", assetNumber: "TV-004", serialNumber: "PROJ-TEST-001", location: "Sala de treinamento", status: "Disponível", operatingSystem: "", notes: "Projeção de conteúdo audiovisual" },
+  { id: 1032, name: "Controle VR 03", category: "Acessórios", assetNumber: "ACC-003", serialNumber: "CTRL-TEST-003", location: "Armário A1", status: "Disponível", operatingSystem: "", notes: "Controle para headset VR" },
+  { id: 1033, name: "Estação de carregamento VR", category: "Acessórios", assetNumber: "ACC-004", serialNumber: "CHG-TEST-001", location: "Armário A2", status: "Disponível", operatingSystem: "", notes: "Carregamento de headsets" },
+  { id: 1034, name: "Sensor de movimento 03", category: "Sensores", assetNumber: "SEN-003", serialNumber: "SEN-TEST-003", location: "Sala VR", status: "Disponível", operatingSystem: "", notes: "Sensor para captura de movimento" },
+  { id: 1035, name: "Sensor de movimento 04", category: "Sensores", assetNumber: "SEN-004", serialNumber: "SEN-TEST-004", location: "Sala VR", status: "Disponível", operatingSystem: "", notes: "Sensor auxiliar de rastreamento" },
+  { id: 1036, name: "Câmera profissional 02", category: "Áudio e vídeo", assetNumber: "AUD-003", serialNumber: "CAM-TEST-002", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Captação de vídeo" },
+  { id: 1037, name: "Gravador de áudio 01", category: "Áudio e vídeo", assetNumber: "AUD-004", serialNumber: "REC-TEST-001", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Gravação de áudio" },
+  { id: 1038, name: "Kit de iluminação 02", category: "Iluminação", assetNumber: "ILU-002", serialNumber: "ILU-TEST-002", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Iluminação para gravações" },
+  { id: 1039, name: "Tripé profissional 01", category: "Acessórios", assetNumber: "ACC-005", serialNumber: "TRI-TEST-001", location: "Estúdio", status: "Disponível", operatingSystem: "", notes: "Suporte para câmeras" },
+  { id: 1040, name: "Mesa digitalizadora 01", category: "Outros", assetNumber: "OUT-002", serialNumber: "TAB-TEST-001", location: "Bancada 03", status: "Disponível", operatingSystem: "", notes: "Apoio à produção audiovisual" },
 ];
 
 export type SeedPerson = Person;
@@ -51,6 +72,16 @@ export const seedPeople: SeedPerson[] = [
   { id: "seed-person-018", name: "Rafael Moreira", role: "Aluno", sector: "Turma VR 03", phone: "(18) 99100-0018", email: "rafael.moreira@example.com", active: true },
   { id: "seed-person-019", name: "Sofia Cardoso", role: "Gestor", sector: "Gestão", phone: "(18) 99100-0019", email: "sofia.cardoso@example.com", active: true },
   { id: "seed-person-020", name: "Tiago Fernandes", role: "Responsável autorizado", sector: "Coordenação", phone: "(18) 99100-0020", email: "tiago.fernandes@example.com", active: true },
+  { id: "seed-person-021", name: "Amanda Ribeiro", role: "Aluno", sector: "Turma VR 04", phone: "(18) 99100-0021", email: "amanda.ribeiro@example.com", active: true },
+  { id: "seed-person-022", name: "Bernardo Martins", role: "Professor", sector: "Audiovisual", phone: "(18) 99100-0022", email: "bernardo.martins@example.com", active: true },
+  { id: "seed-person-023", name: "Camila Ferreira", role: "Técnico", sector: "Suporte técnico", phone: "(18) 99100-0023", email: "camila.ferreira@example.com", active: true },
+  { id: "seed-person-024", name: "Daniel Costa", role: "Aluno", sector: "Turma VR 04", phone: "(18) 99100-0024", email: "daniel.costa@example.com", active: true },
+  { id: "seed-person-025", name: "Elisa Rodrigues", role: "Responsável autorizado", sector: "Coordenação", phone: "(18) 99100-0025", email: "elisa.rodrigues@example.com", active: true },
+  { id: "seed-person-026", name: "Fernando Almeida", role: "Colaborador", sector: "Produção audiovisual", phone: "(18) 99100-0026", email: "fernando.almeida@example.com", active: true },
+  { id: "seed-person-027", name: "Giovana Carvalho", role: "Aluno", sector: "Turma VR 05", phone: "(18) 99100-0027", email: "giovana.carvalho@example.com", active: true },
+  { id: "seed-person-028", name: "Heitor Santos", role: "Gestor", sector: "Gestão do laboratório", phone: "(18) 99100-0028", email: "heitor.santos@example.com", active: true },
+  { id: "seed-person-029", name: "Isadora Lima", role: "Professor", sector: "Realidade virtual", phone: "(18) 99100-0029", email: "isadora.lima@example.com", active: true },
+  { id: "seed-person-030", name: "João Victor Mendes", role: "Técnico", sector: "Manutenção", phone: "(18) 99100-0030", email: "joao.victor.mendes@example.com", active: true },
 ];
 
 export type SeedRoom = Room;
@@ -77,11 +108,57 @@ export const seedRooms: SeedRoom[] = [
     capacity: 6,
     active: true,
   },
+  {
+    id: "seed-room-004",
+    name: "Sala de Captura de Movimento",
+    location: "Bloco de Laboratórios",
+    capacity: 12,
+    active: true,
+  },
+  {
+    id: "seed-room-005",
+    name: "Estúdio de Gravação 02",
+    location: "Laboratório Audiovisual",
+    capacity: 6,
+    active: true,
+  },
+  {
+    id: "seed-room-006",
+    name: "Sala de Pós-produção",
+    location: "Bloco de Laboratórios",
+    capacity: 8,
+    active: true,
+  },
+  {
+    id: "seed-room-007",
+    name: "Sala de Equipamentos",
+    location: "Bloco de Laboratórios",
+    capacity: 4,
+    active: false,
+  },
+  {
+    id: "seed-room-008",
+    name: "Sala de Treinamento Audiovisual",
+    location: "Bloco de Laboratórios",
+    capacity: 15,
+    active: true,
+  },
 ];
+
+function getSeedDate(daysOffset: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export type SeedMaintenanceOrder = MaintenanceOrder;
 
-export const seedMaintenanceOrders: SeedMaintenanceOrder[] = [
+const seedMaintenanceOrdersBase: SeedMaintenanceOrder[] = [
   { id: "seed-order-001", orderNumber: "OS-SEED-001", equipment: "Meta Quest 3 - Unidade 01", equipmentId: 1001, assetNumber: "VR-001", previousEquipmentStatus: "Disponível", problem: "Falha intermitente no rastreamento", responsible: "Ana Souza", openingDate: "2026-01-05", status: "Concluída", serviceNotes: "Sensores testados e funcionamento validado.", completionDate: "2026-01-06", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza", performedByPersonId: "seed-person-002", performedByName: "Bruno Oliveira", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
   { id: "seed-order-002", orderNumber: "OS-SEED-002", equipment: "Meta Quest 2 - Unidade 01", equipmentId: 1003, assetNumber: "VR-003", previousEquipmentStatus: "Em uso", problem: "Imagem não inicia corretamente", responsible: "Bruno Oliveira", openingDate: "2026-01-08", status: "Concluída", serviceNotes: "Aplicativo atualizado e equipamento testado.", completionDate: "2026-01-09", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira", performedByPersonId: "seed-person-010", performedByName: "João Pereira", releasedByPersonId: "seed-person-011", releasedByName: "Karen Ribeiro" },
   { id: "seed-order-003", orderNumber: "OS-SEED-003", equipment: "Notebook de Alto Desempenho 01", equipmentId: 1005, assetNumber: "TI-001", previousEquipmentStatus: "Disponível", problem: "Superaquecimento durante uso", responsible: "Carla Santos", openingDate: "2026-01-12", status: "Concluída", serviceNotes: "Ventilação limpa e teste de carga realizado.", completionDate: "2026-01-13", assignedPersonId: "seed-person-010", assignedPersonName: "João Pereira", performedByPersonId: "seed-person-016", performedByName: "Paulo Nascimento", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
@@ -102,4 +179,301 @@ export const seedMaintenanceOrders: SeedMaintenanceOrder[] = [
   { id: "seed-order-018", orderNumber: "OS-SEED-018", equipment: "Computador VR 01", equipmentId: 1007, assetNumber: "TI-003", previousEquipmentStatus: "Disponível", problem: "Queda de desempenho em aplicações VR", responsible: "Carla Santos", openingDate: "2026-03-04", status: "Em andamento", serviceNotes: "Verificação de drivers em andamento.", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira" },
   { id: "seed-order-019", orderNumber: "OS-SEED-019", equipment: "Controle VR 01", equipmentId: 1013, assetNumber: "ACC-001", previousEquipmentStatus: "Disponível", problem: "Desgaste no gatilho", responsible: "Diego Almeida", openingDate: "2026-03-06", status: "Aguardando peças", serviceNotes: "Aguardando componente de reposição.", assignedPersonId: "seed-person-016", assignedPersonName: "Paulo Nascimento" },
   { id: "seed-order-020", orderNumber: "OS-SEED-020", equipment: "Microfone USB 01", equipmentId: 1018, assetNumber: "AUD-002", previousEquipmentStatus: "Disponível", problem: "Microfone não reconhecido pelo computador", responsible: "Gabriela Martins", openingDate: "2026-03-09", status: "Aberta", serviceNotes: "", assignedPersonId: "seed-person-010", assignedPersonName: "João Pereira" },
+  {
+    id: "seed-order-021",
+    orderNumber: "OS-SEED-021",
+    equipment: "Meta Quest 3 - Unidade 03",
+    equipmentId: 1021,
+    assetNumber: "VR-005",
+    previousEquipmentStatus: "Disponível",
+    problem: "Falha no sensor de proximidade",
+    responsible: "Amanda Ribeiro",
+    openingDate: getSeedDate(-8),
+    status: "Concluída",
+    serviceNotes: "Sensor recalibrado e funcionamento validado.",
+    completionDate: getSeedDate(-7),
+    assignedPersonId: "seed-person-001",
+    assignedPersonName: "Ana Souza",
+    performedByPersonId: "seed-person-023",
+    performedByName: "Camila Ferreira",
+    releasedByPersonId: "seed-person-003",
+    releasedByName: "Carla Santos",
+  },
+  {
+    id: "seed-order-022",
+    orderNumber: "OS-SEED-022",
+    equipment: "Notebook de Alto Desempenho 03",
+    equipmentId: 1024,
+    assetNumber: "TI-005",
+    previousEquipmentStatus: "Disponível",
+    problem: "Teclado apresenta falhas",
+    responsible: "Bernardo Martins",
+    openingDate: getSeedDate(-6),
+    status: "Concluída",
+    serviceNotes: "Teclado revisado e funcionamento testado.",
+    completionDate: getSeedDate(-5),
+    assignedPersonId: "seed-person-023",
+    assignedPersonName: "Camila Ferreira",
+    performedByPersonId: "seed-person-030",
+    performedByName: "João Victor Mendes",
+    releasedByPersonId: "seed-person-025",
+    releasedByName: "Elisa Rodrigues",
+  },
+  {
+    id: "seed-order-023",
+    orderNumber: "OS-SEED-023",
+    equipment: "Computador de Edição 01",
+    equipmentId: 1026,
+    assetNumber: "TI-007",
+    previousEquipmentStatus: "Disponível",
+    problem: "Lentidão durante renderização",
+    responsible: "Daniel Costa",
+    openingDate: getSeedDate(-4),
+    status: "Aberta",
+    serviceNotes: "",
+    assignedPersonId: "seed-person-030",
+    assignedPersonName: "João Victor Mendes",
+  },
+  {
+    id: "seed-order-024",
+    orderNumber: "OS-SEED-024",
+    equipment: "Monitor 32 polegadas 01",
+    equipmentId: 1028,
+    assetNumber: "MON-003",
+    previousEquipmentStatus: "Disponível",
+    problem: "Tela apresenta manchas",
+    responsible: "Elisa Rodrigues",
+    openingDate: getSeedDate(-3),
+    status: "Em andamento",
+    serviceNotes: "Inspeção do painel em andamento.",
+    assignedPersonId: "seed-person-023",
+    assignedPersonName: "Camila Ferreira",
+  },
+  {
+    id: "seed-order-025",
+    orderNumber: "OS-SEED-025",
+    equipment: "Televisor de apoio 03",
+    equipmentId: 1030,
+    assetNumber: "TV-003",
+    previousEquipmentStatus: "Disponível",
+    problem: "Falha na conexão HDMI",
+    responsible: "Fernando Almeida",
+    openingDate: getSeedDate(-2),
+    status: "Aguardando peças",
+    serviceNotes: "Aguardando cabo e adaptador de reposição.",
+    assignedPersonId: "seed-person-001",
+    assignedPersonName: "Ana Souza",
+  },
+  {
+    id: "seed-order-026",
+    orderNumber: "OS-SEED-026",
+    equipment: "Projetor multimídia 01",
+    equipmentId: 1031,
+    assetNumber: "TV-004",
+    previousEquipmentStatus: "Disponível",
+    problem: "Imagem com baixa luminosidade",
+    responsible: "Giovana Carvalho",
+    openingDate: getSeedDate(-1),
+    status: "Aberta",
+    serviceNotes: "",
+    assignedPersonId: "seed-person-030",
+    assignedPersonName: "João Victor Mendes",
+  },
+  {
+    id: "seed-order-027",
+    orderNumber: "OS-SEED-027",
+    equipment: "Sensor de movimento 03",
+    equipmentId: 1034,
+    assetNumber: "SEN-003",
+    previousEquipmentStatus: "Disponível",
+    problem: "Perda de rastreamento durante utilização",
+    responsible: "Heitor Santos",
+    openingDate: getSeedDate(0),
+    status: "Em andamento",
+    serviceNotes: "Análise de conexão e posicionamento em andamento.",
+    assignedPersonId: "seed-person-023",
+    assignedPersonName: "Camila Ferreira",
+  },
+  {
+    id: "seed-order-028",
+    orderNumber: "OS-SEED-028",
+    equipment: "Gravador de áudio 01",
+    equipmentId: 1037,
+    assetNumber: "AUD-004",
+    previousEquipmentStatus: "Disponível",
+    problem: "Ruído durante gravação",
+    responsible: "Isadora Lima",
+    openingDate: getSeedDate(0),
+    status: "Aberta",
+    serviceNotes: "",
+    assignedPersonId: "seed-person-001",
+    assignedPersonName: "Ana Souza",
+  },
+  {
+    id: "seed-order-029",
+    orderNumber: "OS-SEED-029",
+    equipment: "Notebook de Alto Desempenho 04",
+    equipmentId: 1025,
+    assetNumber: "TI-006",
+    previousEquipmentStatus: "Disponível",
+    problem: "Bateria não mantém carga",
+    responsible: "Amanda Ribeiro",
+    openingDate: getSeedDate(-2),
+    status: "Em andamento",
+    serviceNotes: "Diagnóstico da bateria em andamento.",
+    assignedPersonId: "seed-person-030",
+    assignedPersonName: "João Victor Mendes",
+  },
+  {
+    id: "seed-order-030",
+    orderNumber: "OS-SEED-030",
+    equipment: "Kit de iluminação 02",
+    equipmentId: 1038,
+    assetNumber: "ILU-002",
+    previousEquipmentStatus: "Disponível",
+    problem: "Uma das luminárias não acende",
+    responsible: "Bernardo Martins",
+    openingDate: getSeedDate(-1),
+    status: "Aguardando peças",
+    serviceNotes: "Aguardando substituição do componente elétrico.",
+    assignedPersonId: "seed-person-023",
+    assignedPersonName: "Camila Ferreira",
+  },
 ];
+
+export const seedMaintenanceOrders: SeedMaintenanceOrder[] =
+  seedMaintenanceOrdersBase.map((order, index) => {
+    const openingDate = getSeedDate(-(60 - index * 2));
+
+    return {
+      ...order,
+      openingDate,
+      ...(order.status === "Concluída"
+        ? { completionDate: getSeedDate(-(59 - index * 2)) }
+        : {}),
+    };
+  });
+
+function getSeedBusinessDate(daysOffset: number): string {
+  const date = new Date();
+  const direction = daysOffset >= 0 ? 1 : -1;
+  let remainingDays = Math.abs(daysOffset);
+
+  while (remainingDays > 0) {
+    date.setDate(date.getDate() + direction);
+
+    const day = date.getDay();
+
+    if (day !== 0 && day !== 6) {
+      remainingDays--;
+    }
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+const activeSeedRooms = seedRooms.filter((room) => room.active);
+
+const equipmentWithActiveMaintenance = new Set(
+  seedMaintenanceOrders
+    .filter((order) => order.status !== "Concluída")
+    .map((order) => order.equipmentId)
+    .filter((id): id is number => id !== undefined)
+);
+
+const availableSeedEquipments = seedEquipments.filter(
+  (equipment) =>
+    equipment.status === "Disponível" &&
+    !equipmentWithActiveMaintenance.has(equipment.id)
+);
+
+const seedReservationPeople = seedPeople.filter((person) => person.active);
+
+const seedStaffPeople = seedPeople.filter(
+  (person) =>
+    person.active &&
+    ["Técnico", "Responsável autorizado", "Gestor"].includes(person.role)
+);
+
+export const seedReservations: Reservation[] = Array.from(
+  { length: 40 },
+  (_, index) => {
+    const isCompleted = index < 12;
+    const isCancelled = index >= 12 && index < 20;
+    const status = isCompleted
+      ? "Concluída"
+      : isCancelled
+        ? "Cancelada"
+        : "Confirmada";
+
+    const useRoom = index % 2 === 0 || availableSeedEquipments.length === 0;
+
+    const room = activeSeedRooms[index % activeSeedRooms.length];
+    const equipment =
+      availableSeedEquipments[
+      Math.floor(index / 2) % availableSeedEquipments.length
+      ];
+
+    const resource = useRoom ? room : equipment;
+    const resourceType = useRoom ? "Sala" : "Equipamento";
+
+    const dateOffset = isCompleted
+      ? -60 + (index % 12) * 3
+      : isCancelled
+        ? -24 + ((index - 12) % 8) * 2
+        : index - 19;
+
+    const date = getSeedBusinessDate(dateOffset);
+
+    const startTime = index % 3 === 0 ? "08:00" : "13:00";
+    const endTime = index % 3 === 0 ? "10:00" : "15:00";
+
+    const person =
+      seedReservationPeople[index % seedReservationPeople.length];
+
+    const confirmedBy =
+      seedStaffPeople[index % seedStaffPeople.length];
+
+    const createdAt = new Date().toISOString();
+
+    const reservation: Reservation = {
+      id: `seed-reservation-${String(index + 1).padStart(3, "0")}`,
+      resourceType,
+      resourceId: resource.id,
+      resourceName: resource.name,
+      reservedBy: person.name,
+      date,
+      startTime,
+      endTime,
+      status,
+      notes: isCompleted
+        ? "Reserva de teste concluída."
+        : isCancelled
+          ? "Reserva de teste cancelada."
+          : "Reserva de teste confirmada.",
+      createdAt,
+      ...(resourceType === "Equipamento"
+        ? {
+          returnStatus: isCompleted
+            ? "Devolvida"
+            : isCancelled
+              ? "Não se aplica"
+              : "Aguardando devolução",
+        }
+        : {}),
+      ...(resourceType === "Equipamento" && isCompleted
+        ? {
+          returnReportedAt: createdAt,
+          returnConfirmedAt: createdAt,
+          returnConfirmedBy: confirmedBy.name,
+        }
+        : {}),
+    };
+
+    return reservation;
+  }
+);
