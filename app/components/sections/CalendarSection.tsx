@@ -1183,7 +1183,7 @@ export default function CalendarSection() {
                             <button
                                 type="button"
                                 onClick={() => setSelectedMaintenance(null)}
-                                className="w-full rounded-xl bg-red-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
+                                className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${selectedMaintenanceColors?.background} ${selectedMaintenanceColors?.hover} ${selectedMaintenanceColors?.border} border`}
                             >
                                 Fechar
                             </button>
