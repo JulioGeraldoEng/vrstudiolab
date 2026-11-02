@@ -212,6 +212,41 @@ O projeto também disponibiliza dados fictícios para demonstração e testes da
 
 **Importante:** a versão atual é um protótipo em desenvolvimento. A integração com banco de dados e autenticação compartilhada está prevista para etapas futuras.
 
+## Carregamento de dados de demonstração (Seed)
+
+O VR Studio Lab possui uma funcionalidade de **Seed**, destinada ao carregamento de dados fictícios para demonstração e testes da aplicação.
+
+Por meio dessa funcionalidade, é possível preencher automaticamente o sistema com informações de exemplo, facilitando a avaliação das telas e dos recursos disponíveis.
+
+### Dados disponibilizados
+
+O conjunto de dados de demonstração inclui:
+
+| Informação | Quantidade |
+|---|---:|
+| Equipamentos | 40 |
+| Pessoas | 30 |
+| Salas | 8 |
+| Ordens de serviço | 30 |
+| Reservas | 40 |
+
+### Como carregar os dados
+
+1. Execute o projeto localmente com `npm.cmd run dev`.
+2. Acesse a aplicação pelo navegador.
+3. Entre na página **Seed**, pelo endereço `/seed`.
+4. Confirme o carregamento dos dados de demonstração.
+5. Acesse os módulos para visualizar os registros fictícios.
+
+### Atenção
+
+O carregamento do Seed substitui os dados locais existentes nos módulos contemplados pela operação.
+
+Por isso, antes de executar essa funcionalidade, faça um backup caso queira preservar informações armazenadas no navegador.
+
+**Importante:** os dados são fictícios e destinados exclusivamente a demonstrações e testes. Não utilize informações reais ou sensíveis nesse ambiente.
+
+
 ## Publicação
 
 O projeto está publicado por meio do **GitHub Pages**.
