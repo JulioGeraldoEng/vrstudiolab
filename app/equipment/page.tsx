@@ -3,13 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Sidebar from "../components/Sidebar";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
 import EquipmentModal from "../components/modals/EquipmentModal";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import EquipmentTable from "../components/tables/EquipmentTable";
 import { categories, statuses } from "../../types/equipment";
 import type { Equipment, Status } from "../../types/equipment";
+import PermissionGate from "../components/PermissionGate";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 
@@ -24,13 +27,6 @@ const emptyForm = {
   notes: "",
 };
 
-const statusStyles: Record<Status, string> = {
-  "Disponível": "bg-emerald-400/10 text-emerald-300",
-  "Em uso": "bg-cyan-400/10 text-cyan-300",
-  "Manutenção": "bg-amber-400/10 text-amber-300",
-  "Baixado": "bg-rose-400/10 text-rose-300",
-};
-
 export default function InventoryPage() {
   const [items, setItems] = useState<Equipment[]>([]);
   const [ready, setReady] = useState(false);
@@ -40,36 +36,40 @@ export default function InventoryPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageState, setPageState] = useState({
+    page: 1,
+    filterKey: "",
+  });
+
   const itemsPerPage = 10;
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter, categoryFilter]);
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved !== null) {
+          const parsed: unknown = JSON.parse(saved);
 
-      if (saved !== null) {
-        const parsed: unknown = JSON.parse(saved);
-
-        if (Array.isArray(parsed)) {
-          setItems(parsed as Equipment[]);
+          if (Array.isArray(parsed)) {
+            setItems(parsed as Equipment[]);
+          } else {
+            setItems([]);
+          }
         } else {
           setItems([]);
         }
-      } else {
-        setItems([]);
+      } catch (error) {
+        console.error(
+          "Não foi possível carregar o equipamento salvo.",
+          error
+        );
+      } finally {
+        setReady(true);
       }
-    } catch (error) {
-      console.error(
-        "Não foi possível carregar o equipamento salvo.",
-        error
-      );
-    } finally {
-      setReady(true);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -99,6 +99,19 @@ export default function InventoryPage() {
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [items, search, statusFilter, categoryFilter]);
+
+  const filterKey = JSON.stringify([
+    search,
+    statusFilter,
+    categoryFilter,
+  ]);
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+  const currentPage =
+    pageState.filterKey === filterKey
+      ? Math.min(pageState.page, Math.max(totalPages, 1))
+      : 1;
 
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
@@ -163,23 +176,25 @@ export default function InventoryPage() {
     }
   }
 
-  function deleteEquipment(item: Equipment) {
+  function deactivateEquipment(item: Equipment) {
     const confirmed = window.confirm(
-      `Deseja excluir o equipamento "${item.name}"?`
+      `Deseja dar baixa no equipamento "${item.name}"? Ele continuará registrado no histórico.`
     );
 
     if (!confirmed) return;
 
     try {
-      const updatedItems = items.filter(
-        (entry) => entry.id !== item.id
+      const updatedItems = items.map((entry) =>
+        entry.id === item.id
+          ? { ...entry, status: "Baixado" as Status }
+          : entry
       );
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
       setItems(updatedItems);
     } catch (error) {
-      console.error("Erro ao excluir equipamento:", error);
-      window.alert("Não foi possível atualizar o equipamento salvo.");
+      console.error("Erro ao dar baixa no equipamento:", error);
+      window.alert("Não foi possível atualizar o equipamento.");
     }
   }
 
@@ -291,25 +306,44 @@ export default function InventoryPage() {
                   </select>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={openNewForm}
-                  className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                >
-                  + Novo equipamento
-                </button>
+                <PermissionGate permission="equipment.create">
+                  <button
+                    type="button"
+                    onClick={openNewForm}
+                    className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                  >
+                    + Novo equipamento
+                  </button>
+                </PermissionGate>
               </div>
 
 
               <EquipmentTable
                 items={paginatedItems}
                 ready={ready}
-                onEdit={openEditForm}
-                onDelete={deleteEquipment}
+                onEdit={
+                  hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")
+                    ? openEditForm
+                    : undefined
+                }
+                onDeactivate={
+                  hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+                    ? deactivateEquipment
+                    : undefined
+                }
                 currentPage={currentPage}
                 itemsPerPage={itemsPerPage}
                 totalItems={filteredItems.length}
-                onPageChange={setCurrentPage}
+                onPageChange={(page) =>
+                  setPageState({
+                    page,
+                    filterKey,
+                  })
+                }
+                showActions={
+                  hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit") ||
+                  hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+                }
               />
 
             </section>

@@ -282,7 +282,8 @@ export async function exportToPDF(
       horizontalPageBreak: true,
     });
 
-    currentY = (doc as any).lastAutoTable.finalY + 12;
+    currentY = (doc as typeof doc & { lastAutoTable: { finalY: number } })
+      .lastAutoTable.finalY + 12;
   }
 
   if (maintenanceFields.length > 0) {

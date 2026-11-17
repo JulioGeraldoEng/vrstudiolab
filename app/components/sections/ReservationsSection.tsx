@@ -1,6 +1,7 @@
 import type { Reservation } from "../../../types/reservation";
 import type { Person } from "../../../types/person";
 import ReservationsTable from "../tables/ReservationsTable";
+import PermissionGate from "../PermissionGate";
 
 type ReservationsSectionProps = {
   reservations: Reservation[];
@@ -57,13 +58,15 @@ export default function ReservationsSection({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onNewReservation}
-          className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-        >
-          + Realizar reserva
-        </button>
+        <PermissionGate permission="reservations.request">
+          <button
+            type="button"
+            onClick={onNewReservation}
+            className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+          >
+            + Realizar reserva
+          </button>
+        </PermissionGate>
       </div>
 
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">

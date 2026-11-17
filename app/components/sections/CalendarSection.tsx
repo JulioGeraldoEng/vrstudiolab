@@ -11,8 +11,7 @@ export default function CalendarSection() {
     const [showEquipment, setShowEquipment] = useState(true);
     const [showMaintenance, setShowMaintenance] = useState(true);
     const [maintenanceFilter, setMaintenanceFilter] = useState<"open" | "completed" | "all">("open");
-    const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [maintenanceOrders, setMaintenanceOrders] = useState<MaintenanceOrder[]>([]);
+
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
     const [selectedMaintenance, setSelectedMaintenance] = useState<MaintenanceOrder | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -20,33 +19,47 @@ export default function CalendarSection() {
     const [viewMode, setViewMode] = useState<"week" | "month" | "list">("week");
     const [expandedMonthDay, setExpandedMonthDay] = useState<string | null>(null);
 
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [maintenanceOrders, setMaintenanceOrders] = useState<MaintenanceOrder[]>([]);
+
     useEffect(() => {
-        const savedReservations = localStorage.getItem(RESERVATIONS_STORAGE_KEY);
-
-        if (savedReservations) {
+        const timeoutId = window.setTimeout(() => {
             try {
-                const parsedReservations = JSON.parse(savedReservations);
+                const savedReservations = localStorage.getItem(
+                    RESERVATIONS_STORAGE_KEY
+                );
 
-                if (Array.isArray(parsedReservations)) {
-                    setReservations(parsedReservations);
+                if (savedReservations) {
+                    const parsed: unknown = JSON.parse(savedReservations);
+
+                    setReservations(
+                        Array.isArray(parsed) ? (parsed as Reservation[]) : []
+                    );
                 }
             } catch (error) {
                 console.error("Erro ao carregar reservas:", error);
             }
-        }
-        const savedMaintenance = localStorage.getItem("vrstudiolab-maintenance-v1");
 
-        if (savedMaintenance) {
             try {
-                const parsedMaintenance = JSON.parse(savedMaintenance);
+                const savedMaintenance = localStorage.getItem(
+                    "vrstudiolab-maintenance-v1"
+                );
 
-                if (Array.isArray(parsedMaintenance)) {
-                    setMaintenanceOrders(parsedMaintenance);
+                if (savedMaintenance) {
+                    const parsed: unknown = JSON.parse(savedMaintenance);
+
+                    setMaintenanceOrders(
+                        Array.isArray(parsed)
+                            ? (parsed as MaintenanceOrder[])
+                            : []
+                    );
                 }
             } catch (error) {
                 console.error("Erro ao carregar ordens de serviço:", error);
             }
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
@@ -123,23 +136,6 @@ export default function CalendarSection() {
         const day = String(date.getDate()).padStart(2, "0");
 
         return `${year}-${month}-${day}`;
-    }
-
-    function isReservationInHour(
-        reservation: Reservation,
-        date: Date,
-        hour: number,
-    ) {
-        const day = dateToLocalString(date);
-
-        const slotStart = `${String(hour).padStart(2, "0")}:00`;
-        const slotEnd = `${String(hour + 1).padStart(2, "0")}:00`;
-
-        return (
-            reservation.date === day &&
-            reservation.startTime < slotEnd &&
-            reservation.endTime > slotStart
-        );
     }
 
     function getReservationPosition(reservation: Reservation) {

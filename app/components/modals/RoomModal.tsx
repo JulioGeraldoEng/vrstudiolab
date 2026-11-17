@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { Room } from "../../../types/room";
 import CloseModalButton from "../buttons/CloseModalButton";
 
@@ -18,30 +18,12 @@ export default function RoomModal({
   onSave,
   onClose,
 }: RoomModalProps) {
-  const [form, setForm] = useState<RoomFormData>({
-    name: "",
-    location: "",
-    capacity: 1,
-    active: true,
-  });
-
-  useEffect(() => {
-    if (room) {
-      setForm({
-        name: room.name,
-        location: room.location,
-        capacity: room.capacity,
-        active: room.active,
-      });
-    } else {
-      setForm({
-        name: "",
-        location: "",
-        capacity: 1,
-        active: true,
-      });
-    }
-  }, [room]);
+  const [form, setForm] = useState<RoomFormData>(() => ({
+    name: room?.name ?? "",
+    location: room?.location ?? "",
+    capacity: room?.capacity ?? 1,
+    active: room?.active ?? true,
+  }));
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

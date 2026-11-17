@@ -2,13 +2,15 @@
 
 import ReservationForm from "../forms/ReservationForm";
 import CloseModalButton from "../buttons/CloseModalButton";
+import type { Room } from "../../../types/room";
+import type { Equipment } from "../../../types/equipment";
 
 type ReservationModalProps = {
     isOpen: boolean;
     onClose: () => void;
 
-    rooms: any[];
-    equipment: any[];
+    rooms: Room[];
+    equipment: Equipment[];
 
     resourceType: "Sala" | "Equipamento";
     resourceId: string;

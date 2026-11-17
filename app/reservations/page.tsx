@@ -7,18 +7,19 @@ import { RESERVATIONS_STORAGE_KEY, hasReservationConflict } from "./storage";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
 import { getReservationDisplayStatus } from "../components/tables/ReservationsTable";
 import type { Equipment } from "../../types/equipment";
 import type { Person } from "../../types/person";
 import ReservationModal from "../components/modals/ReservationModal";
 import ReservationsSection from "../components/sections/ReservationsSection";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
 export default function ReservasPage() {
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [ready, setReady] = useState(false);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
@@ -37,63 +38,77 @@ export default function ReservasPage() {
     const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+        const timeoutId = window.setTimeout(() => {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
 
-            if (saved !== null) {
-                const parsed: unknown = JSON.parse(saved);
-                setRooms(Array.isArray(parsed) ? (parsed as Room[]) : []);
-            }
-        } catch (error) {
-            console.error("Não foi possível carregar as salas.", error);
-        } finally {
-            setReady(true);
-        }
+                if (saved !== null) {
+                    const parsed: unknown = JSON.parse(saved);
+                    setRooms(Array.isArray(parsed) ? (parsed as Room[]) : []);
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar as salas.", error);
+            } 
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(RESERVATIONS_STORAGE_KEY);
+        const timeoutId = window.setTimeout(() => {
+            try {
+                const saved = localStorage.getItem(RESERVATIONS_STORAGE_KEY);
 
-            if (saved !== null) {
-                const parsed: unknown = JSON.parse(saved);
-                setReservations(
-                    Array.isArray(parsed) ? (parsed as Reservation[]) : []
-                );
+                if (saved !== null) {
+                    const parsed: unknown = JSON.parse(saved);
+                    setReservations(
+                        Array.isArray(parsed) ? (parsed as Reservation[]) : []
+                    );
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar as reservas.", error);
+            } finally {
+                setReservationsReady(true);
             }
-        } catch (error) {
-            console.error("Não foi possível carregar as reservas.", error);
-        } finally {
-            setReservationsReady(true);
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem("vrstudiolab-inventory-v1");
+        const timeoutId = window.setTimeout(() => {
+            try {
+                const saved = localStorage.getItem("vrstudiolab-inventory-v1");
 
-            if (saved !== null) {
-                const parsed: unknown = JSON.parse(saved);
-                setEquipment(
-                    Array.isArray(parsed) ? (parsed as Equipment[]) : []
-                );
+                if (saved !== null) {
+                    const parsed: unknown = JSON.parse(saved);
+                    setEquipment(
+                        Array.isArray(parsed) ? (parsed as Equipment[]) : []
+                    );
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar os equipamentos.", error);
             }
-        } catch (error) {
-            console.error("Não foi possível carregar os equipamentos.", error);
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem("vrstudiolab-maintenance-people-v1");
+        const timeoutId = window.setTimeout(() => {
+            try {
+                const saved = localStorage.getItem("vrstudiolab-maintenance-people-v1");
 
-            if (saved !== null) {
-                const parsed: unknown = JSON.parse(saved);
-                setPeople(Array.isArray(parsed) ? (parsed as Person[]) : []);
+                if (saved !== null) {
+                    const parsed: unknown = JSON.parse(saved);
+                    setPeople(Array.isArray(parsed) ? (parsed as Person[]) : []);
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar as pessoas cadastradas.", error);
             }
-        } catch (error) {
-            console.error("Não foi possível carregar as pessoas cadastradas.", error);
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
@@ -111,6 +126,11 @@ export default function ReservasPage() {
     }, [reservations, reservationsReady]);
 
     function createReservation() {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "reservations.request")) {
+            alert("Você não possui permissão para solicitar reservas.");
+            return;
+        }
+
         if (
             !resourceId ||
             !reservedBy.trim() ||
@@ -231,6 +251,13 @@ export default function ReservasPage() {
     }
 
     function cancelReservation(reservation: Reservation) {
+        if (
+            !hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") &&
+            !hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelAny")
+        ) {
+            alert("Você não possui permissão para cancelar reservas.");
+            return;
+        }
         const confirmed = window.confirm(
             `Deseja cancelar a reserva de "${reservation.resourceName}" para ${reservation.date.split("-").reverse().join("/")} das ${reservation.startTime} às ${reservation.endTime}?`
         );
@@ -247,6 +274,11 @@ export default function ReservasPage() {
     }
 
     function reportEquipmentReturn(reservation: Reservation) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "loans.registerReturn")) {
+            alert("Você não possui permissão para registrar devoluções.");
+            return;
+        }
+
         if (reservation.resourceType !== "Equipamento") {
             return;
         }
@@ -283,10 +315,12 @@ export default function ReservasPage() {
         );
     }
 
-    function confirmEquipmentReturn(
-        reservation: Reservation,
-        confirmerName: string
-    ) {
+    function confirmEquipmentReturn(reservation: Reservation, confirmerName: string) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "loans.confirmReturn")) {
+            alert("Você não possui permissão para confirmar devoluções.");
+            return;
+        }
+
         if (reservation.resourceType !== "Equipamento") {
             return;
         }

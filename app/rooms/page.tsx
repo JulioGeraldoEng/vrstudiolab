@@ -7,7 +7,9 @@ import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import RoomsSection from "../components/sections/RoomsSection";
 import RoomModal from "../components/modals/RoomModal";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
@@ -18,18 +20,22 @@ export default function RoomsPage() {
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+        const timeout = window.setTimeout(() => {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
 
-            if (saved !== null) {
-                const parsed: unknown = JSON.parse(saved);
-                setRooms(Array.isArray(parsed) ? (parsed as Room[]) : []);
+                if (saved !== null) {
+                    const parsed: unknown = JSON.parse(saved);
+                    setRooms(Array.isArray(parsed) ? (parsed as Room[]) : []);
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar as salas.", error);
+            } finally {
+                setReady(true);
             }
-        } catch (error) {
-            console.error("Não foi possível carregar as salas.", error);
-        } finally {
-            setReady(true);
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeout);
     }, []);
 
     useEffect(() => {
@@ -44,16 +50,32 @@ export default function RoomsPage() {
     }, [rooms, ready]);
 
     function openNewRoom() {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "rooms.create")) {
+            alert("Você não possui permissão para cadastrar salas.");
+            return;
+        }
         setEditingRoom(null);
         setShowModal(true);
     }
 
     function openEditRoom(room: Room) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit")) {
+            alert("Você não possui permissão para editar salas.");
+            return;
+        }
         setEditingRoom(room);
         setShowModal(true);
     }
 
     function saveRoom(data: Omit<Room, "id">) {
+        if (
+            editingRoom
+                ? !hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit")
+                : !hasPermission(CURRENT_ACCESS_PROFILE, "rooms.create")
+        ) {
+            alert("Você não possui permissão para realizar esta operação.");
+            return;
+        }
         const nameExists = rooms.some(
             (room) =>
                 room.name.trim().toLocaleLowerCase() ===
@@ -86,6 +108,10 @@ export default function RoomsPage() {
     }
 
     function toggleRoomStatus(room: Room) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "rooms.deactivate")) {
+            alert("Você não possui permissão para alterar a situação das salas.");
+            return;
+        }
         const action = room.active ? "desativar" : "ativar";
 
         const confirmed = window.confirm(
