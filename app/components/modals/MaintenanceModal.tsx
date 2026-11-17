@@ -36,6 +36,9 @@ export default function MaintenanceModal({
   if (!open) return null;
 
   const activePeople = people.filter((person) => person.active);
+  const availableEquipment = inventory.filter(
+    (item) => item.status !== "Baixado"
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -73,19 +76,17 @@ export default function MaintenanceModal({
             >
               <option value="">Selecione um equipamento</option>
 
-              {inventory
-                .filter((item) => item.status !== "Baixado")
-                .map((item) => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.name} — {item.assetNumber || "Sem patrimônio"}
-                  </option>
-                ))}
+              {availableEquipment.map((item) => (
+                <option key={item.id} value={String(item.id)}>
+                  {item.name} — {item.assetNumber || "Sem patrimônio"}
+                </option>
+              ))}
             </select>
 
-            {inventory.length === 0 && (
+            {availableEquipment.length === 0 && (
               <p className="mt-2 text-xs text-amber-300">
-                Nenhum equipamento carregado. Cadastre ou confira os itens
-                no inventário.
+                Não há equipamentos disponíveis para abertura de ordem de serviço.
+                Confira o inventário.
               </p>
             )}
           </div>

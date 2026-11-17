@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import MaintenanceModal from "../components/modals/MaintenanceModal";
@@ -13,6 +13,9 @@ import type {
   MaintenanceOrder,
   MaintenanceStatus,
 } from "../../types/maintenance";
+import PermissionGate from "../components/PermissionGate";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -37,7 +40,10 @@ export default function ManutencaoPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [showForm, setShowForm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageState, setPageState] = useState({
+    page: 1,
+    searchKey: "",
+  });
   const itemsPerPage = 10;
 
   const [equipmentId, setEquipmentId] = useState("");
@@ -58,96 +64,101 @@ export default function ManutencaoPage() {
   const [completionServiceNotes, setCompletionServiceNotes] = useState("");
   const [completionIsReleased, setCompletionIsReleased] = useState(false);
 
+
   useEffect(() => {
-    try {
-      const savedOrders = localStorage.getItem(STORAGE_KEY);
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const savedOrders = localStorage.getItem(STORAGE_KEY);
 
-      if (savedOrders) {
-        const parsedOrders: unknown = JSON.parse(savedOrders);
+        if (savedOrders) {
+          const parsedOrders: unknown = JSON.parse(savedOrders);
 
-        if (Array.isArray(parsedOrders)) {
-          const existingOrders = parsedOrders as MaintenanceOrder[];
-          const currentYear = new Date().getFullYear();
-          const usedNumbers = new Set<string>();
+          if (Array.isArray(parsedOrders)) {
+            const existingOrders = parsedOrders as MaintenanceOrder[];
+            const currentYear = new Date().getFullYear();
+            const usedNumbers = new Set<string>();
 
-          for (const order of existingOrders) {
-            if (
-              typeof order.orderNumber === "string" &&
-              order.orderNumber.trim() !== ""
-            ) {
-              usedNumbers.add(order.orderNumber.trim());
+            for (const order of existingOrders) {
+              if (
+                typeof order.orderNumber === "string" &&
+                order.orderNumber.trim() !== ""
+              ) {
+                usedNumbers.add(order.orderNumber.trim());
+              }
             }
+
+            let nextNumber = 1;
+
+            for (const number of usedNumbers) {
+              const match = number.match(/^OS-(\d{4})-(\d+)$/);
+
+              if (match && Number(match[1]) === currentYear) {
+                nextNumber = Math.max(
+                  nextNumber,
+                  Number(match[2]) + 1
+                );
+              }
+            }
+
+            const migratedOrders = existingOrders.map((order) => {
+              if (
+                typeof order.orderNumber === "string" &&
+                order.orderNumber.trim() !== ""
+              ) {
+                return order;
+              }
+
+              let newNumber = "";
+
+              do {
+                newNumber = `OS-${currentYear}-${String(
+                  nextNumber
+                ).padStart(4, "0")}`;
+
+                nextNumber++;
+              } while (usedNumbers.has(newNumber));
+
+              usedNumbers.add(newNumber);
+
+              return {
+                ...order,
+                orderNumber: newNumber,
+              };
+            });
+
+            setOrders(migratedOrders);
           }
+        }
 
-          let nextNumber = 1;
+        const savedInventory = localStorage.getItem(
+          "vrstudiolab-inventory-v1"
+        );
 
-          for (const number of usedNumbers) {
-            const match = number.match(/^OS-(\d{4})-(\d+)$/);
+        if (savedInventory) {
+          const parsedInventory: unknown = JSON.parse(savedInventory);
 
-            if (match && Number(match[1]) === currentYear) {
-              nextNumber = Math.max(
-                nextNumber,
-                Number(match[2]) + 1
-              );
-            }
+          if (Array.isArray(parsedInventory)) {
+            setInventory(parsedInventory as Equipment[]);
           }
-
-          const migratedOrders = existingOrders.map((order) => {
-            if (
-              typeof order.orderNumber === "string" &&
-              order.orderNumber.trim() !== ""
-            ) {
-              return order;
-            }
-
-            let newNumber = "";
-
-            do {
-              newNumber = `OS-${currentYear}-${String(
-                nextNumber
-              ).padStart(4, "0")}`;
-
-              nextNumber++;
-            } while (usedNumbers.has(newNumber));
-
-            usedNumbers.add(newNumber);
-
-            return {
-              ...order,
-              orderNumber: newNumber,
-            };
-          });
-
-          setOrders(migratedOrders);
         }
-      }
 
-      const savedInventory = localStorage.getItem(
-        "vrstudiolab-inventory-v1"
-      );
+        const savedPeople = localStorage.getItem(PEOPLE_STORAGE_KEY);
 
-      if (savedInventory) {
-        const parsedInventory: unknown = JSON.parse(savedInventory);
+        if (savedPeople) {
+          const parsedPeople: unknown = JSON.parse(savedPeople);
 
-        if (Array.isArray(parsedInventory)) {
-          setInventory(parsedInventory as Equipment[]);
+          if (Array.isArray(parsedPeople)) {
+            setPeople(parsedPeople as Person[]);
+          }
         }
+      } catch (error) {
+        console.error("Erro ao carregar os dados:", error);
+      } finally {
+        setReady(true);
       }
+    }, 0);
 
-      const savedPeople = localStorage.getItem(PEOPLE_STORAGE_KEY);
-
-      if (savedPeople) {
-        const parsedPeople: unknown = JSON.parse(savedPeople);
-
-        if (Array.isArray(parsedPeople)) {
-          setPeople(parsedPeople as Person[]);
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar os dados:", error);
-    } finally {
-      setReady(true);
-    }
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -162,6 +173,13 @@ export default function ManutencaoPage() {
 
   function createOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
+    ) {
+      alert("Seu perfil não possui permissão para abrir ordens de serviço.");
+      return;
+    }
 
     const selectedId = Number(equipmentId);
     const savedInventory = localStorage.getItem(
@@ -262,6 +280,22 @@ export default function ManutencaoPage() {
   }
 
   function updateStatus(id: string, status: MaintenanceStatus) {
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") &&
+      status !== "Concluída"
+    ) {
+      alert("Você não possui permissão para alterar esta ordem.");
+      return;
+    }
+
+    if (
+      status === "Concluída" &&
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+    ) {
+      alert("Você não possui permissão para concluir esta ordem.");
+      return;
+    }
+
     const targetOrder = orders.find((order) => order.id === id);
 
     if (!targetOrder) return;
@@ -286,6 +320,13 @@ export default function ManutencaoPage() {
 
   function confirmCompletion(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+    ) {
+      alert("Você não possui permissão para concluir esta ordem.");
+      return;
+    }
 
     const targetOrder = orders.find(
       (order) => order.id === completionOrderId
@@ -339,6 +380,9 @@ export default function ManutencaoPage() {
     const updatedInventory = currentInventory.map((item) => {
       if (item.id !== targetOrder.equipmentId) return item;
 
+      // Equipamento baixado não pode ser reativado por uma ordem antiga.
+      if (item.status === "Baixado") return item;
+
       if (!completionIsReleased || hasAnotherActiveOrder) {
         return {
           ...item,
@@ -389,6 +433,13 @@ export default function ManutencaoPage() {
   }
 
   function releaseEquipment(orderId: string) {
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+    ) {
+      alert("Você não possui permissão para liberar equipamentos.");
+      return;
+    }
+
     const targetOrder = orders.find(
       (order) => order.id === orderId
     );
@@ -533,10 +584,13 @@ export default function ManutencaoPage() {
     return matchesSearch && matchesStatus;
   });
 
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
+  const currentPage =
+    pageState.searchKey === search
+      ? Math.min(
+        pageState.page,
+        Math.max(Math.ceil(filteredOrders.length / itemsPerPage), 1)
+      )
+      : 1;
 
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * itemsPerPage,
@@ -828,14 +882,16 @@ export default function ManutencaoPage() {
                   </select>
 
                   <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForm(true);
-                      }}
-                      className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
-                      + Nova ordem de serviço
-                    </button>
+                    <PermissionGate permission="maintenance.openOrder">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForm(true);
+                        }}
+                        className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
+                        + Nova ordem de serviço
+                      </button>
+                    </PermissionGate>
                   </div>
                 </div>
 
@@ -855,11 +911,21 @@ export default function ManutencaoPage() {
                 <MaintenanceTable
                   orders={paginatedOrders}
                   statusStyles={statusStyles}
-                  onStatusChange={updateStatus}
+                  onStatusChange={
+                    hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") ||
+                      hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+                      ? updateStatus
+                      : undefined
+                  }
                   currentPage={currentPage}
                   itemsPerPage={itemsPerPage}
                   totalItems={filteredOrders.length}
-                  onPageChange={setCurrentPage}
+                  onPageChange={(page) =>
+                    setPageState({
+                      page,
+                      searchKey: search,
+                    })
+                  }
                 />
               )}
             </section>
@@ -981,13 +1047,15 @@ export default function ManutencaoPage() {
                                   item.id === order.equipmentId &&
                                   item.status === "Manutenção"
                               ) && (
-                                <button
-                                  type="button"
-                                  onClick={() => releaseEquipment(order.id)}
-                                  className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                                >
-                                  Liberar equipamento
-                                </button>
+                                <PermissionGate permission="maintenance.completeOrder">
+                                  <button
+                                    type="button"
+                                    onClick={() => releaseEquipment(order.id)}
+                                    className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                                  >
+                                    Liberar equipamento
+                                  </button>
+                                </PermissionGate>
                               )}
                           </div>
                         </div>

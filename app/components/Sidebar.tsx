@@ -2,16 +2,65 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import type { Permission } from "../../types/permissions";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
 
-const navigation = [
-  { name: "Visão geral", icon: "dashboard", href: "/" },
-  { name: "Equipamentos", icon: "equipment", href: "/equipment" },
-  { name: "Manutenção", icon: "maintenance", href: "/maintenance" },
-  { name: "Pessoas", icon: "people", href: "/people" },
-  { name: "Salas", icon: "rooms", href: "/rooms" },
-  { name: "Reservas", icon: "reservations", href: "/reservations" },
-  { name: "Relatórios", icon: "reports", href: "/reports" },
-];
+const navigation: {
+  name: string;
+  icon: string;
+  href: string;
+  permissions: Permission[];
+}[] = [
+    {
+      name: "Visão geral",
+      icon: "dashboard",
+      href: "/",
+      permissions: ["dashboard.view"],
+    },
+    {
+      name: "Equipamentos",
+      icon: "equipment",
+      href: "/equipment",
+      permissions: ["equipment.view"],
+    },
+    {
+      name: "Manutenção",
+      icon: "maintenance",
+      href: "/maintenance",
+      permissions: ["maintenance.viewOwn", "maintenance.viewAll"],
+    },
+    {
+      name: "Pessoas",
+      icon: "people",
+      href: "/people",
+      permissions: ["people.viewOwn", "people.viewAll"],
+    },
+    {
+      name: "Salas",
+      icon: "rooms",
+      href: "/rooms",
+      permissions: ["rooms.view"],
+    },
+    {
+      name: "Reservas",
+      icon: "reservations",
+      href: "/reservations",
+      permissions: ["reservations.viewOwn", "reservations.viewAll"],
+    },
+    {
+      name: "Calendário",
+      icon: "calendar",
+      href: "/calendar",
+      permissions: ["calendar.view"],
+    },
+    {
+      name: "Relatórios",
+      icon: "reports",
+      href: "/reports",
+      permissions: ["reports.view"],
+    },
+  ];
 
 type SidebarProps = {
   activePage?: string;
@@ -87,6 +136,15 @@ function NavigationIcon({ name }: { name: string }) {
         </svg>
       );
 
+    case "calendar":
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M16 3v4M8 3v4M3 10h18" />
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" />
+        </svg>
+      );
+
     case "reports":
       return (
         <svg {...common}>
@@ -106,17 +164,26 @@ export default function Sidebar({
 
   const router = useRouter();
   const pathname = usePathname();
+  const visibleNavigation = navigation.filter((item) =>
+    item.permissions.some((permission) =>
+      hasPermission(CURRENT_ACCESS_PROFILE, permission)
+    )
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("vrstudiolab-sidebar-collapsed");
 
-    if (saved !== null) {
-      setCollapsed(saved === "true");
-    }
+    const timeoutId = window.setTimeout(() => {
+      if (saved !== null) {
+        setCollapsed(saved === "true");
+      }
 
-    setPreferenceLoaded(true);
+      setPreferenceLoaded(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -289,7 +356,7 @@ export default function Sidebar({
         )}
 
         <nav className="flex flex-col gap-2">
-          {navigation.map((item) => renderLink(item))}
+          {visibleNavigation.map((item) => renderLink(item))}
         </nav>
 
         <div
@@ -316,7 +383,7 @@ export default function Sidebar({
 
       <div className="w-full min-w-0 border-b border-white/10 px-4 py-3 lg:hidden">
         <nav className="flex w-full min-w-0 gap-2 overflow-x-auto">
-          {navigation.map((item) => renderLink(item, true))}
+          {visibleNavigation.map((item) => renderLink(item, true))}
         </nav>
       </div>
     </>

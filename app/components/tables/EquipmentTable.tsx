@@ -1,6 +1,6 @@
 import { Pagination } from "../Pagination";
 import EditButton from "../buttons/EditButton";
-import DeleteButton from "../buttons/DeleteButton";
+import DeactivateButton from "../buttons/DeactivateButton";
 import type { Status } from "../../../types/equipment";
 import type { Equipment } from "../../../types/equipment";
 
@@ -8,7 +8,7 @@ type InventoryTableProps = {
   items: Equipment[];
   ready: boolean;
   onEdit?: (item: Equipment) => void;
-  onDelete?: (item: Equipment) => void;
+  onDeactivate?: (item: Equipment) => void;
   showActions?: boolean;
   currentPage: number;
   itemsPerPage: number;
@@ -27,7 +27,7 @@ export default function InventoryTable({
   items,
   ready,
   onEdit,
-  onDelete,
+  onDeactivate,
   currentPage,
   itemsPerPage,
   totalItems,
@@ -62,13 +62,13 @@ export default function InventoryTable({
         <tbody className="divide-y divide-white/5">
           {!ready ? (
             <tr>
-              <td colSpan={5} className="px-5 py-10 text-center text-slate-400">
+              <td colSpan={showActions ? 5 : 4} className="px-5 py-10 text-center text-slate-400">
                 Carregando inventário...
               </td>
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={5} className="px-5 py-10 text-center">
+              <td colSpan={showActions ? 5 : 4} className="px-5 py-10 text-center">
                 <p className="font-medium text-slate-300">
                   Nenhum equipamento encontrado
                 </p>
@@ -116,12 +116,14 @@ export default function InventoryTable({
                 {showActions && (
                   <td className="px-5 py-4">
                     <div className="flex gap-3">
-                      {onEdit && (
+                      {onEdit && item.status !== "Baixado" && (
                         <EditButton onClick={() => onEdit(item)} />
                       )}
 
-                      {onDelete && (
-                        <DeleteButton onClick={() => onDelete(item)} />
+                      {onDeactivate && item.status !== "Baixado" && (
+                        <DeactivateButton
+                          onClick={() => onDeactivate(item)}
+                        />
                       )}
                     </div>
                   </td>

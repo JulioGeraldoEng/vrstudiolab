@@ -1,5 +1,8 @@
 import type { Room } from "../../../types/room";
 import RoomsTable from "../tables/RoomsTable";
+import PermissionGate from "../PermissionGate";
+import { CURRENT_ACCESS_PROFILE } from "../../../lib/permissions/current-profile";
+import { hasPermission } from "../../../lib/permissions/has-permission";
 
 type RoomsSectionProps = {
   rooms: Room[];
@@ -29,13 +32,15 @@ export default function RoomsSection({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onNewRoom}
-          className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-        >
-          + Cadastrar sala
-        </button>
+        <PermissionGate permission="rooms.create">
+          <button
+            type="button"
+            onClick={onNewRoom}
+            className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+          >
+            + Cadastrar sala
+          </button>
+        </PermissionGate>
       </div>
 
       {!ready ? (
@@ -51,6 +56,12 @@ export default function RoomsSection({
           rooms={rooms}
           onEdit={onEditRoom}
           onToggleStatus={onToggleStatus}
+          canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit")}
+          canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "rooms.deactivate")}
+          showActions={
+            hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit") ||
+            hasPermission(CURRENT_ACCESS_PROFILE, "rooms.deactivate")
+          }
         />
       )}
     </section>

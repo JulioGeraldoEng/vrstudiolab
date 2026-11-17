@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import PersonModal from "../components/modals/PersonModal";
 import PeopleTable from "../components/tables/PeopleTable";
 import type { Person, PersonRole } from "../../types/person";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
+import PermissionGate from "../components/PermissionGate";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -40,52 +43,59 @@ export default function PessoasPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState(emptyForm);
     const [filter, setFilter] = useState("Todas");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [pageState, setPageState] = useState({
+        page: 1,
+        filterKey: "",
+    });
     const itemsPerPage = 10;
 
     useEffect(() => {
-        try {
-            const savedPeople = localStorage.getItem(PEOPLE_STORAGE_KEY);
+        const timeoutId = window.setTimeout(() => {
+            try {
+                const savedPeople = localStorage.getItem(PEOPLE_STORAGE_KEY);
 
-            if (savedPeople) {
-                const parsed: unknown = JSON.parse(savedPeople);
+                if (savedPeople) {
+                    const parsed: unknown = JSON.parse(savedPeople);
 
-                if (Array.isArray(parsed)) {
-                    const migratedPeople: Person[] = parsed.map((item) => {
-                        const legacyContact =
-                            typeof item.contact === "string" ? item.contact.trim() : "";
+                    if (Array.isArray(parsed)) {
+                        const migratedPeople: Person[] = parsed.map((item) => {
+                            const legacyContact =
+                                typeof item.contact === "string" ? item.contact.trim() : "";
 
-                        return {
-                            ...item,
-                            sector: typeof item.sector === "string" ? item.sector : "",
-                            contact: typeof item.contact === "string" ? item.contact : "",
-                            phone:
-                                typeof item.phone === "string"
-                                    ? item.phone
-                                    : legacyContact.includes("@")
-                                        ? ""
-                                        : legacyContact,
-                            email:
-                                typeof item.email === "string"
-                                    ? item.email
-                                    : legacyContact.includes("@")
-                                        ? legacyContact
-                                        : "",
-                            active: item.active !== false,
-                        };
-                    });
+                            return {
+                                ...item,
+                                sector: typeof item.sector === "string" ? item.sector : "",
+                                contact: typeof item.contact === "string" ? item.contact : "",
+                                phone:
+                                    typeof item.phone === "string"
+                                        ? item.phone
+                                        : legacyContact.includes("@")
+                                            ? ""
+                                            : legacyContact,
+                                email:
+                                    typeof item.email === "string"
+                                        ? item.email
+                                        : legacyContact.includes("@")
+                                            ? legacyContact
+                                            : "",
+                                active: item.active !== false,
+                            };
+                        });
 
-                    setPeople(migratedPeople);
+                        setPeople(migratedPeople);
+                    }
                 }
+            } catch (error) {
+                console.error("Erro ao carregar pessoas:", error);
+                alert(
+                    "Não foi possível carregar os cadastros. Confira os dados salvos antes de continuar."
+                );
+            } finally {
+                setReady(true);
             }
-        } catch (error) {
-            console.error("Erro ao carregar pessoas:", error);
-            alert(
-                "Não foi possível carregar os cadastros. Confira os dados salvos antes de continuar."
-            );
-        } finally {
-            setReady(true);
-        }
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
@@ -123,6 +133,14 @@ export default function PessoasPage() {
 
     function savePerson(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if (
+            editingId
+                ? !hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")
+                : !hasPermission(CURRENT_ACCESS_PROFILE, "people.create")
+        ) {
+            alert("Você não possui permissão para realizar esta operação.");
+            return;
+        }
 
         const name = form.name.trim();
 
@@ -179,6 +197,10 @@ export default function PessoasPage() {
     }
 
     function togglePersonStatus(id: string) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")) {
+            alert("Você não possui permissão para alterar a situação desta pessoa.");
+            return;
+        }
         setPeople((current) =>
             current.map((person) =>
                 person.id === id
@@ -202,9 +224,14 @@ export default function PessoasPage() {
         return matchesSearch && matchesFilter;
     });
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search, filter]);
+    const filterKey = JSON.stringify([search, filter]);
+
+    const totalPages = Math.ceil(filteredPeople.length / itemsPerPage);
+
+    const currentPage =
+        pageState.filterKey === filterKey
+            ? Math.min(pageState.page, Math.max(totalPages, 1))
+            : 1;
 
     const paginatedPeople = filteredPeople.slice(
         (currentPage - 1) * itemsPerPage,
@@ -309,13 +336,15 @@ export default function PessoasPage() {
                                         <option value="Inativas">Somente inativas</option>
                                     </select>
 
-                                    <button
-                                        type="button"
-                                        onClick={openNewForm}
-                                        className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                                    >
-                                        + Cadastrar pessoa
-                                    </button>
+                                    <PermissionGate permission="people.create">
+                                        <button
+                                            type="button"
+                                            onClick={openNewForm}
+                                            className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                                        >
+                                            + Cadastrar pessoa
+                                        </button>
+                                    </PermissionGate>
                                 </div>
 
                             </div>
@@ -347,7 +376,18 @@ export default function PessoasPage() {
                                         totalItems={filteredPeople.length}
                                         onEdit={openEditForm}
                                         onToggleStatus={togglePersonStatus}
-                                        onPageChange={setCurrentPage}
+                                        onPageChange={(page) =>
+                                            setPageState({
+                                                page,
+                                                filterKey,
+                                            })
+                                        }
+                                        showActions={
+                                            hasPermission(CURRENT_ACCESS_PROFILE, "people.edit") ||
+                                            hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")
+                                        }
+                                        canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")}
+                                        canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")}
                                     />
                                 </div>
                             )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import Cards from "../components/Cards";
+import Cards from "../components/cards/Cards";
 import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import ExportReportButtons from "../components/buttons/ExportReportButtons";
@@ -15,11 +15,14 @@ import MaintenanceTable from "../components/tables/MaintenanceTable";
 import InventoryTable from "../components/tables/EquipmentTable";
 import PeopleTable from "../components/tables/PeopleTable";
 import type { Person } from "../../types/person";
-import type { Equipment, Status } from "../../types/equipment";
+import type { Equipment } from "../../types/equipment";
 import type {
   MaintenanceOrder,
   MaintenanceStatus,
 } from "../../types/maintenance";
+import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { hasPermission } from "../../lib/permissions/has-permission";
+import PermissionGate from "../components/PermissionGate";
 
 const inventoryKey = "vrstudiolab-inventory-v1";
 const maintenanceKey = "vrstudiolab-maintenance-v1";
@@ -67,8 +70,29 @@ export default function RelatoriosPage() {
 
   const backupFileInputRef = useRef<HTMLInputElement>(null);
 
+  function handleExportCSV() {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "reports.export")) {
+      alert("Você não possui permissão para exportar relatórios.");
+      return;
+    }
+
+    exportToCSV(equipment, orders, selectedFields, people);
+  }
+
+  function handleExportPDF() {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "reports.export")) {
+      alert("Você não possui permissão para exportar relatórios.");
+      return;
+    }
+
+    exportToPDF(equipment, orders, selectedFields, people);
+  }
 
   async function handleImportBackup(file: File) {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "settings.manage")) {
+      alert("Você não possui permissão para importar backups.");
+      return;
+    }
     try {
       const imported = await importBackup(file);
 
@@ -100,52 +124,59 @@ export default function RelatoriosPage() {
     }
   }
 
-
   useEffect(() => {
-    try {
-      const savedEquipment = localStorage.getItem(inventoryKey);
-      const savedOrders = localStorage.getItem(maintenanceKey);
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const savedEquipment = localStorage.getItem(inventoryKey);
+        const savedOrders = localStorage.getItem(maintenanceKey);
 
-      if (savedEquipment) {
-        const parsed = JSON.parse(savedEquipment);
+        if (savedEquipment) {
+          const parsed = JSON.parse(savedEquipment);
 
-        if (Array.isArray(parsed)) {
-          setEquipment(parsed);
+          if (Array.isArray(parsed)) {
+            setEquipment(parsed);
+          }
         }
-      }
 
-      if (savedOrders) {
-        const parsed = JSON.parse(savedOrders);
+        if (savedOrders) {
+          const parsed = JSON.parse(savedOrders);
 
-        if (Array.isArray(parsed)) {
-          setOrders(parsed);
+          if (Array.isArray(parsed)) {
+            setOrders(parsed);
+          }
         }
+      } catch (error) {
+        console.error("Erro ao carregar relatórios:", error);
+      } finally {
+        setReady(true);
       }
-    } catch (error) {
-      console.error("Erro ao carregar relatórios:", error);
-    } finally {
-      setReady(true);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
-    try {
-      const savedPeople = localStorage.getItem(
-        "vrstudiolab-maintenance-people-v1"
-      );
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const savedPeople = localStorage.getItem(
+          "vrstudiolab-maintenance-people-v1"
+        );
 
-      if (savedPeople) {
-        const parsedPeople = JSON.parse(savedPeople);
+        if (savedPeople) {
+          const parsedPeople = JSON.parse(savedPeople);
 
-        if (Array.isArray(parsedPeople)) {
-          setPeople(parsedPeople);
+          if (Array.isArray(parsedPeople)) {
+            setPeople(parsedPeople);
+          }
         }
+      } catch (error) {
+        console.error("Erro ao carregar pessoas:", error);
+      } finally {
+        setPeopleReady(true);
       }
-    } catch (error) {
-      console.error("Erro ao carregar pessoas:", error);
-    } finally {
-      setPeopleReady(true);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const equipmentInMaintenance = equipment.filter(
@@ -255,29 +286,35 @@ export default function RelatoriosPage() {
                       Marque as informações que deseja incluir na exportação.
                     </p>
                     <div className="flex flex-wrap items-center justify-end gap-3">
-                    <h2 className="mt-1 text-sm text-slate-400">
-                      Exportação e backup
-                    </h2>
+                      <h2 className="mt-1 text-sm text-slate-400">
+                        Exportação e backup
+                      </h2>
                     </div>
                   </div>
-                  
+
 
                   <div className="flex flex-wrap items-center justify-end gap-3">
-                    <ExportReportButtons
-                      onExportCSV={() => exportToCSV(equipment, orders, selectedFields, people)}
-                      onExportPDF={() => exportToPDF(equipment, orders, selectedFields, people)}
-                      disabled={!ready || selectedFields.length === 0}
-                    />
+                    <PermissionGate permission="reports.export">
+                      <ExportReportButtons
+                        onExportCSV={handleExportCSV}
+                        onExportPDF={handleExportPDF}
+                        disabled={!ready || selectedFields.length === 0}
+                      />
+                    </PermissionGate>
 
-                    <BackupButton
-                      onClick={exportBackup}
-                      disabled={!ready || !peopleReady}
-                    />
+                    <PermissionGate permission="settings.manage">
+                      <BackupButton
+                        onClick={exportBackup}
+                        disabled={!ready || !peopleReady}
+                      />
+                    </PermissionGate>
 
-                    <ImportBackupButton
-                      onClick={() => backupFileInputRef.current?.click()}
-                      disabled={!ready || !peopleReady}
-                    />
+                    <PermissionGate permission="settings.manage">
+                      <ImportBackupButton
+                        onClick={() => backupFileInputRef.current?.click()}
+                        disabled={!ready || !peopleReady}
+                      />
+                    </PermissionGate>
 
                     <input
                       ref={backupFileInputRef}

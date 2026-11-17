@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Reservation } from "../../../types/reservation";
 import type { Person } from "../../../types/person";
 import ReportReturnButton from "../buttons/ReportReturnButton";
 import ConfirmReturnButton from "../buttons/ConfirmReturnButton";
 import CancelReservationButton from "../buttons/CancelReservationButton";
 import { Pagination } from "../Pagination";
+import { CURRENT_ACCESS_PROFILE } from "../../../lib/permissions/current-profile";
+import { hasPermission } from "../../../lib/permissions/has-permission";
 
 export type DisplayReservationStatus =
   | "Agendada"
@@ -83,19 +85,17 @@ export default function ReservationsTable({
   onCancel,
   resetPageKey,
 }: ReservationsTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageState, setPageState] = useState({
+    page: 1,
+    resetKey: resetPageKey,
+  });
 
   const totalPages = Math.ceil(reservations.length / ITEMS_PER_PAGE);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [resetPageKey]);
-
-  useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  const currentPage =
+    pageState.resetKey === resetPageKey
+      ? Math.min(pageState.page, Math.max(totalPages, 1))
+      : 1;
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
@@ -149,7 +149,7 @@ export default function ReservationsTable({
 
                     const statusColor =
                       displayStatus === "Cancelada" ||
-                      displayStatus === "Atraso na devolução"
+                        displayStatus === "Atraso na devolução"
                         ? "bg-red-400/10 text-red-300"
                         : displayStatus === "Concluída"
                           ? "bg-blue-400/10 text-blue-300"
@@ -178,6 +178,7 @@ export default function ReservationsTable({
 
                 <td className="px-4 py-3">
                   {reservation.resourceType === "Equipamento" &&
+                    hasPermission(CURRENT_ACCESS_PROFILE, "loans.registerReturn") &&
                     reservation.status !== "Cancelada" &&
                     reservation.returnStatus !== "Devolvida" &&
                     reservation.returnStatus !== "Devolução informada" && (
@@ -187,6 +188,7 @@ export default function ReservationsTable({
                     )}
 
                   {reservation.resourceType === "Equipamento" &&
+                    hasPermission(CURRENT_ACCESS_PROFILE, "loans.confirmReturn") &&
                     reservation.returnStatus === "Devolução informada" && (
                       <div className="mb-2 flex min-w-48 flex-col gap-2">
                         <select
@@ -225,7 +227,9 @@ export default function ReservationsTable({
                       </div>
                     )}
 
-                  {reservation.status === "Confirmada" &&
+                  {(hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") ||
+                    hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelAny")) &&
+                    reservation.status === "Confirmada" &&
                     getReservationDisplayStatus(reservation) !== "Concluída" &&
                     reservation.returnStatus !== "Devolvida" && (
                       <CancelReservationButton
@@ -243,7 +247,12 @@ export default function ReservationsTable({
         currentPage={currentPage}
         totalItems={reservations.length}
         itemsPerPage={ITEMS_PER_PAGE}
-        onPageChange={setCurrentPage}
+        onPageChange={(page) =>
+          setPageState({
+            page,
+            resetKey: resetPageKey,
+          })
+        }
       />
     </>
   );

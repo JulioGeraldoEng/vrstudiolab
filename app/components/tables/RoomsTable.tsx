@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Room } from "../../../types/room";
 import EditButton from "../buttons/EditButton";
 import ToggleStatusButton from "../buttons/ToggleStatusButton";
@@ -10,6 +10,9 @@ type RoomsTableProps = {
   rooms: Room[];
   onEdit: (room: Room) => void;
   onToggleStatus: (room: Room) => void;
+  canEdit?: boolean;
+  canToggleStatus?: boolean;
+  showActions?: boolean;
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -18,18 +21,20 @@ export default function RoomsTable({
   rooms,
   onEdit,
   onToggleStatus,
+  canEdit = true,
+  canToggleStatus = true,
+  showActions = true,
 }: RoomsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(rooms.length / ITEMS_PER_PAGE);
 
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  const safeCurrentPage = Math.min(
+    currentPage,
+    Math.max(totalPages, 1)
+  );
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
 
   const paginatedRooms = rooms.slice(
     startIndex,
@@ -46,9 +51,11 @@ export default function RoomsTable({
               <th className="px-4 py-3 font-medium">Localização</th>
               <th className="px-4 py-3 font-medium">Capacidade</th>
               <th className="px-4 py-3 font-medium">Situação</th>
-              <th className="px-4 py-3 text-right font-medium">
-                Ações
-              </th>
+              {showActions && (
+                <th className="px-4 py-3 text-right font-medium">
+                  Ações
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -72,26 +79,31 @@ export default function RoomsTable({
 
                 <td className="px-4 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      room.active
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-slate-700 text-slate-300"
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${room.active
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-slate-700 text-slate-300"
+                      }`}
                   >
                     {room.active ? "Ativa" : "Inativa"}
                   </span>
                 </td>
 
-                <td className="px-4 py-4">
-                  <div className="flex justify-end gap-2">
-                    <EditButton onClick={() => onEdit(room)} />
+                {showActions && (
+                  <td className="px-4 py-4">
+                    <div className="flex justify-end gap-2">
+                      {canEdit && (
+                        <EditButton onClick={() => onEdit(room)} />
+                      )}
 
-                    <ToggleStatusButton
-                      active={room.active}
-                      onClick={() => onToggleStatus(room)}
-                    />
-                  </div>
-                </td>
+                      {canToggleStatus && (
+                        <ToggleStatusButton
+                          active={room.active}
+                          onClick={() => onToggleStatus(room)}
+                        />
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -99,7 +111,7 @@ export default function RoomsTable({
       </div>
 
       <Pagination
-        currentPage={currentPage}
+        currentPage={safeCurrentPage}
         totalItems={rooms.length}
         itemsPerPage={ITEMS_PER_PAGE}
         onPageChange={setCurrentPage}

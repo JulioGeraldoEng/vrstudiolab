@@ -14,6 +14,8 @@ type PeopleTableProps = {
     onToggleStatus: (id: string) => void;
     onPageChange: (page: number) => void;
     showActions?: boolean;
+    canEdit?: boolean;
+    canToggleStatus?: boolean;
 };
 
 export default function PeopleTable({
@@ -25,6 +27,8 @@ export default function PeopleTable({
     onToggleStatus,
     onPageChange,
     showActions = true,
+    canEdit = true,
+    canToggleStatus = true,
 }: PeopleTableProps) {
     return (
         <>
@@ -84,12 +88,16 @@ export default function PeopleTable({
                                 {showActions && (
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
-                                            <EditButton onClick={() => onEdit(person)} />
+                                            {canEdit && (
+                                                <EditButton onClick={() => onEdit(person)} />
+                                            )}
 
-                                            <ToggleStatusButton
-                                                active={person.active}
-                                                onClick={() => onToggleStatus(person.id)}
-                                            />
+                                            {canToggleStatus && (
+                                                <ToggleStatusButton
+                                                    active={person.active}
+                                                    onClick={() => onToggleStatus(person.id)}
+                                                />
+                                            )}
                                         </div>
                                     </td>
                                 )}
