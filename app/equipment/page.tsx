@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import Sidebar from "../components/Sidebar";
 import Cards from "../components/cards/Cards";
 import EquipmentModal from "../components/modals/EquipmentModal";
-import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import EquipmentTable from "../components/tables/EquipmentTable";
 import { categories, statuses } from "../../types/equipment";
@@ -13,7 +11,6 @@ import type { Equipment, Status } from "../../types/equipment";
 import PermissionGate from "../components/PermissionGate";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
-import AccessGuard from "../components/AccessGuard";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 const activePage = "Equipamentos";
@@ -207,163 +204,153 @@ export default function InventoryPage() {
   ).length;
 
   return (
-    <AccessGuard>
-      <main className="min-h-screen bg-[#0b1120] text-white">
-        <div className="flex min-h-screen w-full flex-col lg:flex-row">
-          <Sidebar activePage={activePage} />
+    <section className="min-w-0 flex-1 p-4 sm:p-8">
+      <div className="mx-auto max-w-7xl space-y-8">
 
-          <section className="min-w-0 flex-1 p-4 sm:p-8">
-            <div className="mx-auto max-w-7xl space-y-8">
-              <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
-                  <BackToDashboard />
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                    VR STUDIO LAB
-                  </p>
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                    {activePage}
-                  </h1>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Gerencie equipamentos, patrimônio e localização.
-                  </p>
-                </div>
-              </header>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+              {activePage}
+            </h1>
 
-              <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Cards
-                  title="Total de equipamentos"
-                  value={items.length}
-                  detail="Itens cadastrados"
-                  icon="▣"
-                  color="text-cyan-300"
-                  bg="bg-cyan-400/10"
-                />
-                <Cards
-                  title="Disponíveis"
-                  value={available}
-                  detail="Prontos para utilização"
-                  icon="✓"
-                  color="text-emerald-300"
-                  bg="bg-emerald-400/10"
-                />
-                <Cards
-                  title="Em uso"
-                  value={inUse}
-                  detail="Em uso no laboratório"
-                  icon="⌁"
-                  color="text-blue-300"
-                  bg="bg-blue-400/10"
-                />
-                <Cards
-                  title="Em manutenção"
-                  value={maintenance}
-                  detail="Precisam de atenção"
-                  icon="⚙"
-                  color="text-amber-300"
-                  bg="bg-amber-400/10"
-                />
-              </section>
+            <p className="mt-2 text-sm text-slate-400">
+              Gerencie equipamentos, patrimônio e localização.
+            </p>
+          </div>
 
-              <section className="rounded-2xl border border-white/10 bg-[#101c2e]">
+          <BackToDashboard />
+        </header>
 
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                    <div>
-                      <h2 className="text-lg font-semibold">
-                        Cadastro de equipamentos
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-400">
-                        {filteredItems.length} registro(s) encontrado(s)
-                      </p>
-                    </div>
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Pesquisar equipamentos..."
-                      aria-label="Pesquisar equipamentos"
-                      className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-64"
-                    />
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Cards
+            title="Total de equipamentos"
+            value={items.length}
+            detail="Itens cadastrados"
+            icon="▣"
+            color="text-cyan-300"
+            bg="bg-cyan-400/10"
+          />
+          <Cards
+            title="Disponíveis"
+            value={available}
+            detail="Prontos para utilização"
+            icon="✓"
+            color="text-emerald-300"
+            bg="bg-emerald-400/10"
+          />
+          <Cards
+            title="Em uso"
+            value={inUse}
+            detail="Em uso no laboratório"
+            icon="⌁"
+            color="text-blue-300"
+            bg="bg-blue-400/10"
+          />
+          <Cards
+            title="Em manutenção"
+            value={maintenance}
+            detail="Precisam de atenção"
+            icon="⚙"
+            color="text-amber-300"
+            bg="bg-amber-400/10"
+          />
+        </section>
 
-                    <select
-                      value={categoryFilter}
-                      onChange={(event) => setCategoryFilter(event.target.value)}
-                      aria-label="Filtrar por categoria"
-                      className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-56"
-                    >
-                      <option value="Todas">Todas as categorias</option>
-                      {categories.map((category) => (
-                        <option key={category}>{category}</option>
-                      ))}
-                    </select>
+        <section className="rounded-2xl border border-white/10 bg-[#101c2e]">
 
-                    <select
-                      value={statusFilter}
-                      onChange={(event) => setStatusFilter(event.target.value)}
-                      aria-label="Filtrar por status"
-                      className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-48"
-                    >
-                      <option value="Todos">Todos os status</option>
-                      {statuses.map((status) => (
-                        <option key={status}>{status}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <PermissionGate permission="equipment.create">
-                    <button
-                      type="button"
-                      onClick={openNewForm}
-                      className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                    >
-                      + Novo equipamento
-                    </button>
-                  </PermissionGate>
-                </div>
-
-
-                <EquipmentTable
-                  items={paginatedItems}
-                  ready={ready}
-                  onEdit={
-                    hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")
-                      ? openEditForm
-                      : undefined
-                  }
-                  onDeactivate={
-                    hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
-                      ? deactivateEquipment
-                      : undefined
-                  }
-                  currentPage={currentPage}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={filteredItems.length}
-                  onPageChange={(page) =>
-                    setPageState({
-                      page,
-                      filterKey,
-                    })
-                  }
-                  showActions={
-                    hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit") ||
-                    hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
-                  }
-                />
-
-              </section>
-
-              <EquipmentModal
-                isOpen={showForm}
-                onClose={() => setShowForm(false)}
-                onSubmit={saveEquipment}
-                form={form}
-                setForm={setForm}
-                isEditing={editingId !== null}
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-lg font-semibold">
+                  Cadastro de equipamentos
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  {filteredItems.length} registro(s) encontrado(s)
+                </p>
+              </div>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Pesquisar equipamentos..."
+                aria-label="Pesquisar equipamentos"
+                className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-64"
               />
-              <Footer />
+
+              <select
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                aria-label="Filtrar por categoria"
+                className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-56"
+              >
+                <option value="Todas">Todas as categorias</option>
+                {categories.map((category) => (
+                  <option key={category}>{category}</option>
+                ))}
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                aria-label="Filtrar por status"
+                className="w-full rounded-xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm outline-none transition focus:border-cyan-400 sm:max-w-48"
+              >
+                <option value="Todos">Todos os status</option>
+                {statuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
             </div>
-          </section>
-        </div>
-      </main>
-    </AccessGuard>
+
+            <PermissionGate permission="equipment.create">
+              <button
+                type="button"
+                onClick={openNewForm}
+                className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+              >
+                + Novo equipamento
+              </button>
+            </PermissionGate>
+          </div>
+
+          <EquipmentTable
+            items={paginatedItems}
+            ready={ready}
+            onEdit={
+              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")
+                ? openEditForm
+                : undefined
+            }
+            onDeactivate={
+              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+                ? deactivateEquipment
+                : undefined
+            }
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredItems.length}
+            onPageChange={(page) =>
+              setPageState({
+                page,
+                filterKey,
+              })
+            }
+            showActions={
+              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit") ||
+              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+            }
+          />
+
+        </section>
+
+        <EquipmentModal
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={saveEquipment}
+          form={form}
+          setForm={setForm}
+          isEditing={editingId !== null}
+        />
+      </div>
+    </section>
   );
 }
