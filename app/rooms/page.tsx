@@ -10,8 +10,11 @@ import RoomModal from "../components/modals/RoomModal";
 import Cards from "../components/cards/Cards";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import AccessGuard from "../components/AccessGuard";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
+
+const activePage = "Salas";
 
 export default function RoomsPage() {
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -128,84 +131,86 @@ export default function RoomsPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0b1120] text-white">
-            <div className="flex min-h-screen w-full flex-col lg:flex-row">
-                <Sidebar activePage="Salas" />
+        <AccessGuard>
+            <main className="min-h-screen bg-[#0b1120] text-white">
+                <div className="flex min-h-screen w-full flex-col lg:flex-row">
+                    <Sidebar activePage={activePage} />
 
-                <section className="min-w-0 flex-1 p-4 sm:p-8">
-                    <div className="mx-auto max-w-7xl space-y-8">
-                        <header>
-                            <BackToDashboard />
+                    <section className="min-w-0 flex-1 p-4 sm:p-8">
+                        <div className="mx-auto max-w-7xl space-y-8">
+                            <header>
+                                <BackToDashboard />
 
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                                VR STUDIO LAB
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
+                                    VR STUDIO LAB
+                                </p>
+
+                                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                                    {activePage}
+                                </h1>
+
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Cadastre e gerencie as salas disponíveis para utilização e reserva.
+                                </p>
+                            </header>
+
+                            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                <Cards
+                                    title="Total de salas"
+                                    value={rooms.length}
+                                    detail="Salas cadastradas"
+                                    icon="🏢"
+                                    color="text-blue-300"
+                                    bg="bg-blue-400/10"
+                                />
+
+                                <Cards
+                                    title="Salas ativas"
+                                    value={rooms.filter((room) => room.active).length}
+                                    detail="Disponíveis para novas reservas"
+                                    icon="✓"
+                                    color="text-emerald-300"
+                                    bg="bg-emerald-400/10"
+                                />
+
+                                <Cards
+                                    title="Salas inativas"
+                                    value={rooms.filter((room) => !room.active).length}
+                                    detail="Não recebem novas reservas"
+                                    icon="⏸"
+                                    color="text-red-300"
+                                    bg="bg-red-400/10"
+                                />
+                            </section>
+
+                            <RoomsSection
+                                rooms={rooms}
+                                ready={ready}
+                                onNewRoom={openNewRoom}
+                                onEditRoom={openEditRoom}
+                                onToggleStatus={toggleRoomStatus}
+                            />
+
+                            <p className="text-xs text-slate-500">
+                                VR Studio Lab · Cadastro de salas · Dados salvos neste navegador
                             </p>
 
-                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                Salas
-                            </h1>
+                            <Footer />
 
-                            <p className="mt-2 text-sm text-slate-400">
-                                Cadastre e gerencie as salas disponíveis para utilização e reserva.
-                            </p>
-                        </header>
-
-                        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            <Cards
-                                title="Total de salas"
-                                value={rooms.length}
-                                detail="Salas cadastradas"
-                                icon="🏢"
-                                color="text-blue-300"
-                                bg="bg-blue-400/10"
-                            />
-
-                            <Cards
-                                title="Salas ativas"
-                                value={rooms.filter((room) => room.active).length}
-                                detail="Disponíveis para novas reservas"
-                                icon="✓"
-                                color="text-emerald-300"
-                                bg="bg-emerald-400/10"
-                            />
-
-                            <Cards
-                                title="Salas inativas"
-                                value={rooms.filter((room) => !room.active).length}
-                                detail="Não recebem novas reservas"
-                                icon="⏸"
-                                color="text-red-300"
-                                bg="bg-red-400/10"
-                            />
-                        </section>
-
-                        <RoomsSection
-                            rooms={rooms}
-                            ready={ready}
-                            onNewRoom={openNewRoom}
-                            onEditRoom={openEditRoom}
-                            onToggleStatus={toggleRoomStatus}
-                        />
-
-                        <p className="text-xs text-slate-500">
-                            VR Studio Lab · Cadastro de salas · Dados salvos neste navegador
-                        </p>
-
-                        <Footer />
-
-                        {showModal && (
-                            <RoomModal
-                                room={editingRoom}
-                                onSave={saveRoom}
-                                onClose={() => {
-                                    setShowModal(false);
-                                    setEditingRoom(null);
-                                }}
-                            />
-                        )}
-                    </div>
-                </section>
-            </div>
-        </main>
+                            {showModal && (
+                                <RoomModal
+                                    room={editingRoom}
+                                    onSave={saveRoom}
+                                    onClose={() => {
+                                        setShowModal(false);
+                                        setEditingRoom(null);
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </AccessGuard>
     );
 }

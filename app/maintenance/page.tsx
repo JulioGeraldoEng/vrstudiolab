@@ -16,10 +16,13 @@ import type {
 import PermissionGate from "../components/PermissionGate";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import AccessGuard from "../components/AccessGuard";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
 const STORAGE_KEY = "vrstudiolab-maintenance-v1";
+
+const activePage = "Manutenção";
 
 const initialOrders: MaintenanceOrder[] = [];
 
@@ -634,456 +637,458 @@ export default function ManutencaoPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#0b1120] text-white">
-      <div className="flex min-h-screen w-full flex-col lg:flex-row">
-        <Sidebar activePage="Manutenção" />
+    <AccessGuard>
+      <main className="min-h-screen bg-[#0b1120] text-white">
+        <div className="flex min-h-screen w-full flex-col lg:flex-row">
+          <Sidebar activePage={activePage} />
 
-        <section className="min-w-0 flex-1 p-4 sm:p-8">
-          <div className="mx-auto max-w-7xl space-y-8">
-            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <BackToDashboard />
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                  VR STUDIO LAB
-                </p>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Manutenção
-                </h1>
-                <p className="mt-2 text-sm text-slate-400">
-                  Controle de serviços e ordens de manutenção.
-                </p>
-              </div>
-            </header>
-
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <Cards
-                title="Ordens abertas"
-                value={openCount}
-                detail="Aguardando triagem"
-                icon="📋"
-                color="text-blue-300"
-                bg="bg-blue-400/10"
-              />
-              <Cards
-                title="Em andamento"
-                value={progressCount}
-                detail="Sendo reparadas"
-                icon="⚙"
-                color="text-amber-300"
-                bg="bg-amber-400/10"
-              />
-              <Cards
-                title="Aguardando peças"
-                value={waitingCount}
-                detail="Pendência de componentes"
-                icon="⏳"
-                color="text-orange-300"
-                bg="bg-orange-400/10"
-              />
-              <Cards
-                title="Concluídas"
-                value={completedCount}
-                detail="Reparos finalizados"
-                icon="✓"
-                color="text-emerald-300"
-                bg="bg-emerald-400/10"
-              />
-            </section>
-
-            {completionOrderId && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-emerald-400/20 bg-[#151e30] p-6 shadow-2xl">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h2 className="mb-5 text-xl font-semibold">
-                      Concluir ordem de serviço
-                    </h2>
-
-                    <button
-                      type="button"
-                      onClick={() => setCompletionOrderId("")}
-                      className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
-                      aria-label="Fechar formulário"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <p className="mt-2 text-sm text-slate-400">
-                    Registre o serviço executado e quem autorizou a liberação.
+          <section className="min-w-0 flex-1 p-4 sm:p-8">
+            <div className="mx-auto max-w-7xl space-y-8">
+              <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                  <BackToDashboard />
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
+                    VR STUDIO LAB
                   </p>
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                    {activePage}
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-400">
+                    Controle de serviços e ordens de manutenção.
+                  </p>
+                </div>
+              </header>
 
-                  <form onSubmit={confirmCompletion} className="mt-6 space-y-5">
-                    <div>
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Quem executou o serviço?
-                      </label>
+              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Cards
+                  title="Ordens abertas"
+                  value={openCount}
+                  detail="Aguardando triagem"
+                  icon="📋"
+                  color="text-blue-300"
+                  bg="bg-blue-400/10"
+                />
+                <Cards
+                  title="Em andamento"
+                  value={progressCount}
+                  detail="Sendo reparadas"
+                  icon="⚙"
+                  color="text-amber-300"
+                  bg="bg-amber-400/10"
+                />
+                <Cards
+                  title="Aguardando peças"
+                  value={waitingCount}
+                  detail="Pendência de componentes"
+                  icon="⏳"
+                  color="text-orange-300"
+                  bg="bg-orange-400/10"
+                />
+                <Cards
+                  title="Concluídas"
+                  value={completedCount}
+                  detail="Reparos finalizados"
+                  icon="✓"
+                  color="text-emerald-300"
+                  bg="bg-emerald-400/10"
+                />
+              </section>
 
-                      <select
-                        className={inputClass}
-                        value={completionExecutorId}
-                        onChange={(event) =>
-                          setCompletionExecutorId(event.target.value)
-                        }
-                        required
-                      >
-                        <option value="">Selecione o executor</option>
+              {completionOrderId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                  <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-emerald-400/20 bg-[#151e30] p-6 shadow-2xl">
+                    <div className="mb-6 flex items-center justify-between">
+                      <h2 className="mb-5 text-xl font-semibold">
+                        Concluir ordem de serviço
+                      </h2>
 
-                        {people
-                          .filter((person) => person.active)
-                          .map((person) => (
-                            <option key={person.id} value={person.id}>
-                              {person.name} — {person.role}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Técnico ou responsável que autoriza a liberação
-                      </label>
-
-                      <select
-                        className={inputClass}
-                        value={completionAuthorizerId}
-                        onChange={(event) =>
-                          setCompletionAuthorizerId(event.target.value)
-                        }
-                        required
-                      >
-                        <option value="">Selecione quem autoriza</option>
-
-                        {people
-                          .filter(
-                            (person) =>
-                              person.active &&
-                              (person.role === "Técnico" ||
-                                person.role === "Responsável autorizado")
-                          )
-                          .map((person) => (
-                            <option key={person.id} value={person.id}>
-                              {person.name} — {person.role}
-                            </option>
-                          ))}
-                      </select>
-
-                      <p className="mt-2 text-xs text-slate-400">
-                        Alunos não podem autorizar a liberação.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm text-slate-300">
-                        Serviço realizado
-                      </label>
-
-                      <textarea
-                        className={inputClass}
-                        value={completionServiceNotes}
-                        onChange={(event) =>
-                          setCompletionServiceNotes(event.target.value)
-                        }
-                        placeholder="Descreva os reparos, testes e procedimentos realizados"
-                        rows={4}
-                        required
-                      />
-                    </div>
-
-                    <div className="rounded-xl border border-white/10 bg-[#111827] p-4">
-                      <p className="font-medium text-white">
-                        O equipamento foi testado e está liberado para uso?
-                      </p>
-
-                      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                        <label className="flex items-center gap-2 text-sm text-slate-300">
-                          <input
-                            type="radio"
-                            name="completionRelease"
-                            checked={completionIsReleased}
-                            onChange={() => setCompletionIsReleased(true)}
-                          />
-                          Sim, liberar para uso
-                        </label>
-
-                        <label className="flex items-center gap-2 text-sm text-slate-300">
-                          <input
-                            type="radio"
-                            name="completionRelease"
-                            checked={!completionIsReleased}
-                            onChange={() => setCompletionIsReleased(false)}
-                          />
-                          Não, manter em manutenção
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => setCompletionOrderId("")}
-                        className="rounded-xl border border-white/10 px-5 py-3 text-sm text-slate-300 hover:bg-white/5"
+                        className="rounded-lg px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white"
+                        aria-label="Fechar formulário"
                       >
-                        Cancelar
-                      </button>
-
-                      <button
-                        type="submit"
-                        className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold hover:bg-emerald-500"
-                      >
-                        Confirmar conclusão
+                        ✕
                       </button>
                     </div>
-                  </form>
-                </section>
-              </div>
-            )}
 
-            <MaintenanceModal
-              open={showForm}
-              equipmentId={equipmentId}
-              problem={problem}
-              assignedPersonId={assignedPersonId}
-              inventory={inventory}
-              people={people}
-              inputClass={inputClass}
-              onEquipmentChange={setEquipmentId}
-              onProblemChange={setProblem}
-              onPersonChange={setAssignedPersonId}
-              onSubmit={createOrder}
-              onClose={() => setShowForm(false)}
-            />
+                    <p className="mt-2 text-sm text-slate-400">
+                      Registre o serviço executado e quem autorizou a liberação.
+                    </p>
 
-            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
-              <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Ordens de serviço</h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {filteredOrders.length} registro(s) encontrado(s)
-                  </p>
-                </div>
+                    <form onSubmit={confirmCompletion} className="mt-6 space-y-5">
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-300">
+                          Quem executou o serviço?
+                        </label>
 
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">                  <input
-                  className={`${inputClass} sm:w-64 sm:flex-none`} value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar equipamento ou serviço..."
-                />
-
-                  <select
-                    className={`${inputClass} sm:w-64 sm:flex-none`} value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                    aria-label="Filtrar ordens por status"
-                  >
-                    <option value="Todos">Todos os status</option>
-                    <option value="Aberta">Aberta</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Aguardando peças">Aguardando peças</option>
-                    <option value="Concluída">Concluída</option>
-                  </select>
-
-                  <div className="flex flex-wrap gap-3">
-                    <PermissionGate permission="maintenance.openOrder">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowForm(true);
-                        }}
-                        className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
-                        + Nova ordem de serviço
-                      </button>
-                    </PermissionGate>
-                  </div>
-                </div>
-
-              </div>
-
-              {filteredOrders.length === 0 ? (
-                <div className="px-6 py-16 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-400/10 text-2xl text-blue-300">
-                    ⚙
-                  </div>
-                  <h3 className="font-semibold">Nenhuma ordem de serviço</h3>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Crie uma ordem para começar a acompanhar as manutenções.
-                  </p>
-                </div>
-              ) : (
-                <MaintenanceTable
-                  orders={paginatedOrders}
-                  statusStyles={statusStyles}
-                  onStatusChange={
-                    hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") ||
-                      hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
-                      ? updateStatus
-                      : undefined
-                  }
-                  currentPage={currentPage}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={filteredOrders.length}
-                  onPageChange={(page) =>
-                    setPageState({
-                      page,
-                      searchKey: search,
-                    })
-                  }
-                />
-              )}
-            </section>
-
-            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
-              <div className="border-b border-white/10 p-5">
-                <h2 className="text-lg font-semibold">
-                  Histórico por equipamento
-                </h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Consulte os defeitos e serviços anteriores de cada equipamento.
-                </p>
-
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm text-slate-300">
-                    Selecione o equipamento
-                  </label>
-
-                  <select
-                    className={inputClass}
-                    value={historyEquipmentId}
-                    onChange={(event) =>
-                      setHistoryEquipmentId(event.target.value)
-                    }
-                  >
-                    <option value="">Escolha um equipamento</option>
-
-                    {inventory.map((item) => (
-                      <option key={item.id} value={String(item.id)}>
-                        {item.name} — {item.assetNumber || "Sem patrimônio"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {!historyEquipmentId ? (
-                <p className="p-6 text-sm text-slate-400">
-                  Selecione um equipamento para consultar seu histórico.
-                </p>
-              ) : historyOrders.length === 0 ? (
-                <p className="p-6 text-sm text-slate-400">
-                  Nenhuma ordem de serviço encontrada para este equipamento.
-                </p>
-              ) : (
-                <div className="space-y-4 p-5">
-                  {historyOrders.map((order) => (
-                    <article
-                      key={order.id}
-                      className="rounded-xl border border-white/10 bg-[#111827] p-4"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold text-cyan-300">
-                            {order.orderNumber || "OS antiga"}
-                          </p>
-                          <h3 className="mt-1 font-semibold">{order.equipment}</h3>
-                        </div>
-                        <span
-                          className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
-                            }`}
+                        <select
+                          className={inputClass}
+                          value={completionExecutorId}
+                          onChange={(event) =>
+                            setCompletionExecutorId(event.target.value)
+                          }
+                          required
                         >
-                          {order.status}
-                        </span>
+                          <option value="">Selecione o executor</option>
+
+                          {people
+                            .filter((person) => person.active)
+                            .map((person) => (
+                              <option key={person.id} value={person.id}>
+                                {person.name} — {person.role}
+                              </option>
+                            ))}
+                        </select>
                       </div>
 
-                      <p className="mt-3 text-xs text-slate-400">
-                        Abertura: {order.openingDate.split("-").reverse().join("/")}
-                      </p>
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-300">
+                          Técnico ou responsável que autoriza a liberação
+                        </label>
 
-                      {order.completionDate && (
-                        <p className="mt-1 text-xs text-slate-400">
-                          Conclusão:{" "}
-                          {order.completionDate.split("-").reverse().join("/")}
-                        </p>
-                      )}
+                        <select
+                          className={inputClass}
+                          value={completionAuthorizerId}
+                          onChange={(event) =>
+                            setCompletionAuthorizerId(event.target.value)
+                          }
+                          required
+                        >
+                          <option value="">Selecione quem autoriza</option>
 
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold uppercase text-slate-400">
-                          Defeito ou solicitação
-                        </p>
-                        <p className="mt-1 text-sm text-slate-200">
-                          {order.problem}
+                          {people
+                            .filter(
+                              (person) =>
+                                person.active &&
+                                (person.role === "Técnico" ||
+                                  person.role === "Responsável autorizado")
+                            )
+                            .map((person) => (
+                              <option key={person.id} value={person.id}>
+                                {person.name} — {person.role}
+                              </option>
+                            ))}
+                        </select>
+
+                        <p className="mt-2 text-xs text-slate-400">
+                          Alunos não podem autorizar a liberação.
                         </p>
                       </div>
 
-                      <div className="mt-3">
-                        <p className="text-xs font-semibold uppercase text-slate-400">
-                          Responsável
-                        </p>
-                        <p className="mt-1 text-sm text-slate-200">
-                          {order.responsible}
-                        </p>
+                      <div>
+                        <label className="mb-2 block text-sm text-slate-300">
+                          Serviço realizado
+                        </label>
+
+                        <textarea
+                          className={inputClass}
+                          value={completionServiceNotes}
+                          onChange={(event) =>
+                            setCompletionServiceNotes(event.target.value)
+                          }
+                          placeholder="Descreva os reparos, testes e procedimentos realizados"
+                          rows={4}
+                          required
+                        />
                       </div>
 
-                      {order.status === "Concluída" && (
-                        <div className="mt-3 space-y-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-slate-400">
-                              Serviço executado por
-                            </p>
-                            <p className="mt-1 text-sm text-slate-200">
-                              {order.performedByName || "Não informado"}
-                            </p>
-                          </div>
+                      <div className="rounded-xl border border-white/10 bg-[#111827] p-4">
+                        <p className="font-medium text-white">
+                          O equipamento foi testado e está liberado para uso?
+                        </p>
 
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-slate-400">
-                              Liberação autorizada por
-                            </p>
+                        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                            <input
+                              type="radio"
+                              name="completionRelease"
+                              checked={completionIsReleased}
+                              onChange={() => setCompletionIsReleased(true)}
+                            />
+                            Sim, liberar para uso
+                          </label>
 
-                            <p className="mt-1 text-sm text-slate-200">
-                              {order.releasedByName || "Não informado"}
-                            </p>
-
-                            {order.status === "Concluída" &&
-                              inventory.some(
-                                (item) =>
-                                  item.id === order.equipmentId &&
-                                  item.status === "Manutenção"
-                              ) && (
-                                <PermissionGate permission="maintenance.completeOrder">
-                                  <button
-                                    type="button"
-                                    onClick={() => releaseEquipment(order.id)}
-                                    className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                                  >
-                                    Liberar equipamento
-                                  </button>
-                                </PermissionGate>
-                              )}
-                          </div>
+                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                            <input
+                              type="radio"
+                              name="completionRelease"
+                              checked={!completionIsReleased}
+                              onChange={() => setCompletionIsReleased(false)}
+                            />
+                            Não, manter em manutenção
+                          </label>
                         </div>
-                      )}
+                      </div>
 
-                      {order.status === "Concluída" && (
-                        <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
-                          <p className="text-xs font-semibold uppercase text-emerald-300">
-                            Serviço executado
+                      <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setCompletionOrderId("")}
+                          className="rounded-xl border border-white/10 px-5 py-3 text-sm text-slate-300 hover:bg-white/5"
+                        >
+                          Cancelar
+                        </button>
+
+                        <button
+                          type="submit"
+                          className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold hover:bg-emerald-500"
+                        >
+                          Confirmar conclusão
+                        </button>
+                      </div>
+                    </form>
+                  </section>
+                </div>
+              )}
+
+              <MaintenanceModal
+                open={showForm}
+                equipmentId={equipmentId}
+                problem={problem}
+                assignedPersonId={assignedPersonId}
+                inventory={inventory}
+                people={people}
+                inputClass={inputClass}
+                onEquipmentChange={setEquipmentId}
+                onProblemChange={setProblem}
+                onPersonChange={setAssignedPersonId}
+                onSubmit={createOrder}
+                onClose={() => setShowForm(false)}
+              />
+
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+                <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">Ordens de serviço</h2>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {filteredOrders.length} registro(s) encontrado(s)
+                    </p>
+                  </div>
+
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">                  <input
+                    className={`${inputClass} sm:w-64 sm:flex-none`} value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar equipamento ou serviço..."
+                  />
+
+                    <select
+                      className={`${inputClass} sm:w-64 sm:flex-none`} value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value)}
+                      aria-label="Filtrar ordens por status"
+                    >
+                      <option value="Todos">Todos os status</option>
+                      <option value="Aberta">Aberta</option>
+                      <option value="Em andamento">Em andamento</option>
+                      <option value="Aguardando peças">Aguardando peças</option>
+                      <option value="Concluída">Concluída</option>
+                    </select>
+
+                    <div className="flex flex-wrap gap-3">
+                      <PermissionGate permission="maintenance.openOrder">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForm(true);
+                          }}
+                          className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
+                          + Nova ordem de serviço
+                        </button>
+                      </PermissionGate>
+                    </div>
+                  </div>
+
+                </div>
+
+                {filteredOrders.length === 0 ? (
+                  <div className="px-6 py-16 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-400/10 text-2xl text-blue-300">
+                      ⚙
+                    </div>
+                    <h3 className="font-semibold">Nenhuma ordem de serviço</h3>
+                    <p className="mt-2 text-sm text-slate-400">
+                      Crie uma ordem para começar a acompanhar as manutenções.
+                    </p>
+                  </div>
+                ) : (
+                  <MaintenanceTable
+                    orders={paginatedOrders}
+                    statusStyles={statusStyles}
+                    onStatusChange={
+                      hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") ||
+                        hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+                        ? updateStatus
+                        : undefined
+                    }
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredOrders.length}
+                    onPageChange={(page) =>
+                      setPageState({
+                        page,
+                        searchKey: search,
+                      })
+                    }
+                  />
+                )}
+              </section>
+
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+                <div className="border-b border-white/10 p-5">
+                  <h2 className="text-lg font-semibold">
+                    Histórico por equipamento
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Consulte os defeitos e serviços anteriores de cada equipamento.
+                  </p>
+
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm text-slate-300">
+                      Selecione o equipamento
+                    </label>
+
+                    <select
+                      className={inputClass}
+                      value={historyEquipmentId}
+                      onChange={(event) =>
+                        setHistoryEquipmentId(event.target.value)
+                      }
+                    >
+                      <option value="">Escolha um equipamento</option>
+
+                      {inventory.map((item) => (
+                        <option key={item.id} value={String(item.id)}>
+                          {item.name} — {item.assetNumber || "Sem patrimônio"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {!historyEquipmentId ? (
+                  <p className="p-6 text-sm text-slate-400">
+                    Selecione um equipamento para consultar seu histórico.
+                  </p>
+                ) : historyOrders.length === 0 ? (
+                  <p className="p-6 text-sm text-slate-400">
+                    Nenhuma ordem de serviço encontrada para este equipamento.
+                  </p>
+                ) : (
+                  <div className="space-y-4 p-5">
+                    {historyOrders.map((order) => (
+                      <article
+                        key={order.id}
+                        className="rounded-xl border border-white/10 bg-[#111827] p-4"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold text-cyan-300">
+                              {order.orderNumber || "OS antiga"}
+                            </p>
+                            <h3 className="mt-1 font-semibold">{order.equipment}</h3>
+                          </div>
+                          <span
+                            className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
+                              }`}
+                          >
+                            {order.status}
+                          </span>
+                        </div>
+
+                        <p className="mt-3 text-xs text-slate-400">
+                          Abertura: {order.openingDate.split("-").reverse().join("/")}
+                        </p>
+
+                        {order.completionDate && (
+                          <p className="mt-1 text-xs text-slate-400">
+                            Conclusão:{" "}
+                            {order.completionDate.split("-").reverse().join("/")}
+                          </p>
+                        )}
+
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold uppercase text-slate-400">
+                            Defeito ou solicitação
                           </p>
                           <p className="mt-1 text-sm text-slate-200">
-                            {order.serviceNotes || "Sem observações registradas."}
+                            {order.problem}
                           </p>
                         </div>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
 
-            <p className="text-xs text-slate-500">
-              VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
-            </p>
-            <Footer />
-          </div>
-        </section>
-      </div>
-    </main>
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold uppercase text-slate-400">
+                            Responsável
+                          </p>
+                          <p className="mt-1 text-sm text-slate-200">
+                            {order.responsible}
+                          </p>
+                        </div>
+
+                        {order.status === "Concluída" && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase text-slate-400">
+                                Serviço executado por
+                              </p>
+                              <p className="mt-1 text-sm text-slate-200">
+                                {order.performedByName || "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-semibold uppercase text-slate-400">
+                                Liberação autorizada por
+                              </p>
+
+                              <p className="mt-1 text-sm text-slate-200">
+                                {order.releasedByName || "Não informado"}
+                              </p>
+
+                              {order.status === "Concluída" &&
+                                inventory.some(
+                                  (item) =>
+                                    item.id === order.equipmentId &&
+                                    item.status === "Manutenção"
+                                ) && (
+                                  <PermissionGate permission="maintenance.completeOrder">
+                                    <button
+                                      type="button"
+                                      onClick={() => releaseEquipment(order.id)}
+                                      className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                                    >
+                                      Liberar equipamento
+                                    </button>
+                                  </PermissionGate>
+                                )}
+                            </div>
+                          </div>
+                        )}
+
+                        {order.status === "Concluída" && (
+                          <div className="mt-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 p-3">
+                            <p className="text-xs font-semibold uppercase text-emerald-300">
+                              Serviço executado
+                            </p>
+                            <p className="mt-1 text-sm text-slate-200">
+                              {order.serviceNotes || "Sem observações registradas."}
+                            </p>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <p className="text-xs text-slate-500">
+                VR Studio Lab · Módulo de manutenção · Dados salvos neste navegador
+              </p>
+              <Footer />
+            </div>
+          </section>
+        </div>
+      </main>
+    </AccessGuard>
   );
 }

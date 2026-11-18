@@ -8,6 +8,7 @@ import {
   seedRooms,
   seedReservations,
 } from "./dados";
+import AccessGuard from "../components/AccessGuard";
 
 export default function SeedPage() {
   const [message, setMessage] = useState("");
@@ -74,31 +75,33 @@ export default function SeedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="mx-auto max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6">
-        <h1 className="mb-3 text-2xl font-bold">
-          Carga de dados de teste
-        </h1>
+    <AccessGuard>
+      <main className="min-h-screen bg-slate-950 p-6 text-slate-100">
+        <div className="mx-auto max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6">
+          <h1 className="mb-3 text-2xl font-bold">
+            Carga de dados de teste
+          </h1>
 
-        <p className="mb-6 text-slate-300">
-          Esta ferramenta substitui os registros atuais por 40 equipamentos,
-          30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias.
-        </p>
-
-        <button
-          type="button"
-          onClick={loadSeedData}
-          className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500"
-        >
-          Atualizar ambiente de testes
-        </button>
-
-        {message && (
-          <p className="mt-5 rounded-lg bg-slate-800 p-4 text-sm text-slate-200">
-            {message}
+          <p className="mb-6 text-slate-300">
+            Esta ferramenta substitui os registros atuais por 40 equipamentos,
+            30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias.
           </p>
-        )}
-      </div>
-    </main>
+
+          <button
+            type="button"
+            onClick={loadSeedData}
+            className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500"
+          >
+            Atualizar ambiente de testes
+          </button>
+
+          {message && (
+            <p className="mt-5 rounded-lg bg-slate-800 p-4 text-sm text-slate-200">
+              {message}
+            </p>
+          )}
+        </div>
+      </main>
+    </AccessGuard>
   );
 }
