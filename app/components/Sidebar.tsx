@@ -65,6 +65,8 @@ const navigation: {
 
 type SidebarProps = {
   activePage?: string;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
 };
 
 function NavigationIcon({ name }: { name: string }) {
@@ -161,6 +163,8 @@ function NavigationIcon({ name }: { name: string }) {
 
 export default function Sidebar({
   activePage = "",
+  mobileOpen,
+  setMobileOpen,
 }: SidebarProps) {
 
   const router = useRouter();
@@ -201,6 +205,11 @@ export default function Sidebar({
     router.push(destination);
   }
 
+  function navigateMobile(href: string) {
+    setMobileOpen(false);
+    navigate(href);
+  }
+
   function renderLink(
     item: (typeof navigation)[number],
     mobile = false,
@@ -211,20 +220,30 @@ export default function Sidebar({
       (activePage === item.name &&
         (item.name !== "Visão geral" || pathname === "/"));
 
+
     if (mobile) {
       return (
         <button
           key={item.name}
-          onClick={() => navigate(item.href)}
-          className={`shrink-0 rounded-lg px-3 py-2 text-sm transition ${active
-            ? "bg-cyan-400/10 text-cyan-300"
-            : "text-slate-400 hover:bg-white/5 hover:text-white"
+          type="button"
+          onClick={() => navigateMobile(item.href)}
+          title={item.name}
+          aria-label={item.name}
+          className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${mobileOpen ? "gap-3 px-3" : "justify-center px-2"
+            } ${active
+              ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-red-300"
+              : "text-slate-400 hover:bg-white/5 hover:text-white"
             }`}
         >
-          {item.name}
+          <span className="flex shrink-0 items-center justify-center">
+            <NavigationIcon name={item.icon} />
+          </span>
+
+          {mobileOpen && <span>{item.name}</span>}
         </button>
       );
     }
+
 
     return (
       <button
@@ -277,14 +296,14 @@ export default function Sidebar({
                 : "Recolher menu"
             }
             className={`group flex w-full items-center rounded-xl text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${collapsed
-                ? "justify-center"
-                : "justify-start"
+              ? "justify-center"
+              : "justify-start"
               }`}
           >
             <span
               className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 group-hover:shadow-cyan-500/20 ${collapsed
-                  ? "aspect-square w-11"
-                  : "aspect-[16/9] w-full"
+                ? "aspect-square w-11"
+                : "aspect-[16/9] w-full"
                 }`}
             >
               <Image
@@ -311,11 +330,59 @@ export default function Sidebar({
 
       </aside >
 
-      <div className="w-full min-w-0 border-b border-white/10 px-4 py-3 lg:hidden">
-        <nav className="flex w-full min-w-0 gap-2 overflow-x-auto">
-          {visibleNavigation.map((item) => renderLink(item, true))}
-        </nav>
+
+      <div className="lg:hidden">
+        {mobileOpen && (
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60"
+          />
+        )}
+
+        <aside
+          className={`fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-white/10 bg-[#0e1729] p-2 shadow-2xl transition-all duration-300 ease-in-out ${mobileOpen ? "w-64" : "w-16"
+            }`}
+        >
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={
+                mobileOpen ? "Recolher menu lateral" : "Expandir menu lateral"
+              }
+              aria-expanded={mobileOpen}
+              className="group flex w-full items-center justify-center rounded-xl transition-all duration-200"
+            >
+              <span
+                className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 ${mobileOpen ? "aspect-[16/9] w-full" : "aspect-square w-11"
+                  }`}
+              >
+                <Image
+                  src="/vrstudiolab/animations/vr-studio-lab-sidebar.gif"
+                  alt="VR Studio Lab - expandir ou recolher menu"
+                  fill
+                  unoptimized
+                  sizes={mobileOpen ? "240px" : "44px"}
+                  className="object-cover"
+                />
+              </span>
+            </button>
+          </div>
+
+          {mobileOpen && (
+            <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Menu principal
+            </p>
+          )}
+
+          <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+            {visibleNavigation.map((item) => renderLink(item, true))}
+          </nav>
+        </aside>
       </div>
+
     </>
   );
 }
