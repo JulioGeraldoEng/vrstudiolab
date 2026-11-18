@@ -11,8 +11,11 @@ import type { Person, PersonRole } from "../../types/person";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
 import PermissionGate from "../components/PermissionGate";
+import AccessGuard from "../components/AccessGuard";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
+
+const activePage = "Pessoas";
 
 const roles: PersonRole[] = [
     "Aluno",
@@ -250,175 +253,177 @@ export default function PessoasPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0b1120] text-white">
-            <div className="flex min-h-screen w-full flex-col lg:flex-row">
-                <Sidebar activePage="Pessoas" />
+        <AccessGuard>
+            <main className="min-h-screen bg-[#0b1120] text-white">
+                <div className="flex min-h-screen w-full flex-col lg:flex-row">
+                    <Sidebar activePage={activePage} />
 
-                <section className="min-w-0 flex-1 p-4 sm:p-8">
-                    <div className="mx-auto max-w-7xl space-y-8">
-                        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                            <div>
-                                <BackToDashboard />
-
-                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                                    VR STUDIO LAB
-                                </p>
-
-                                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                    Pessoas
-                                </h1>
-
-                                <p className="mt-2 text-sm text-slate-400">
-                                    Cadastro central de usuários do laboratório.
-                                </p>
-                            </div>
-
-
-                        </header>
-
-                        {/* Cards padronizados unificados */}
-                        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            <Cards
-                                title="Total de pessoas"
-                                value={people.length}
-                                detail="Usuários cadastrados"
-                                icon="👤"
-                                color="text-cyan-300"
-                                bg="bg-cyan-400/10"
-                            />
-                            <Cards
-                                title="Pessoas ativas"
-                                value={activeCount}
-                                detail="Com acesso liberado"
-                                icon="✓"
-                                color="text-emerald-300"
-                                bg="bg-emerald-400/10"
-                            />
-                            <Cards
-                                title="Pessoas inativas"
-                                value={inactiveCount}
-                                detail="Cadastros inativados"
-                                icon="✕"
-                                color="text-amber-300"
-                                bg="bg-amber-400/10"
-                            />
-                        </section>
-
-                        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
-                            <div className="flex flex-col gap-4 border-b border-white/10 p-5 lg:flex-row lg:items-center lg:justify-between">
+                    <section className="min-w-0 flex-1 p-4 sm:p-8">
+                        <div className="mx-auto max-w-7xl space-y-8">
+                            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                                 <div>
-                                    <h2 className="text-lg font-semibold">
-                                        Cadastro de pessoas
-                                    </h2>
-                                    <p className="mt-1 text-sm text-slate-400">
-                                        {filteredPeople.length} registro(s) encontrado(s)
+                                    <BackToDashboard />
+
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
+                                        VR STUDIO LAB
                                     </p>
-                                </div>
 
-
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                    <input
-                                        className={`${inputClass} sm:w-64 sm:flex-none`}
-                                        value={search}
-                                        onChange={(event) => setSearch(event.target.value)}
-                                        placeholder="Buscar nome, função ou setor..."
-                                        aria-label="Buscar pessoas"
-                                    />
-
-                                    <select
-                                        className={`${inputClass} sm:w-64 sm:flex-none`}
-                                        value={filter}
-                                        onChange={(event) => setFilter(event.target.value)}
-                                        aria-label="Filtrar pessoas por situação"
-                                    >
-                                        <option value="Todas">Todas as pessoas</option>
-                                        <option value="Ativas">Somente ativas</option>
-                                        <option value="Inativas">Somente inativas</option>
-                                    </select>
-
-                                    <PermissionGate permission="people.create">
-                                        <button
-                                            type="button"
-                                            onClick={openNewForm}
-                                            className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
-                                        >
-                                            + Cadastrar pessoa
-                                        </button>
-                                    </PermissionGate>
-                                </div>
-
-                            </div>
-
-                            {filteredPeople.length === 0 ? (
-                                <div className="px-6 py-16 text-center">
-                                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-300">
-                                        ♙
-                                    </div>
-
-                                    <h3 className="font-semibold">
-                                        {people.length === 0
-                                            ? "Nenhuma pessoa cadastrada"
-                                            : "Nenhum resultado encontrado"}
-                                    </h3>
+                                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                                        {activePage}
+                                    </h1>
 
                                     <p className="mt-2 text-sm text-slate-400">
-                                        {people.length === 0
-                                            ? "Cadastre a primeira pessoa para começar."
-                                            : "Tente alterar a pesquisa ou o filtro."}
+                                        Cadastro central de usuários do laboratório.
                                     </p>
                                 </div>
-                            ) : (
-                                <div className="p-5">
-                                    <PeopleTable
-                                        people={paginatedPeople}
-                                        currentPage={currentPage}
-                                        itemsPerPage={itemsPerPage}
-                                        totalItems={filteredPeople.length}
-                                        onEdit={openEditForm}
-                                        onToggleStatus={togglePersonStatus}
-                                        onPageChange={(page) =>
-                                            setPageState({
-                                                page,
-                                                filterKey,
-                                            })
-                                        }
-                                        showActions={
-                                            hasPermission(CURRENT_ACCESS_PROFILE, "people.edit") ||
-                                            hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")
-                                        }
-                                        canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")}
-                                        canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")}
-                                    />
+
+
+                            </header>
+
+                            {/* Cards padronizados unificados */}
+                            <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <Cards
+                                    title="Total de pessoas"
+                                    value={people.length}
+                                    detail="Usuários cadastrados"
+                                    icon="👤"
+                                    color="text-cyan-300"
+                                    bg="bg-cyan-400/10"
+                                />
+                                <Cards
+                                    title="Pessoas ativas"
+                                    value={activeCount}
+                                    detail="Com acesso liberado"
+                                    icon="✓"
+                                    color="text-emerald-300"
+                                    bg="bg-emerald-400/10"
+                                />
+                                <Cards
+                                    title="Pessoas inativas"
+                                    value={inactiveCount}
+                                    detail="Cadastros inativados"
+                                    icon="✕"
+                                    color="text-amber-300"
+                                    bg="bg-amber-400/10"
+                                />
+                            </section>
+
+                            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+                                <div className="flex flex-col gap-4 border-b border-white/10 p-5 lg:flex-row lg:items-center lg:justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-semibold">
+                                            Cadastro de pessoas
+                                        </h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            {filteredPeople.length} registro(s) encontrado(s)
+                                        </p>
+                                    </div>
+
+
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <input
+                                            className={`${inputClass} sm:w-64 sm:flex-none`}
+                                            value={search}
+                                            onChange={(event) => setSearch(event.target.value)}
+                                            placeholder="Buscar nome, função ou setor..."
+                                            aria-label="Buscar pessoas"
+                                        />
+
+                                        <select
+                                            className={`${inputClass} sm:w-64 sm:flex-none`}
+                                            value={filter}
+                                            onChange={(event) => setFilter(event.target.value)}
+                                            aria-label="Filtrar pessoas por situação"
+                                        >
+                                            <option value="Todas">Todas as pessoas</option>
+                                            <option value="Ativas">Somente ativas</option>
+                                            <option value="Inativas">Somente inativas</option>
+                                        </select>
+
+                                        <PermissionGate permission="people.create">
+                                            <button
+                                                type="button"
+                                                onClick={openNewForm}
+                                                className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                                            >
+                                                + Cadastrar pessoa
+                                            </button>
+                                        </PermissionGate>
+                                    </div>
+
                                 </div>
-                            )}
 
-                        </section>
+                                {filteredPeople.length === 0 ? (
+                                    <div className="px-6 py-16 text-center">
+                                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-300">
+                                            ♙
+                                        </div>
 
-                        <p className="text-xs text-slate-500">
-                            VR Studio Lab · Cadastro de pessoas · Dados salvos neste navegador
-                        </p>
+                                        <h3 className="font-semibold">
+                                            {people.length === 0
+                                                ? "Nenhuma pessoa cadastrada"
+                                                : "Nenhum resultado encontrado"}
+                                        </h3>
 
-                        <Footer />
-                    </div>
-                </section>
-            </div>
+                                        <p className="mt-2 text-sm text-slate-400">
+                                            {people.length === 0
+                                                ? "Cadastre a primeira pessoa para começar."
+                                                : "Tente alterar a pesquisa ou o filtro."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="p-5">
+                                        <PeopleTable
+                                            people={paginatedPeople}
+                                            currentPage={currentPage}
+                                            itemsPerPage={itemsPerPage}
+                                            totalItems={filteredPeople.length}
+                                            onEdit={openEditForm}
+                                            onToggleStatus={togglePersonStatus}
+                                            onPageChange={(page) =>
+                                                setPageState({
+                                                    page,
+                                                    filterKey,
+                                                })
+                                            }
+                                            showActions={
+                                                hasPermission(CURRENT_ACCESS_PROFILE, "people.edit") ||
+                                                hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")
+                                            }
+                                            canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")}
+                                            canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")}
+                                        />
+                                    </div>
+                                )}
 
-            <PersonModal
-                open={showForm}
-                editing={editingId !== null}
-                form={form}
-                roles={roles}
-                inputClass={inputClass}
-                onFormChange={(field, value) =>
-                    setForm((current) => ({
-                        ...current,
-                        [field]: value,
-                    }))
-                }
-                onSubmit={savePerson}
-                onClose={() => setShowForm(false)}
-            />
+                            </section>
 
-        </main>
+                            <p className="text-xs text-slate-500">
+                                VR Studio Lab · Cadastro de pessoas · Dados salvos neste navegador
+                            </p>
+
+                            <Footer />
+                        </div>
+                    </section>
+                </div>
+
+                <PersonModal
+                    open={showForm}
+                    editing={editingId !== null}
+                    form={form}
+                    roles={roles}
+                    inputClass={inputClass}
+                    onFormChange={(field, value) =>
+                        setForm((current) => ({
+                            ...current,
+                            [field]: value,
+                        }))
+                    }
+                    onSubmit={savePerson}
+                    onClose={() => setShowForm(false)}
+                />
+
+            </main>
+        </AccessGuard>
     );
 }

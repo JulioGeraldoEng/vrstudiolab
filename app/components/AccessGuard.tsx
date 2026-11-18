@@ -11,6 +11,7 @@ const ROUTE_PERMISSIONS: {
   path: string;
   permission: Permission;
 }[] = [
+  { path: "/dashboard", permission: "dashboard.view" },
   { path: "/equipment", permission: "equipment.view" },
   { path: "/maintenance", permission: "maintenance.viewAll" },
   { path: "/people", permission: "people.viewAll" },
