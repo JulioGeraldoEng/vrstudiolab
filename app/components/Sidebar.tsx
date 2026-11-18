@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { Permission } from "../../types/permissions";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import Image from "next/image";
 
 const navigation: {
   name: string;
@@ -15,7 +16,7 @@ const navigation: {
     {
       name: "Visão geral",
       icon: "dashboard",
-      href: "/",
+      href: "/dashboard",
       permissions: ["dashboard.view"],
     },
     {
@@ -250,7 +251,7 @@ export default function Sidebar({
     <>
       <div
         className={`hidden shrink-0 lg:block ${preferenceLoaded
-          ? `transition-[width] duration-200 ${collapsed ? "w-20" : "w-56 xl:w-64"
+          ? `transition-[width] duration-200 ${collapsed ? "w-16" : "w-56 xl:w-64"
           }`
           : "w-20"
           }`}
@@ -258,94 +259,43 @@ export default function Sidebar({
 
       </div>
       <aside
-        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] p-4 ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-20" : "w-56 xl:w-64 xl:p-5"}`}
+        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] ${collapsed ? "p-2" : "p-4"} ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-16" : "w-56 xl:w-64 xl:p-3"}`}
       >
-        <div
-          className={`mb-8 flex ${collapsed
-            ? "flex-col items-center gap-4"
-            : "items-center justify-between gap-3"
-            }`}
-        >
-          <div
-            className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-3"
-              }`}
-          >
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/20 to-blue-500/10 text-cyan-300 shadow-lg shadow-cyan-950/20"
-              title="VR Studio Lab"
-            >
-              <svg
-                width="27"
-                height="27"
-                viewBox="0 0 32 32"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M16 3 28 10v12l-12 7L4 22V10L16 3Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="m16 8 7 4v8l-7 4-7-4v-8l7-4Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="m12 13 4 7 4-7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
 
-            {!collapsed && (
-              <div className="min-w-0">
-                <h1 className="whitespace-nowrap text-sm font-bold tracking-wide">
-                  VR STUDIO LAB
-                </h1>
-                <p className="mt-1 text-xs text-slate-400">
-                  Gestão de equipamentos
-                </p>
-              </div>
-            )}
-          </div>
-
+        <div className="mb-4">
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={
-              collapsed ? "Expandir menu lateral" : "Recolher menu lateral"
+              collapsed
+                ? "Expandir menu lateral"
+                : "Recolher menu lateral"
             }
             title={
-              collapsed ? "Expandir menu" : "Recolher menu"
+              collapsed
+                ? "Expandir menu"
+                : "Recolher menu"
             }
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-cyan-300 ${collapsed ? "ml-0" : "ml-auto"
+            className={`group flex w-full items-center rounded-xl text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${collapsed
+                ? "justify-center"
+                : "justify-start"
               }`}
           >
-            <svg
-              width="19"
-              height="19"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+            <span
+              className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 group-hover:shadow-cyan-500/20 ${collapsed
+                  ? "aspect-square w-11"
+                  : "aspect-[16/9] w-full"
+                }`}
             >
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <path d="M9 4v16" />
-              {collapsed ? (
-                <path d="m13 9 3 3-3 3" />
-              ) : (
-                <path d="m16 9-3 3 3 3" />
-              )}
-            </svg>
+              <Image
+                src="/vrstudiolab/animations/vr-studio-lab-sidebar.gif"
+                alt="VR Studio Lab - expandir ou recolher menu"
+                fill
+                unoptimized
+                sizes={collapsed ? "44px" : "220px"}
+                className="object-cover"
+              />
+            </span>
           </button>
         </div>
 
@@ -355,30 +305,10 @@ export default function Sidebar({
           </p>
         )}
 
-        <nav className="flex flex-col gap-2">
+        <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
           {visibleNavigation.map((item) => renderLink(item))}
         </nav>
 
-        <div
-          className={`mt-auto rounded-2xl border border-white/10 bg-[#111e33] ${collapsed ? "flex justify-center p-3" : "p-4"
-            }`}
-          title={collapsed ? "Ambiente de testes" : undefined}
-        >
-          <div
-            className={`flex items-center gap-2 text-sm font-semibold ${collapsed ? "justify-center" : "mb-2"
-              }`}
-          >
-            <span className="text-cyan-300">●</span>
-            {!collapsed && "Ambiente de testes"}
-          </div>
-
-          {!collapsed && (
-            <p className="text-xs leading-5 text-slate-400">
-              Protótipo local. Os dados ainda são armazenados neste
-              navegador durante os testes.
-            </p>
-          )}
-        </div>
       </aside >
 
       <div className="w-full min-w-0 border-b border-white/10 px-4 py-3 lg:hidden">

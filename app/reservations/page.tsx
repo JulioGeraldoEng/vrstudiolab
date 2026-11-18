@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import type { Room } from "../../types/room";
 import type { Reservation } from "../../types/reservation";
 import { RESERVATIONS_STORAGE_KEY, hasReservationConflict } from "./storage";
-import Sidebar from "../components/Sidebar";
-import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import Cards from "../components/cards/Cards";
 import { getReservationDisplayStatus } from "../components/tables/ReservationsTable";
@@ -15,7 +13,6 @@ import ReservationModal from "../components/modals/ReservationModal";
 import ReservationsSection from "../components/sections/ReservationsSection";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
-import AccessGuard from "../components/AccessGuard";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
@@ -405,127 +402,110 @@ export default function ReservasPage() {
     }).length;
 
     return (
-        <AccessGuard>
-            <main className="min-h-screen bg-[#0b1120] text-white">
-                <div className="flex min-h-screen w-full flex-col lg:flex-row">
-                    <Sidebar activePage={activePage} />
+        <section className="min-w-0 flex-1 p-4 sm:p-8">
+            <div className="mx-auto max-w-7xl space-y-8">
 
-                    <section className="min-w-0 flex-1 p-4 sm:p-8">
-                        <div className="mx-auto max-w-7xl space-y-8">
-                            <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                                <div>
-                                    <BackToDashboard />
+                <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white sm:text-3xl">
+                            {activePage}
+                        </h1>
 
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                                        VR STUDIO LAB
-                                    </p>
+                        <p className="mt-2 text-sm text-slate-400">
+                            Gerencie as reservas de salas e acompanhe a utilização dos espaços.
+                        </p>
+                    </div>
 
-                                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                        {activePage}
-                                    </h1>
+                    <BackToDashboard />
+                </header>
 
-                                    <p className="mt-2 text-sm text-slate-400">
-                                        Gerencie as salas e prepare os ambientes para futuras reservas.
-                                    </p>
-                                </div>
-                            </header>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <Cards
+                        title="Total de reservas"
+                        value={totalReservations}
+                        detail="Reservas cadastradas"
+                        icon="📅"
+                        color="text-blue-300"
+                        bg="bg-blue-400/10"
+                    />
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                <Cards
-                                    title="Total de reservas"
-                                    value={totalReservations}
-                                    detail="Reservas cadastradas"
-                                    icon="📅"
-                                    color="text-blue-300"
-                                    bg="bg-blue-400/10"
-                                />
+                    <Cards
+                        title="Agendadas"
+                        value={scheduledReservations}
+                        detail="Reservas futuras"
+                        icon="🗓️"
+                        color="text-emerald-300"
+                        bg="bg-emerald-400/10"
+                    />
 
-                                <Cards
-                                    title="Agendadas"
-                                    value={scheduledReservations}
-                                    detail="Reservas futuras"
-                                    icon="🗓️"
-                                    color="text-emerald-300"
-                                    bg="bg-emerald-400/10"
-                                />
+                    <Cards
+                        title="Em utilização"
+                        value={activeReservations}
+                        detail="Reservas em andamento"
+                        icon="🏢"
+                        color="text-amber-300"
+                        bg="bg-amber-400/10"
+                    />
 
-                                <Cards
-                                    title="Em utilização"
-                                    value={activeReservations}
-                                    detail="Reservas em andamento"
-                                    icon="🏢"
-                                    color="text-amber-300"
-                                    bg="bg-amber-400/10"
-                                />
-
-                                <Cards
-                                    title="Devoluções pendentes"
-                                    value={pendingReturns}
-                                    detail="Aguardando confirmação"
-                                    icon="📦"
-                                    color="text-purple-300"
-                                    bg="bg-purple-400/10"
-                                />
-                            </div>
-
-                            <ReservationsSection
-                                reservations={filteredReservations}
-                                people={people}
-                                ready={reservationsReady}
-                                search={reservationSearch}
-                                typeFilter={reservationTypeFilter}
-                                statusFilter={reservationStatusFilter}
-                                confirmerName={confirmerName}
-                                resetPageKey={`${reservationSearch}|${reservationTypeFilter}|${reservationStatusFilter}`}
-                                onSearchChange={setReservationSearch}
-                                onTypeFilterChange={setReservationTypeFilter}
-                                onStatusFilterChange={setReservationStatusFilter}
-                                onClearFilters={() => {
-                                    setReservationSearch("");
-                                    setReservationTypeFilter("Todos");
-                                    setReservationStatusFilter("Todos");
-                                }}
-                                onNewReservation={() => setIsReservationModalOpen(true)}
-                                onConfirmerChange={setConfirmerName}
-                                onReportReturn={reportEquipmentReturn}
-                                onConfirmReturn={confirmEquipmentReturn}
-                                onCancel={cancelReservation}
-                            />
-
-                            <p className="text-xs text-slate-500">
-                                VR Studio Lab · Cadastro de salas · Dados salvos neste navegador
-                            </p>
-
-                            <Footer />
-
-                            <ReservationModal
-                                isOpen={isReservationModalOpen}
-                                onClose={() => setIsReservationModalOpen(false)}
-                                rooms={rooms}
-                                equipment={equipment}
-                                resourceType={resourceType}
-                                resourceId={resourceId}
-                                reservedBy={reservedBy}
-                                reservationDate={reservationDate}
-                                startTime={startTime}
-                                endTime={endTime}
-                                reservationNotes={reservationNotes}
-                                onResourceTypeChange={(value) => {
-                                    setResourceType(value);
-                                    setResourceId("");
-                                }}
-                                onResourceIdChange={setResourceId}
-                                onReservedByChange={setReservedBy}
-                                onReservationDateChange={setReservationDate}
-                                onStartTimeChange={setStartTime}
-                                onEndTimeChange={setEndTime}
-                                onReservationNotesChange={setReservationNotes}
-                                onSubmit={createReservation}
-                            />
-                        </div>
-                    </section>
+                    <Cards
+                        title="Devoluções pendentes"
+                        value={pendingReturns}
+                        detail="Aguardando confirmação"
+                        icon="📦"
+                        color="text-purple-300"
+                        bg="bg-purple-400/10"
+                    />
                 </div>
-            </main>
-        </AccessGuard>
+
+                <ReservationsSection
+                    reservations={filteredReservations}
+                    people={people}
+                    ready={reservationsReady}
+                    search={reservationSearch}
+                    typeFilter={reservationTypeFilter}
+                    statusFilter={reservationStatusFilter}
+                    confirmerName={confirmerName}
+                    resetPageKey={`${reservationSearch}|${reservationTypeFilter}|${reservationStatusFilter}`}
+                    onSearchChange={setReservationSearch}
+                    onTypeFilterChange={setReservationTypeFilter}
+                    onStatusFilterChange={setReservationStatusFilter}
+                    onClearFilters={() => {
+                        setReservationSearch("");
+                        setReservationTypeFilter("Todos");
+                        setReservationStatusFilter("Todos");
+                    }}
+                    onNewReservation={() => setIsReservationModalOpen(true)}
+                    onConfirmerChange={setConfirmerName}
+                    onReportReturn={reportEquipmentReturn}
+                    onConfirmReturn={confirmEquipmentReturn}
+                    onCancel={cancelReservation}
+                />
+
+                <ReservationModal
+                    isOpen={isReservationModalOpen}
+                    onClose={() => setIsReservationModalOpen(false)}
+                    rooms={rooms}
+                    equipment={equipment}
+                    resourceType={resourceType}
+                    resourceId={resourceId}
+                    reservedBy={reservedBy}
+                    reservationDate={reservationDate}
+                    startTime={startTime}
+                    endTime={endTime}
+                    reservationNotes={reservationNotes}
+                    onResourceTypeChange={(value) => {
+                        setResourceType(value);
+                        setResourceId("");
+                    }}
+                    onResourceIdChange={setResourceId}
+                    onReservedByChange={setReservedBy}
+                    onReservationDateChange={setReservationDate}
+                    onStartTimeChange={setStartTime}
+                    onEndTimeChange={setEndTime}
+                    onReservationNotesChange={setReservationNotes}
+                    onSubmit={createReservation}
+                />
+            </div>
+        </section>
     );
 }

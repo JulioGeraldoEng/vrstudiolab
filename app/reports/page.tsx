@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Sidebar from "../components/Sidebar";
 import Cards from "../components/cards/Cards";
-import Footer from "../components/Footer";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import ExportReportButtons from "../components/buttons/ExportReportButtons";
 import BackupButton from "../components/buttons/BackupButton";
@@ -23,7 +21,6 @@ import type {
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
 import PermissionGate from "../components/PermissionGate";
-import AccessGuard from "../components/AccessGuard";
 
 const inventoryKey = "vrstudiolab-inventory-v1";
 const maintenanceKey = "vrstudiolab-maintenance-v1";
@@ -251,306 +248,293 @@ export default function RelatoriosPage() {
   );
 
   return (
-    <AccessGuard>
-      <main className="min-h-screen bg-[#0b1120] text-white">
-        <div className="flex min-h-screen w-full flex-col lg:flex-row">
-          <Sidebar activePage={activePage} />
+    <section className="min-w-0 flex-1 p-4 sm:p-8">
+      <div className="mx-auto max-w-7xl space-y-8">
 
-          <section className="min-w-0 flex-1 p-4 sm:p-8">
-            <div className="mx-auto max-w-7xl space-y-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+              {activePage}
+            </h1>
 
-              <header>
-                <div>
-                  <BackToDashboard />
+            <p className="mt-2 text-sm text-slate-400">
+              Consulte informações e gere relatórios sobre a operação do laboratório.
+            </p>
+          </div>
 
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
-                    VR Studio Lab
-                  </p>
+          <BackToDashboard />
+        </header>
 
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                    {activePage}
-                  </h1>
+        {ready && (
+          <section className="mb-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
 
-                  <p className="mt-2 text-sm text-slate-400">
-                    Resumo do inventário e das ordens de manutenção.
-                  </p>
+            <div className="mb-5 flex flex-col gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">
+                  Campos do relatório
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Marque as informações que deseja incluir na exportação.
+                </p>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <h2 className="mt-1 text-sm text-slate-400">
+                    Exportação e backup
+                  </h2>
                 </div>
-              </header>
+              </div>
 
-              {ready && (
-                <section className="mb-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <PermissionGate permission="reports.export">
+                  <ExportReportButtons
+                    onExportCSV={handleExportCSV}
+                    onExportPDF={handleExportPDF}
+                    disabled={!ready || selectedFields.length === 0}
+                  />
+                </PermissionGate>
 
-                  <div className="mb-5 flex flex-col gap-4">
-                    <div>
-                      <h2 className="text-lg font-semibold">
-                        Campos do relatório
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-400">
-                        Marque as informações que deseja incluir na exportação.
-                      </p>
-                      <div className="flex flex-wrap items-center justify-end gap-3">
-                        <h2 className="mt-1 text-sm text-slate-400">
-                          Exportação e backup
-                        </h2>
-                      </div>
-                    </div>
+                <PermissionGate permission="settings.manage">
+                  <BackupButton
+                    onClick={exportBackup}
+                    disabled={!ready || !peopleReady}
+                  />
+                </PermissionGate>
 
+                <PermissionGate permission="settings.manage">
+                  <ImportBackupButton
+                    onClick={() => backupFileInputRef.current?.click()}
+                    disabled={!ready || !peopleReady}
+                  />
+                </PermissionGate>
 
-                    <div className="flex flex-wrap items-center justify-end gap-3">
-                      <PermissionGate permission="reports.export">
-                        <ExportReportButtons
-                          onExportCSV={handleExportCSV}
-                          onExportPDF={handleExportPDF}
-                          disabled={!ready || selectedFields.length === 0}
-                        />
-                      </PermissionGate>
+                <input
+                  ref={backupFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
 
-                      <PermissionGate permission="settings.manage">
-                        <BackupButton
-                          onClick={exportBackup}
-                          disabled={!ready || !peopleReady}
-                        />
-                      </PermissionGate>
+                    if (file) {
+                      void handleImportBackup(file);
+                    }
 
-                      <PermissionGate permission="settings.manage">
-                        <ImportBackupButton
-                          onClick={() => backupFileInputRef.current?.click()}
-                          disabled={!ready || !peopleReady}
-                        />
-                      </PermissionGate>
+                    event.target.value = "";
+                  }}
+                />
+              </div>
 
-                      <input
-                        ref={backupFileInputRef}
-                        type="file"
-                        accept=".json,application/json"
-                        className="hidden"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedFields(exportFields.map((field) => field.id))
+                  }
+                  className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+                >
+                  Marcar todos
+                </button>
+              </div>
+            </div>
 
-                          if (file) {
-                            void handleImportBackup(file);
-                          }
+            {(["inventory", "maintenance", "people"] as const).map((group) => (
+              <div key={group} className="mb-5 last:mb-0">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-medium text-slate-200">
+                    {group === "inventory"
+                      ? "Inventário de equipamentos"
+                      : group === "maintenance"
+                        ? "Ordens de manutenção"
+                        : "Pessoas cadastradas"}
+                  </h3>
 
-                          event.target.value = "";
-                        }}
-                      />
-                    </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const groupFieldIds = exportFields
+                        .filter((field) => field.group === group)
+                        .map((field) => field.id);
 
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedFields(exportFields.map((field) => field.id))
-                        }
-                        className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+                      setSelectedFields((current) =>
+                        current.filter((id) => !groupFieldIds.includes(id))
+                      );
+                    }}
+                    className="text-sm font-medium text-slate-400 transition hover:text-cyan-300"
+                  >
+                    Desmarcar todos
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {exportFields
+                    .filter((field) => field.group === group)
+                    .map((field) => (
+                      <label
+                        key={field.id}
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] p-3 text-sm text-slate-300 transition hover:bg-white/[0.07]"
                       >
-                        Marcar todos
-                      </button>
-                    </div>
-                  </div>
-
-                  {(["inventory", "maintenance", "people"] as const).map((group) => (
-                    <div key={group} className="mb-5 last:mb-0">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="font-medium text-slate-200">
-                          {group === "inventory"
-                            ? "Inventário de equipamentos"
-                            : group === "maintenance"
-                              ? "Ordens de manutenção"
-                              : "Pessoas cadastradas"}
-                        </h3>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const groupFieldIds = exportFields
-                              .filter((field) => field.group === group)
-                              .map((field) => field.id);
-
+                        <input
+                          type="checkbox"
+                          checked={selectedFields.includes(field.id)}
+                          onChange={(event) => {
                             setSelectedFields((current) =>
-                              current.filter((id) => !groupFieldIds.includes(id))
+                              event.target.checked
+                                ? [...current, field.id]
+                                : current.filter((id) => id !== field.id)
                             );
                           }}
-                          className="text-sm font-medium text-slate-400 transition hover:text-cyan-300"
-                        >
-                          Desmarcar todos
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {exportFields
-                          .filter((field) => field.group === group)
-                          .map((field) => (
-                            <label
-                              key={field.id}
-                              className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] p-3 text-sm text-slate-300 transition hover:bg-white/[0.07]"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedFields.includes(field.id)}
-                                onChange={(event) => {
-                                  setSelectedFields((current) =>
-                                    event.target.checked
-                                      ? [...current, field.id]
-                                      : current.filter((id) => id !== field.id)
-                                  );
-                                }}
-                                className="h-4 w-4 accent-cyan-400"
-                              />
-                              {field.label}
-                            </label>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              {!ready ? (
-                <p className="text-slate-400">Carregando relatórios...</p>
-              ) : (
-                <>
-                  <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Cards
-                      title="Total de equipamentos"
-                      value={equipment.length}
-                      detail="Itens cadastrados"
-                      icon="▣"
-                      color="text-cyan-300"
-                      bg="bg-cyan-400/10"
-                    />
-                    <Cards
-                      title="Disponíveis"
-                      value={availableEquipment}
-                      detail="Prontos para uso"
-                      icon="✓"
-                      color="text-emerald-300"
-                      bg="bg-emerald-400/10"
-                    />
-                    <Cards
-                      title="Em uso"
-                      value={inUseEquipment}
-                      detail="Em utilização"
-                      icon="⌁"
-                      color="text-blue-300"
-                      bg="bg-blue-400/10"
-                    />
-                    <Cards
-                      title="Em manutenção"
-                      value={equipmentInMaintenance}
-                      detail="Precisam de atenção"
-                      icon="⚙"
-                      color="text-amber-300"
-                      bg="bg-amber-400/10"
-                    />
-                    <Cards
-                      title="Baixados"
-                      value={writtenOffEquipment}
-                      detail="Inativados"
-                      icon="✕"
-                      color="text-rose-300"
-                      bg="bg-rose-400/10"
-                    />
-                    <Cards
-                      title="Ordens abertas"
-                      value={openOrders}
-                      detail="Aguardando triagem"
-                      icon="📋"
-                      color="text-blue-300"
-                      bg="bg-blue-400/10"
-                    />
-                    <Cards
-                      title="Em andamento"
-                      value={inProgressOrders}
-                      detail="Em reparo"
-                      icon="⚙"
-                      color="text-amber-300"
-                      bg="bg-amber-400/10"
-                    />
-                    <Cards
-                      title="Aguardando peças"
-                      value={waitingOrders}
-                      detail="Pendência de componentes"
-                      icon="⏳"
-                      color="text-orange-300"
-                      bg="bg-orange-400/10"
-                    />
-                    <Cards
-                      title="Ordens concluídas"
-                      value={completedOrders}
-                      detail="Reparos finalizados"
-                      icon="✓"
-                      color="text-emerald-300"
-                      bg="bg-emerald-400/10"
-                    />
-                  </section>
-
-                  <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
-                    <h2 className="text-lg font-semibold">
-                      Ordens de serviço recentes
-                    </h2>
-
-                    {orders.length === 0 ? (
-                      <p className="mt-4 text-sm text-slate-400">
-                        Nenhuma ordem de serviço cadastrada.
-                      </p>
-                    ) : (
-                      <div className="mt-4">
-                        <MaintenanceTable
-                          orders={paginatedOrders}
-                          statusStyles={statusStyles}
-                          currentPage={currentPage}
-                          itemsPerPage={itemsPerPage}
-                          totalItems={orders.length}
-                          onPageChange={setCurrentPage}
-                          showActions={false}
+                          className="h-4 w-4 accent-cyan-400"
                         />
-                      </div>
-                    )}
-                  </section>
-
-                  <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
-                    <h2 className="text-lg font-semibold">
-                      Equipamentos cadastrados
-                    </h2>
-
-                    <div className="mt-4">
-                      <InventoryTable
-                        items={paginatedEquipment}
-                        ready={ready}
-                        currentPage={inventoryPage}
-                        itemsPerPage={inventoryItemsPerPage}
-                        totalItems={equipment.length}
-                        onPageChange={setInventoryPage}
-                        showActions={false}
-                      />
-                    </div>
-                  </section>
-
-                  <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
-                    <h2 className="text-lg font-semibold">Pessoas cadastradas</h2>
-
-                    <div className="mt-4">
-                      <PeopleTable
-                        people={paginatedPeople}
-                        currentPage={peoplePage}
-                        itemsPerPage={peopleItemsPerPage}
-                        totalItems={people.length}
-                        onEdit={() => { }}
-                        onToggleStatus={() => { }}
-                        onPageChange={setPeoplePage}
-                        showActions={false}
-                      />
-                    </div>
-                  </section>
-
-                </>
-              )}
-              <Footer />
-            </div>
+                        {field.label}
+                      </label>
+                    ))}
+                </div>
+              </div>
+            ))}
           </section>
-        </div>
-      </main>
-    </AccessGuard>
+        )}
+
+        {!ready ? (
+          <p className="text-slate-400">Carregando relatórios...</p>
+        ) : (
+          <>
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Cards
+                title="Total de equipamentos"
+                value={equipment.length}
+                detail="Itens cadastrados"
+                icon="▣"
+                color="text-cyan-300"
+                bg="bg-cyan-400/10"
+              />
+              <Cards
+                title="Disponíveis"
+                value={availableEquipment}
+                detail="Prontos para uso"
+                icon="✓"
+                color="text-emerald-300"
+                bg="bg-emerald-400/10"
+              />
+              <Cards
+                title="Em uso"
+                value={inUseEquipment}
+                detail="Em utilização"
+                icon="⌁"
+                color="text-blue-300"
+                bg="bg-blue-400/10"
+              />
+              <Cards
+                title="Em manutenção"
+                value={equipmentInMaintenance}
+                detail="Precisam de atenção"
+                icon="⚙"
+                color="text-amber-300"
+                bg="bg-amber-400/10"
+              />
+              <Cards
+                title="Baixados"
+                value={writtenOffEquipment}
+                detail="Inativados"
+                icon="✕"
+                color="text-rose-300"
+                bg="bg-rose-400/10"
+              />
+              <Cards
+                title="Ordens abertas"
+                value={openOrders}
+                detail="Aguardando triagem"
+                icon="📋"
+                color="text-blue-300"
+                bg="bg-blue-400/10"
+              />
+              <Cards
+                title="Em andamento"
+                value={inProgressOrders}
+                detail="Em reparo"
+                icon="⚙"
+                color="text-amber-300"
+                bg="bg-amber-400/10"
+              />
+              <Cards
+                title="Aguardando peças"
+                value={waitingOrders}
+                detail="Pendência de componentes"
+                icon="⏳"
+                color="text-orange-300"
+                bg="bg-orange-400/10"
+              />
+              <Cards
+                title="Ordens concluídas"
+                value={completedOrders}
+                detail="Reparos finalizados"
+                icon="✓"
+                color="text-emerald-300"
+                bg="bg-emerald-400/10"
+              />
+            </section>
+
+            <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+              <h2 className="text-lg font-semibold">
+                Ordens de serviço recentes
+              </h2>
+
+              {orders.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-400">
+                  Nenhuma ordem de serviço cadastrada.
+                </p>
+              ) : (
+                <div className="mt-4">
+                  <MaintenanceTable
+                    orders={paginatedOrders}
+                    statusStyles={statusStyles}
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={orders.length}
+                    onPageChange={setCurrentPage}
+                    showActions={false}
+                  />
+                </div>
+              )}
+            </section>
+
+            <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+              <h2 className="text-lg font-semibold">
+                Equipamentos cadastrados
+              </h2>
+
+              <div className="mt-4">
+                <InventoryTable
+                  items={paginatedEquipment}
+                  ready={ready}
+                  currentPage={inventoryPage}
+                  itemsPerPage={inventoryItemsPerPage}
+                  totalItems={equipment.length}
+                  onPageChange={setInventoryPage}
+                  showActions={false}
+                />
+              </div>
+            </section>
+
+            <section className="mt-8 rounded-2xl border border-white/10 bg-[#151e30] p-5">
+              <h2 className="text-lg font-semibold">Pessoas cadastradas</h2>
+
+              <div className="mt-4">
+                <PeopleTable
+                  people={paginatedPeople}
+                  currentPage={peoplePage}
+                  itemsPerPage={peopleItemsPerPage}
+                  totalItems={people.length}
+                  onEdit={() => { }}
+                  onToggleStatus={() => { }}
+                  onPageChange={setPeoplePage}
+                  showActions={false}
+                />
+              </div>
+            </section>
+
+          </>
+        )}
+
+      </div>
+    </section>
   );
 }
