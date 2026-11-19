@@ -4,16 +4,25 @@ import { useEffect, useState } from "react";
 import Cards from "../components/cards/Cards";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import MaintenanceModal from "../components/modals/MaintenanceModal";
+import MaintenanceRequestModal from "../components/modals/MaintenanceRequestModal";
 import MaintenanceTable from "../components/tables/MaintenanceTable";
+import MaintenanceRequestsTable from "../components/tables/MaintenanceRequestsTable";
 import type { Equipment, Status } from "../../types/equipment";
 import type { Person } from "../../types/person";
 import type {
   MaintenanceOrder,
   MaintenanceStatus,
+  MaintenanceRequest,
 } from "../../types/maintenance";
 import PermissionGate from "../components/PermissionGate";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import { CURRENT_PERSON_ID } from "../../lib/auth/current-user";
+import { canViewRecord } from "../../lib/permissions/can-view-record";
+import {
+  loadMaintenanceRequests,
+  saveMaintenanceRequests,
+} from "../../lib/maintenance/requests-storage";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -36,6 +45,8 @@ const statusStyles: Record<MaintenanceStatus, string> = {
 export default function ManutencaoPage() {
   const [orders, setOrders] =
     useState<MaintenanceOrder[]>(initialOrders);
+  const [maintenanceRequests, setMaintenanceRequests] =
+    useState<MaintenanceRequest[]>([]);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
@@ -48,8 +59,19 @@ export default function ManutencaoPage() {
 
   const [equipmentId, setEquipmentId] = useState("");
   const [problem, setProblem] = useState("");
+  // Estados do formulário de solicitação de manutenção
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestEquipmentId, setRequestEquipmentId] = useState("");
+  const [requestProblem, setRequestProblem] = useState("");
+  const [requestRequesterId, setRequestRequesterId] = useState("");
+  const [requestSearch, setRequestSearch] = useState("");
+  const [requestStatusFilter, setRequestStatusFilter] = useState("Todos");
+  const [requestPage, setRequestPage] = useState(1);
+  const requestItemsPerPage = 10;
   const [inventory, setInventory] =
     useState<Equipment[]>([]);
+  const [requestBeingConvertedId, setRequestBeingConvertedId] =
+    useState<string | null>(null);
 
   const [historyEquipmentId, setHistoryEquipmentId] =
     useState("");
@@ -57,7 +79,7 @@ export default function ManutencaoPage() {
   const [people, setPeople] = useState<Person[]>([]);
 
   const [assignedPersonId, setAssignedPersonId] = useState("");
-
+  const [requestedByPersonId, setRequestedByPersonId] = useState("");
   const [completionOrderId, setCompletionOrderId] = useState("");
   const [completionExecutorId, setCompletionExecutorId] = useState("");
   const [completionAuthorizerId, setCompletionAuthorizerId] = useState("");
@@ -68,6 +90,7 @@ export default function ManutencaoPage() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       try {
+        setMaintenanceRequests(loadMaintenanceRequests());
         const savedOrders = localStorage.getItem(STORAGE_KEY);
 
         if (savedOrders) {
@@ -165,11 +188,175 @@ export default function ManutencaoPage() {
     if (!ready) return;
 
     try {
+      saveMaintenanceRequests(maintenanceRequests);
+    } catch (error) {
+      console.error("Erro ao salvar solicitações de manutenção:", error);
+    }
+  }, [maintenanceRequests, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
     } catch (error) {
       console.error("Erro ao salvar manutenções:", error);
     }
   }, [orders, ready]);
+
+  function createMaintenanceRequest(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.request")
+    ) {
+      alert("Seu perfil não possui permissão para solicitar manutenção.");
+      return;
+    }
+
+    const selectedId = Number(requestEquipmentId);
+
+    const selectedEquipment = inventory.find(
+      (item) => item.id === selectedId
+    );
+
+    if (!selectedEquipment) {
+      alert("Selecione um equipamento válido.");
+      return;
+    }
+
+    if (
+      selectedEquipment.status === "Baixado" ||
+      selectedEquipment.status === "Manutenção"
+    ) {
+      alert("Este equipamento não pode receber uma nova solicitação.");
+      return;
+    }
+
+    const activeOrderExists = orders.some(
+      (order) =>
+        order.equipmentId === selectedId &&
+        order.status !== "Concluída"
+    );
+
+    if (activeOrderExists) {
+      alert("Este equipamento já possui uma ordem de manutenção em aberto.");
+      return;
+    }
+
+    const pendingRequestExists = maintenanceRequests.some(
+      (request) =>
+        request.equipmentId === selectedId &&
+        request.status === "Pendente"
+    );
+
+    if (pendingRequestExists) {
+      alert(
+        "Este equipamento já possui uma solicitação de manutenção pendente."
+      );
+      return;
+    }
+
+    const requester = people.find(
+      (person) =>
+        person.id === requestRequesterId && person.active
+    );
+
+    if (!requester) {
+      alert("Selecione uma pessoa cadastrada e ativa.");
+      return;
+    }
+
+    if (!requestProblem.trim()) {
+      alert("Descreva o problema identificado.");
+      return;
+    }
+
+    const newRequest: MaintenanceRequest = {
+      id: crypto.randomUUID(),
+      equipmentId: selectedEquipment.id,
+      equipment: selectedEquipment.name,
+      assetNumber: selectedEquipment.assetNumber,
+      problem: requestProblem.trim(),
+      requestedByPersonId: requester.id,
+      requestedByName: requester.name,
+      requestDate: new Date().toISOString().slice(0, 10),
+      status: "Pendente",
+    };
+
+    setMaintenanceRequests((current) => [
+      newRequest,
+      ...current,
+    ]);
+
+    setRequestEquipmentId("");
+    setRequestProblem("");
+    setRequestRequesterId("");
+    setShowRequestForm(false);
+
+    alert("Solicitação de manutenção registrada com sucesso!");
+  }
+
+  function startRequestConversion(requestId: string) {
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
+    ) {
+      alert("Seu perfil não possui permissão para abrir ordens de serviço.");
+      return;
+    }
+
+    const request = maintenanceRequests.find(
+      (item) => item.id === requestId
+    );
+
+    if (!request || request.status !== "Pendente") {
+      alert("Esta solicitação não está disponível para conversão.");
+      return;
+    }
+
+    setRequestBeingConvertedId(request.id);
+    setEquipmentId(String(request.equipmentId));
+    setProblem(request.problem);
+    setRequestedByPersonId(request.requestedByPersonId);
+    setAssignedPersonId("");
+    setShowForm(true);
+  }
+
+  function rejectMaintenanceRequest(requestId: string) {
+    if (
+      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
+    ) {
+      alert("Seu perfil não possui permissão para gerenciar solicitações.");
+      return;
+    }
+
+    const request = maintenanceRequests.find(
+      (item) => item.id === requestId
+    );
+
+    if (!request || request.status !== "Pendente") {
+      alert("Esta solicitação não está disponível para recusa.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja realmente recusar a solicitação de manutenção de ${request.equipment}?`
+    );
+
+    if (!confirmed) return;
+
+    setMaintenanceRequests((current) =>
+      current.map((item) =>
+        item.id === requestId
+          ? { ...item, status: "Recusada" }
+          : item
+      )
+    );
+
+    alert("Solicitação recusada com sucesso.");
+  }
 
   function createOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -215,6 +402,16 @@ export default function ManutencaoPage() {
       return;
     }
 
+    const selectedRequester = people.find(
+      (person) =>
+        person.id === requestedByPersonId && person.active
+    );
+
+    if (!selectedRequester) {
+      alert("Selecione uma pessoa cadastrada e ativa como solicitante.");
+      return;
+    }
+
     const selectedPerson = people.find(
       (person) =>
         person.id === assignedPersonId && person.active
@@ -257,6 +454,8 @@ export default function ManutencaoPage() {
       assignedPersonName: selectedPerson.name,
       openingDate: new Date().toISOString().slice(0, 10),
       status: "Aberta",
+      requestedByPersonId: selectedRequester.id,
+      requestedByName: selectedRequester.name,
     };
 
     const updatedInventory = currentInventory.map((item) =>
@@ -273,10 +472,29 @@ export default function ManutencaoPage() {
     setInventory(updatedInventory);
     setOrders((current) => [newOrder, ...current]);
 
+    if (requestBeingConvertedId) {
+      setMaintenanceRequests((current) =>
+        current.map((request) =>
+          request.id === requestBeingConvertedId
+            ? {
+              ...request,
+              status: "Convertida em OS",
+              maintenanceOrderId: newOrder.id,
+              maintenanceOrderNumber: newOrder.orderNumber,
+            }
+            : request
+        )
+      );
+    }
+
+    setRequestBeingConvertedId(null);
     setEquipmentId("");
     setProblem("");
     setAssignedPersonId("");
+    setRequestedByPersonId("");
     setShowForm(false);
+
+    alert(`Ordem de serviço ${newOrder.orderNumber} criada com sucesso!`);
   }
 
   function updateStatus(id: string, status: MaintenanceStatus) {
@@ -572,8 +790,63 @@ export default function ManutencaoPage() {
     }
   }
 
+  const visibleOrders = orders.filter((order) =>
+    canViewRecord({
+      profile: CURRENT_ACCESS_PROFILE,
+      currentPersonId: CURRENT_PERSON_ID,
+      recordPersonId: order.requestedByPersonId,
+      viewOwnPermission: "maintenance.viewOwn",
+      viewAllPermission: "maintenance.viewAll",
+    })
+  );
 
-  const filteredOrders = orders.filter((order) => {
+  const visibleMaintenanceRequests = maintenanceRequests.filter(
+    (request) =>
+      canViewRecord({
+        profile: CURRENT_ACCESS_PROFILE,
+        currentPersonId: CURRENT_PERSON_ID,
+        recordPersonId: request.requestedByPersonId,
+        viewOwnPermission: "maintenance.viewOwn",
+        viewAllPermission: "maintenance.viewAll",
+      })
+  );
+
+  const filteredMaintenanceRequests = visibleMaintenanceRequests
+    .filter((request) => {
+      const searchTerm = requestSearch.trim().toLowerCase();
+
+      const matchesSearch = [
+        request.equipment,
+        request.assetNumber || "",
+        request.problem,
+        request.requestedByName,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(searchTerm);
+
+      const matchesStatus =
+        requestStatusFilter === "Todos" ||
+        request.status === requestStatusFilter;
+
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => b.requestDate.localeCompare(a.requestDate));
+
+  const requestCurrentPage = Math.min(
+    requestPage,
+    Math.max(
+      Math.ceil(filteredMaintenanceRequests.length / requestItemsPerPage),
+      1
+    )
+  );
+
+  const paginatedMaintenanceRequests = filteredMaintenanceRequests.slice(
+    (requestCurrentPage - 1) * requestItemsPerPage,
+    requestCurrentPage * requestItemsPerPage
+  );
+
+  const filteredOrders = visibleOrders.filter((order) => {
     const matchesSearch = `${order.orderNumber || ""} ${order.equipment} ${order.problem} ${order.responsible} ${order.status}`
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -601,7 +874,7 @@ export default function ManutencaoPage() {
     (item) => String(item.id) === historyEquipmentId
   );
 
-  const historyOrders = orders.filter((order) => {
+  const historyOrders = visibleOrders.filter((order) => {
     if (!selectedHistoryEquipment) return false;
 
     return (
@@ -613,19 +886,19 @@ export default function ManutencaoPage() {
     );
   });
 
-  const openCount = orders.filter(
+  const openCount = visibleOrders.filter(
     (order) => order.status === "Aberta"
   ).length;
 
-  const progressCount = orders.filter(
+  const progressCount = visibleOrders.filter(
     (order) => order.status === "Em andamento"
   ).length;
 
-  const waitingCount = orders.filter(
+  const waitingCount = visibleOrders.filter(
     (order) => order.status === "Aguardando peças"
   ).length;
 
-  const completedCount = orders.filter(
+  const completedCount = visibleOrders.filter(
     (order) => order.status === "Concluída"
   ).length;
 
@@ -842,11 +1115,28 @@ export default function ManutencaoPage() {
           inventory={inventory}
           people={people}
           inputClass={inputClass}
+          requestedByPersonId={requestedByPersonId}
+          onRequesterChange={setRequestedByPersonId}
           onEquipmentChange={setEquipmentId}
           onProblemChange={setProblem}
           onPersonChange={setAssignedPersonId}
           onSubmit={createOrder}
           onClose={() => setShowForm(false)}
+        />
+
+        <MaintenanceRequestModal
+          open={showRequestForm}
+          equipmentId={requestEquipmentId}
+          problem={requestProblem}
+          requestedByPersonId={requestRequesterId}
+          inventory={inventory}
+          people={people}
+          inputClass={inputClass}
+          onEquipmentChange={setRequestEquipmentId}
+          onProblemChange={setRequestProblem}
+          onRequesterChange={setRequestRequesterId}
+          onSubmit={createMaintenanceRequest}
+          onClose={() => setShowRequestForm(false)}
         />
 
         <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
@@ -877,6 +1167,15 @@ export default function ManutencaoPage() {
               </select>
 
               <div className="flex flex-wrap gap-3">
+                <PermissionGate permission="maintenance.request">
+                  <button
+                    type="button"
+                    onClick={() => setShowRequestForm(true)}
+                    className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                  >
+                    + Solicitar manutenção
+                  </button>
+                </PermissionGate>
                 <PermissionGate permission="maintenance.openOrder">
                   <button
                     type="button"
@@ -923,6 +1222,67 @@ export default function ManutencaoPage() {
               }
             />
           )}
+        </section>
+
+        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">
+          <div className="flex flex-col gap-4 border-b border-white/10 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">
+                Solicitações de manutenção
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-400">
+                {filteredMaintenanceRequests.length} solicitação(ões) encontrada(s)
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-1 lg:justify-end">
+              <input
+                type="text"
+                className={`${inputClass} sm:flex-1 lg:max-w-xs`}
+                value={requestSearch}
+                onChange={(event) => {
+                  setRequestSearch(event.target.value);
+                  setRequestPage(1);
+                }}
+                placeholder="Buscar equipamento, patrimônio ou solicitante..."
+                aria-label="Buscar solicitações de manutenção"
+              />
+
+              <select
+                className={`${inputClass} sm:w-64 sm:flex-none`}
+                value={requestStatusFilter}
+                onChange={(event) => {
+                  setRequestStatusFilter(event.target.value);
+                  setRequestPage(1);
+                }}
+                aria-label="Filtrar solicitações por status"
+              >
+                <option value="Todos">Todos os status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Convertida em OS">Convertida em OS</option>
+                <option value="Recusada">Recusada</option>
+              </select>
+            </div>
+          </div>
+
+          <MaintenanceRequestsTable
+            requests={paginatedMaintenanceRequests}
+            onConvert={startRequestConversion}
+            onReject={rejectMaintenanceRequest}
+            canConvert={hasPermission(
+              CURRENT_ACCESS_PROFILE,
+              "maintenance.openOrder"
+            )}
+            canReject={hasPermission(
+              CURRENT_ACCESS_PROFILE,
+              "maintenance.openOrder"
+            )}
+            currentPage={requestCurrentPage}
+            itemsPerPage={requestItemsPerPage}
+            totalItems={filteredMaintenanceRequests.length}
+            onPageChange={setRequestPage}
+          />
         </section>
 
         <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151e30]">

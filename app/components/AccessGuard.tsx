@@ -9,17 +9,24 @@ import { hasPermission } from "../../lib/permissions/has-permission";
 
 const ROUTE_PERMISSIONS: {
   path: string;
-  permission: Permission;
+  permissions: Permission[];
 }[] = [
-  { path: "/dashboard", permission: "dashboard.view" },
-  { path: "/equipment", permission: "equipment.view" },
-  { path: "/maintenance", permission: "maintenance.viewAll" },
-  { path: "/people", permission: "people.viewAll" },
-  { path: "/rooms", permission: "rooms.view" },
-  { path: "/reservations", permission: "reservations.viewAll" },
-  { path: "/calendar", permission: "calendar.view" },
-  { path: "/reports", permission: "reports.view" },
-];
+    { path: "/dashboard", permissions: ["dashboard.view"] },
+    { path: "/equipment", permissions: ["equipment.view"] },
+    {
+      path: "/maintenance",
+      permissions: [
+        "maintenance.request",
+        "maintenance.viewOwn",
+        "maintenance.viewAll",
+      ],
+    },
+    { path: "/people", permissions: ["people.viewAll"] },
+    { path: "/rooms", permissions: ["rooms.view"] },
+    { path: "/reservations", permissions: ["reservations.viewAll"] },
+    { path: "/calendar", permissions: ["calendar.view"] },
+    { path: "/reports", permissions: ["reports.view"] },
+  ];
 
 export default function AccessGuard({
   children,
@@ -31,21 +38,23 @@ export default function AccessGuard({
   const normalizedPath =
     pathname.replace(/^\/vrstudiolab(?=\/|$)/, "") || "/";
 
-  const requiredPermission =
+  const requiredPermissions =
     normalizedPath === "/"
-      ? "dashboard.view"
+      ? ["dashboard.view" as Permission]
       : normalizedPath === "/seed" ||
-          normalizedPath.startsWith("/seed/")
-        ? "settings.manage"
+        normalizedPath.startsWith("/seed/")
+        ? ["settings.manage" as Permission]
         : ROUTE_PERMISSIONS.find(
-            (route) =>
-              normalizedPath === route.path ||
-              normalizedPath.startsWith(`${route.path}/`)
-          )?.permission;
+          (route) =>
+            normalizedPath === route.path ||
+            normalizedPath.startsWith(`${route.path}/`)
+        )?.permissions;
 
   const allowed =
-    !requiredPermission ||
-    hasPermission(CURRENT_ACCESS_PROFILE, requiredPermission);
+    !requiredPermissions ||
+    requiredPermissions.some((permission) =>
+      hasPermission(CURRENT_ACCESS_PROFILE, permission)
+    );
 
   if (!allowed) {
     return (
@@ -59,7 +68,7 @@ export default function AccessGuard({
             Seu perfil não possui permissão para acessar esta página.
           </p>
 
-          <Link 
+          <Link
             href="/"
             className="inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500"
           >

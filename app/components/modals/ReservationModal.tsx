@@ -4,25 +4,24 @@ import ReservationForm from "../forms/ReservationForm";
 import CloseModalButton from "../buttons/CloseModalButton";
 import type { Room } from "../../../types/room";
 import type { Equipment } from "../../../types/equipment";
+import type { Person } from "../../../types/person";
 
 type ReservationModalProps = {
     isOpen: boolean;
     onClose: () => void;
-
     rooms: Room[];
     equipment: Equipment[];
-
     resourceType: "Sala" | "Equipamento";
     resourceId: string;
-    reservedBy: string;
     reservationDate: string;
     startTime: string;
     endTime: string;
     reservationNotes: string;
-
+    people: Person[];
+    reservedByPersonId: string;
+    onReservedByPersonChange: (value: string) => void;
     onResourceTypeChange: (value: "Sala" | "Equipamento") => void;
     onResourceIdChange: (value: string) => void;
-    onReservedByChange: (value: string) => void;
     onReservationDateChange: (value: string) => void;
     onStartTimeChange: (value: string) => void;
     onEndTimeChange: (value: string) => void;

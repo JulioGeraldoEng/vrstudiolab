@@ -12,6 +12,8 @@ import type { Person } from "../../types/person";
 import ReservationModal from "../components/modals/ReservationModal";
 import ReservationsSection from "../components/sections/ReservationsSection";
 import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import { CURRENT_PERSON_ID } from "../../lib/auth/current-user";
+import { canViewRecord } from "../../lib/permissions/can-view-record";
 import { hasPermission } from "../../lib/permissions/has-permission";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
@@ -26,7 +28,7 @@ export default function ReservasPage() {
     const [confirmerName, setConfirmerName] = useState("");
     const [resourceType, setResourceType] = useState<"Sala" | "Equipamento">("Sala");
     const [resourceId, setResourceId] = useState("");
-    const [reservedBy, setReservedBy] = useState("");
+    const [reservedByPersonId, setReservedByPersonId] = useState("");
     const [reservationDate, setReservationDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -133,7 +135,7 @@ export default function ReservasPage() {
 
         if (
             !resourceId ||
-            !reservedBy.trim() ||
+            !reservedByPersonId ||
             !reservationDate ||
             !startTime ||
             !endTime
@@ -220,12 +222,22 @@ export default function ReservasPage() {
                 ? rooms.find((room) => room.id === resourceId)!.name
                 : equipment.find((item) => String(item.id) === resourceId)!.name;
 
+        const selectedPerson = people.find(
+            (person) => person.id === reservedByPersonId && person.active
+        );
+
+        if (!selectedPerson) {
+            window.alert("Selecione uma pessoa cadastrada e ativa.");
+            return;
+        }
+
         const newReservation: Reservation = {
             id: crypto.randomUUID(),
             resourceType,
             resourceId,
             resourceName,
-            reservedBy: reservedBy.trim(),
+            reservedBy: selectedPerson.name,
+            reservedByPersonId: selectedPerson.id,
             date: reservationDate,
             startTime,
             endTime,
@@ -241,7 +253,7 @@ export default function ReservasPage() {
         setReservations((current) => [...current, newReservation]);
 
         setResourceId("");
-        setReservedBy("");
+        setReservedByPersonId("");
         setReservationDate("");
         setStartTime("");
         setEndTime("");
@@ -251,13 +263,24 @@ export default function ReservasPage() {
     }
 
     function cancelReservation(reservation: Reservation) {
-        if (
-            !hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") &&
-            !hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelAny")
-        ) {
-            alert("Você não possui permissão para cancelar reservas.");
+        const canCancelAny = hasPermission(
+            CURRENT_ACCESS_PROFILE,
+            "reservations.cancelAny"
+        );
+
+        const isOwnReservation =
+            !!CURRENT_PERSON_ID &&
+            reservation.reservedByPersonId === CURRENT_PERSON_ID;
+
+        const canCancelOwn =
+            isOwnReservation &&
+            hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn");
+
+        if (!canCancelAny && !canCancelOwn) {
+            alert("Você não possui permissão para cancelar esta reserva.");
             return;
         }
+
         const confirmed = window.confirm(
             `Deseja cancelar a reserva de "${reservation.resourceName}" para ${reservation.date.split("-").reverse().join("/")} das ${reservation.startTime} às ${reservation.endTime}?`
         );
@@ -274,8 +297,22 @@ export default function ReservasPage() {
     }
 
     function reportEquipmentReturn(reservation: Reservation) {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "loans.registerReturn")) {
-            alert("Você não possui permissão para registrar devoluções.");
+        const canRegisterReturn = hasPermission(
+            CURRENT_ACCESS_PROFILE,
+            "loans.registerReturn"
+        );
+
+        const isOwnReservation =
+            !!CURRENT_PERSON_ID &&
+            reservation.reservedByPersonId === CURRENT_PERSON_ID;
+
+        const canRegisterAnyReturn = hasPermission(
+            CURRENT_ACCESS_PROFILE,
+            "loans.editAny"
+        );
+
+        if (!canRegisterReturn || (!isOwnReservation && !canRegisterAnyReturn)) {
+            alert("Você não possui permissão para registrar esta devolução.");
             return;
         }
 
@@ -305,6 +342,8 @@ export default function ReservasPage() {
                         ...item,
                         returnStatus: "Devolução informada",
                         returnReportedAt: new Date().toISOString(),
+                        returnReportedByPersonId: reservation.reservedByPersonId,
+                        returnReportedByName: reservation.reservedBy,
                     }
                     : item
             )
@@ -355,6 +394,7 @@ export default function ReservasPage() {
                         returnStatus: "Devolvida",
                         returnConfirmedAt: new Date().toISOString(),
                         returnConfirmedBy: confirmer.name,
+                        returnConfirmedByPersonId: confirmer.id,
                     }
                     : item
             )
@@ -363,7 +403,17 @@ export default function ReservasPage() {
         window.alert("Devolução confirmada com sucesso!");
     }
 
-    const filteredReservations = reservations.filter((reservation) => {
+    const visibleReservations = reservations.filter((reservation) =>
+        canViewRecord({
+            profile: CURRENT_ACCESS_PROFILE,
+            currentPersonId: CURRENT_PERSON_ID,
+            recordPersonId: reservation.reservedByPersonId,
+            viewOwnPermission: "reservations.viewOwn",
+            viewAllPermission: "reservations.viewAll",
+        })
+    );
+
+    const filteredReservations = visibleReservations.filter((reservation) => {
         const searchTerm = reservationSearch.trim().toLowerCase();
 
         const matchesSearch =
@@ -382,18 +432,18 @@ export default function ReservasPage() {
         return matchesSearch && matchesType && matchesStatus;
     });
 
-    const totalReservations = reservations.length;
+    const totalReservations = visibleReservations.length;
 
-    const scheduledReservations = reservations.filter((reservation) => {
+    const scheduledReservations = visibleReservations.filter((reservation) => {
         const status = getReservationDisplayStatus(reservation);
         return status === "Agendada";
     }).length;
 
-    const activeReservations = reservations.filter((reservation) => {
+    const activeReservations = visibleReservations.filter((reservation) => {
         return getReservationDisplayStatus(reservation) === "Em utilização";
     }).length;
 
-    const pendingReturns = reservations.filter((reservation) => {
+    const pendingReturns = visibleReservations.filter((reservation) => {
         return (
             reservation.resourceType === "Equipamento" &&
             reservation.returnStatus === "Devolução informada" &&
@@ -488,7 +538,8 @@ export default function ReservasPage() {
                     equipment={equipment}
                     resourceType={resourceType}
                     resourceId={resourceId}
-                    reservedBy={reservedBy}
+                    people={people}
+                    reservedByPersonId={reservedByPersonId}
                     reservationDate={reservationDate}
                     startTime={startTime}
                     endTime={endTime}
@@ -498,7 +549,7 @@ export default function ReservasPage() {
                         setResourceId("");
                     }}
                     onResourceIdChange={setResourceId}
-                    onReservedByChange={setReservedBy}
+                    onReservedByPersonChange={setReservedByPersonId}
                     onReservationDateChange={setReservationDate}
                     onStartTimeChange={setStartTime}
                     onEndTimeChange={setEndTime}

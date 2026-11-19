@@ -1,5 +1,7 @@
 import type { AccessProfile } from "../../types/permissions";
+import { CURRENT_USER } from "../auth/current-user";
 
-// Perfil temporário para desenvolvimento.
-// Será substituído pelo perfil da pessoa autenticada futuramente.
-export const CURRENT_ACCESS_PROFILE: AccessProfile = "administrator";
+// Perfil temporário de desenvolvimento.
+// Quando houver autenticação, será utilizado o perfil do usuário conectado.
+export const CURRENT_ACCESS_PROFILE: AccessProfile =
+  CURRENT_USER?.profile ?? "administrator";
