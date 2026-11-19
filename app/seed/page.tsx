@@ -5,6 +5,7 @@ import {
   seedEquipments,
   seedPeople,
   seedMaintenanceOrders,
+  seedMaintenanceRequests,
   seedRooms,
   seedReservations,
 } from "./dados";
@@ -15,7 +16,7 @@ export default function SeedPage() {
 
   function loadSeedData() {
     const confirmed = window.confirm(
-      "Atenção: os registros atuais de equipamentos, pessoas, salas, manutenção e reservas serão substituídos por 40 equipamentos, 30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias. Deseja continuar?"
+      "Atenção: os registros atuais de equipamentos, pessoas, salas, manutenção, solicitações de manutenção e reservas serão substituídos por 40 equipamentos, 30 pessoas, 8 salas, 30 ordens de manutenção, 5 solicitações de manutenção e 40 reservas fictícias. Deseja continuar?"
     );
 
     if (!confirmed) return;
@@ -55,6 +56,11 @@ export default function SeedPage() {
       );
 
       localStorage.setItem(
+        "vrstudiolab-maintenance-requests-v1",
+        JSON.stringify(seedMaintenanceRequests)
+      );
+
+      localStorage.setItem(
         "vrstudiolab-rooms-v1",
         JSON.stringify(seedRooms)
       );
@@ -65,7 +71,7 @@ export default function SeedPage() {
       );
 
       setMessage(
-        "Dados de teste carregados! Atualize as páginas de equipamentos, pessoas, manutenção, salas e reservas para visualizar os registros."
+        "Dados de teste carregados! Atualize as páginas de equipamentos, pessoas, manutenção, solicitações de manutenção, salas e reservas para visualizar os registros."
       );
     } catch (error) {
       console.error("Erro ao carregar os dados de teste:", error);
@@ -103,7 +109,8 @@ export default function SeedPage() {
 
           <p className="mb-6 text-slate-300">
             Esta ferramenta substitui os registros atuais por 40 equipamentos,
-            30 pessoas, 8 salas, 30 ordens de manutenção e 40 reservas fictícias.
+            30 pessoas, 8 salas, 30 ordens de manutenção, 5 solicitações
+            de manutenção e 40 reservas fictícias.
           </p>
 
           <button

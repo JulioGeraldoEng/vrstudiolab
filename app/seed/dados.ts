@@ -1,6 +1,9 @@
 import type { Equipment } from "../../types/equipment";
 import type { Person } from "../../types/person";
-import type { MaintenanceOrder } from "../../types/maintenance";
+import type {
+  MaintenanceOrder,
+  MaintenanceRequest,
+} from "../../types/maintenance";
 import type { Room } from "../../types/room";
 import type { Reservation } from "../../types/reservation";
 
@@ -162,7 +165,7 @@ const seedMaintenanceOrdersBase: SeedMaintenanceOrder[] = [
   { id: "seed-order-001", orderNumber: "OS-SEED-001", equipment: "Meta Quest 3 - Unidade 01", equipmentId: 1001, assetNumber: "VR-001", previousEquipmentStatus: "Disponível", problem: "Falha intermitente no rastreamento", responsible: "Ana Souza", openingDate: "2026-01-05", status: "Concluída", serviceNotes: "Sensores testados e funcionamento validado.", completionDate: "2026-01-06", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza", performedByPersonId: "seed-person-002", performedByName: "Bruno Oliveira", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
   { id: "seed-order-002", orderNumber: "OS-SEED-002", equipment: "Meta Quest 2 - Unidade 01", equipmentId: 1003, assetNumber: "VR-003", previousEquipmentStatus: "Em uso", problem: "Imagem não inicia corretamente", responsible: "Bruno Oliveira", openingDate: "2026-01-08", status: "Concluída", serviceNotes: "Aplicativo atualizado e equipamento testado.", completionDate: "2026-01-09", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira", performedByPersonId: "seed-person-010", performedByName: "João Pereira", releasedByPersonId: "seed-person-011", releasedByName: "Karen Ribeiro" },
   { id: "seed-order-003", orderNumber: "OS-SEED-003", equipment: "Notebook de Alto Desempenho 01", equipmentId: 1005, assetNumber: "TI-001", previousEquipmentStatus: "Disponível", problem: "Superaquecimento durante uso", responsible: "Carla Santos", openingDate: "2026-01-12", status: "Concluída", serviceNotes: "Ventilação limpa e teste de carga realizado.", completionDate: "2026-01-13", assignedPersonId: "seed-person-010", assignedPersonName: "João Pereira", performedByPersonId: "seed-person-016", performedByName: "Paulo Nascimento", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
-  { id: "seed-order-004", orderNumber: "OS-SEED-004", equipment: "Computador VR 02", equipmentId: 1008, assetNumber: "TI-004", previousEquipmentStatus: "Manutenção", problem: "Falha ao iniciar o sistema operacional", responsible: "Diego Almeida", openingDate: "2026-01-15", status: "Aguardando peças", serviceNotes: "Diagnóstico indica possível falha no SSD.", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza" },
+  { id: "seed-order-004", orderNumber: "OS-SEED-004", equipment: "Computador VR 02", equipmentId: 1008, assetNumber: "TI-004", previousEquipmentStatus: "Manutenção", problem: "Falha ao iniciar o sistema operacional", responsible: "Carla Santos", openingDate: "2026-01-15", status: "Aguardando peças", serviceNotes: "Diagnóstico indica possível falha no SSD.", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza" },
   { id: "seed-order-005", orderNumber: "OS-SEED-005", equipment: "Controle VR 02", equipmentId: 1014, assetNumber: "ACC-002", previousEquipmentStatus: "Manutenção", problem: "Botão de acionamento sem resposta", responsible: "Eduarda Lima", openingDate: "2026-01-18", status: "Em andamento", serviceNotes: "Inspeção e limpeza em andamento.", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira" },
   { id: "seed-order-006", orderNumber: "OS-SEED-006", equipment: "Monitor 27 polegadas 01", equipmentId: 1009, assetNumber: "MON-001", previousEquipmentStatus: "Disponível", problem: "Oscilação de imagem", responsible: "Felipe Costa", openingDate: "2026-01-20", status: "Concluída", serviceNotes: "Cabo substituído e imagem estabilizada.", completionDate: "2026-01-21", assignedPersonId: "seed-person-016", assignedPersonName: "Paulo Nascimento", performedByPersonId: "seed-person-001", performedByName: "Ana Souza", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
   { id: "seed-order-007", orderNumber: "OS-SEED-007", equipment: "Televisor de apoio 01", equipmentId: 1011, assetNumber: "TV-001", previousEquipmentStatus: "Disponível", problem: "Ausência de áudio", responsible: "Gabriela Martins", openingDate: "2026-01-23", status: "Concluída", serviceNotes: "Configuração de áudio corrigida.", completionDate: "2026-01-24", assignedPersonId: "seed-person-010", assignedPersonName: "João Pereira", performedByPersonId: "seed-person-016", performedByName: "Paulo Nascimento", releasedByPersonId: "seed-person-011", releasedByName: "Karen Ribeiro" },
@@ -177,7 +180,7 @@ const seedMaintenanceOrdersBase: SeedMaintenanceOrder[] = [
   { id: "seed-order-016", orderNumber: "OS-SEED-016", equipment: "Kit de iluminação 01", equipmentId: 1019, assetNumber: "ILU-001", previousEquipmentStatus: "Baixado", problem: "Falha elétrica identificada", responsible: "Ana Souza", openingDate: "2026-02-24", status: "Concluída", serviceNotes: "Equipamento mantido como baixado para fins de teste.", completionDate: "2026-02-25", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira", performedByPersonId: "seed-person-001", performedByName: "Ana Souza", releasedByPersonId: "seed-person-003", releasedByName: "Carla Santos" },
   { id: "seed-order-017", orderNumber: "OS-SEED-017", equipment: "Meta Quest 2 - Unidade 02", equipmentId: 1004, assetNumber: "VR-004", previousEquipmentStatus: "Disponível", problem: "Lentes precisam de inspeção", responsible: "Bruno Oliveira", openingDate: "2026-03-02", status: "Aberta", serviceNotes: "", assignedPersonId: "seed-person-001", assignedPersonName: "Ana Souza" },
   { id: "seed-order-018", orderNumber: "OS-SEED-018", equipment: "Computador VR 01", equipmentId: 1007, assetNumber: "TI-003", previousEquipmentStatus: "Disponível", problem: "Queda de desempenho em aplicações VR", responsible: "Carla Santos", openingDate: "2026-03-04", status: "Em andamento", serviceNotes: "Verificação de drivers em andamento.", assignedPersonId: "seed-person-002", assignedPersonName: "Bruno Oliveira" },
-  { id: "seed-order-019", orderNumber: "OS-SEED-019", equipment: "Controle VR 01", equipmentId: 1013, assetNumber: "ACC-001", previousEquipmentStatus: "Disponível", problem: "Desgaste no gatilho", responsible: "Diego Almeida", openingDate: "2026-03-06", status: "Aguardando peças", serviceNotes: "Aguardando componente de reposição.", assignedPersonId: "seed-person-016", assignedPersonName: "Paulo Nascimento" },
+  { id: "seed-order-019", orderNumber: "OS-SEED-019", equipment: "Controle VR 01", equipmentId: 1013, assetNumber: "ACC-001", previousEquipmentStatus: "Disponível", problem: "Desgaste no gatilho", responsible: "Carla Santos", openingDate: "2026-03-06", status: "Aguardando peças", serviceNotes: "Aguardando componente de reposição.", assignedPersonId: "seed-person-016", assignedPersonName: "Paulo Nascimento" },
   { id: "seed-order-020", orderNumber: "OS-SEED-020", equipment: "Microfone USB 01", equipmentId: 1018, assetNumber: "AUD-002", previousEquipmentStatus: "Disponível", problem: "Microfone não reconhecido pelo computador", responsible: "Gabriela Martins", openingDate: "2026-03-09", status: "Aberta", serviceNotes: "", assignedPersonId: "seed-person-010", assignedPersonName: "João Pereira" },
   {
     id: "seed-order-021",
@@ -344,15 +347,86 @@ const seedMaintenanceOrdersBase: SeedMaintenanceOrder[] = [
 export const seedMaintenanceOrders: SeedMaintenanceOrder[] =
   seedMaintenanceOrdersBase.map((order, index) => {
     const openingDate = getSeedDate(-(60 - index * 2));
+    const requester = seedPeople.find(
+      (person) => person.name === order.responsible
+    );
 
     return {
       ...order,
+      ...(requester
+        ? {
+          requestedByPersonId: requester.id,
+          requestedByName: requester.name,
+        }
+        : {}),
       openingDate,
       ...(order.status === "Concluída"
         ? { completionDate: getSeedDate(-(59 - index * 2)) }
         : {}),
     };
   });
+
+export const seedMaintenanceRequests: MaintenanceRequest[] = [
+  {
+    id: "seed-request-001",
+    equipmentId: 1002,
+    equipment: "Meta Quest 3 - Unidade 02",
+    assetNumber: "VR-002",
+    problem: "Controle apresenta falhas intermitentes durante o uso.",
+    requestedByPersonId: "seed-person-005",
+    requestedByName: "Eduarda Lima",
+    requestDate: getSeedDate(-2),
+    status: "Pendente",
+  },
+  {
+    id: "seed-request-002",
+    equipmentId: 1004,
+    equipment: "Meta Quest 2 - Unidade 02",
+    assetNumber: "VR-004",
+    problem: "Imagem apresenta pequenas oscilações.",
+    requestedByPersonId: "seed-person-006",
+    requestedByName: "Felipe Costa",
+    requestDate: getSeedDate(-5),
+    status: "Recusada",
+  },
+  {
+    id: "seed-request-003",
+    equipmentId: 1021,
+    equipment: "Meta Quest 3 - Unidade 03",
+    assetNumber: "VR-005",
+    problem: "Problema de rastreamento identificado durante atividade.",
+    requestedByPersonId: "seed-person-005",
+    requestedByName: "Eduarda Lima",
+    requestDate: getSeedDate(-15),
+    status: "Convertida em OS",
+    maintenanceOrderId: "seed-order-021",
+    maintenanceOrderNumber: "OS-SEED-021",
+  },
+  {
+    id: "seed-request-004",
+    equipmentId: 1009,
+    equipment: "Monitor 27 polegadas 01",
+    assetNumber: "MON-001",
+    problem: "Monitor apresenta falhas ocasionais na imagem.",
+    requestedByPersonId: "seed-person-012",
+    requestedByName: "Lucas Carvalho",
+    requestDate: getSeedDate(-1),
+    status: "Pendente",
+  },
+  {
+    id: "seed-request-005",
+    equipmentId: 1013,
+    equipment: "Controle VR 01",
+    assetNumber: "ACC-001",
+    problem: "Botão principal apresenta falha de acionamento.",
+    requestedByPersonId: "seed-person-003",
+    requestedByName: "Carla Santos",
+    requestDate: getSeedDate(-20),
+    status: "Convertida em OS",
+    maintenanceOrderId: "seed-order-019",
+    maintenanceOrderNumber: "OS-SEED-019",
+  },
+];
 
 function getSeedBusinessDate(daysOffset: number): string {
   const date = new Date();
@@ -446,6 +520,7 @@ export const seedReservations: Reservation[] = Array.from(
       resourceId: resource.id,
       resourceName: resource.name,
       reservedBy: person.name,
+      reservedByPersonId: person.id,
       date,
       startTime,
       endTime,
@@ -468,8 +543,11 @@ export const seedReservations: Reservation[] = Array.from(
       ...(resourceType === "Equipamento" && isCompleted
         ? {
           returnReportedAt: createdAt,
+          returnReportedByPersonId: person.id,
+          returnReportedByName: person.name,
           returnConfirmedAt: createdAt,
           returnConfirmedBy: confirmedBy.name,
+          returnConfirmedByPersonId: confirmedBy.id,
         }
         : {}),
     };

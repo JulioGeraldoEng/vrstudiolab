@@ -7,7 +7,7 @@ export type CurrentUser = {
 
 export const CURRENT_USER: CurrentUser | null = {
   personId: "seed-person-005",
-  profile: "user",
+  profile: "administrator",
 };
 
 export const CURRENT_PERSON_ID = (
