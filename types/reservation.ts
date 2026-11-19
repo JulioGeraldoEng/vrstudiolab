@@ -17,6 +17,7 @@ export type Reservation = {
   resourceId: string | number;
   resourceName: string;
   reservedBy: string;
+  reservedByPersonId?: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -26,6 +27,9 @@ export type Reservation = {
 
   returnStatus?: EquipmentReturnStatus;
   returnReportedAt?: string;
+  returnReportedByPersonId?: string;
+  returnReportedByName?: string;
   returnConfirmedAt?: string;
   returnConfirmedBy?: string;
+  returnConfirmedByPersonId?: string;
 };

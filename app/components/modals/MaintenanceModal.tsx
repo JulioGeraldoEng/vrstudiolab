@@ -12,6 +12,8 @@ type MaintenanceModalProps = {
   inventory: Pick<Equipment, "id" | "name" | "assetNumber" | "status">[];
   people: Person[];
   inputClass: string;
+  requestedByPersonId: string;
+  onRequesterChange: (value: string) => void;
   onEquipmentChange: (value: string) => void;
   onProblemChange: (value: string) => void;
   onPersonChange: (value: string) => void;
@@ -27,6 +29,8 @@ export default function MaintenanceModal({
   inventory,
   people,
   inputClass,
+  requestedByPersonId,
+  onRequesterChange,
   onEquipmentChange,
   onProblemChange,
   onPersonChange,
@@ -89,6 +93,27 @@ export default function MaintenanceModal({
                 Confira o inventário.
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-slate-300">
+              Pessoa que solicitou a manutenção
+            </label>
+
+            <select
+              className={inputClass}
+              value={requestedByPersonId}
+              onChange={(event) => onRequesterChange(event.target.value)}
+              required
+            >
+              <option value="">Selecione o solicitante</option>
+
+              {activePeople.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name} — {person.role}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

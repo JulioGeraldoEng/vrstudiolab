@@ -1,19 +1,21 @@
 import type { Room } from "../../../types/room";
 import type { Equipment } from "../../../types/equipment";
+import type { Person } from "../../../types/person";
 
 type ReservationFormProps = {
     rooms: Room[];
     equipment: Equipment[];
     resourceType: "Sala" | "Equipamento";
     resourceId: string;
-    reservedBy: string;
     reservationDate: string;
     startTime: string;
     endTime: string;
     reservationNotes: string;
+    people: Person[];
+    reservedByPersonId: string;
+    onReservedByPersonChange: (value: string) => void;
     onResourceTypeChange: (value: "Sala" | "Equipamento") => void;
     onResourceIdChange: (value: string) => void;
-    onReservedByChange: (value: string) => void;
     onReservationDateChange: (value: string) => void;
     onStartTimeChange: (value: string) => void;
     onEndTimeChange: (value: string) => void;
@@ -26,14 +28,15 @@ export default function ReservationForm({
     equipment,
     resourceType,
     resourceId,
-    reservedBy,
+    people,
+    reservedByPersonId,
     reservationDate,
     startTime,
     endTime,
     reservationNotes,
     onResourceTypeChange,
     onResourceIdChange,
-    onReservedByChange,
+    onReservedByPersonChange,
     onReservationDateChange,
     onStartTimeChange,
     onEndTimeChange,
@@ -107,16 +110,30 @@ export default function ReservationForm({
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label className="mb-2 block text-sm text-slate-300">
-                        Nome de quem está reservando
+                        Pessoa que está solicitando a reserva
                     </label>
-                    <input
-                        type="text"
-                        value={reservedBy}
+                    <select
+                        value={reservedByPersonId}
                         onChange={(event) =>
-                            onReservedByChange(event.target.value)
+                            onReservedByPersonChange(event.target.value)
                         }
-                        placeholder="Digite seu nome"
-                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500" />
+                        required
+                        className="w-full rounded-xl border border-white/10 bg-[#0b1424] p-3 text-white outline-none transition-colors focus:border-cyan-500"
+                    >
+                        <option value="">Selecione uma pessoa</option>
+                        {people
+                            .filter((person) => person.active)
+                            .map((person) => (
+                                <option key={person.id} value={person.id}>
+                                    {person.name} — {person.role}
+                                </option>
+                            ))}
+                    </select>
+                    {people.filter((person) => person.active).length === 0 && (
+                        <p className="mt-2 text-xs text-amber-300">
+                            Cadastre uma pessoa ativa antes de realizar uma reserva.
+                        </p>
+                    )}
                 </div>
 
                 <div>

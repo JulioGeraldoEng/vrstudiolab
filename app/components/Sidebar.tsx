@@ -29,13 +29,17 @@ const navigation: {
       name: "Manutenção",
       icon: "maintenance",
       href: "/maintenance",
-      permissions: ["maintenance.viewOwn", "maintenance.viewAll"],
+      permissions: [
+        "maintenance.request",
+        "maintenance.viewOwn",
+        "maintenance.viewAll",
+      ],
     },
     {
       name: "Pessoas",
       icon: "people",
       href: "/people",
-      permissions: ["people.viewOwn", "people.viewAll"],
+      permissions: ["people.viewAll"],
     },
     {
       name: "Salas",
@@ -47,7 +51,7 @@ const navigation: {
       name: "Reservas",
       icon: "reservations",
       href: "/reservations",
-      permissions: ["reservations.viewOwn", "reservations.viewAll"],
+      permissions: ["reservations.viewAll"],
     },
     {
       name: "Calendário",

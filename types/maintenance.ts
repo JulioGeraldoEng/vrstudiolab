@@ -15,6 +15,8 @@ export type MaintenanceOrder = {
   previousEquipmentStatus?: Status;
   problem: string;
   responsible: string;
+  requestedByPersonId?: string;
+  requestedByName?: string;
   openingDate: string;
   status: MaintenanceStatus;
   serviceNotes?: string;
@@ -25,4 +27,23 @@ export type MaintenanceOrder = {
   performedByName?: string;
   releasedByPersonId?: string;
   releasedByName?: string;
+};
+
+export type MaintenanceRequestStatus =
+  | "Pendente"
+  | "Convertida em OS"
+  | "Recusada";
+
+export type MaintenanceRequest = {
+  id: string;
+  equipmentId: number;
+  equipment: string;
+  assetNumber?: string;
+  problem: string;
+  requestedByPersonId: string;
+  requestedByName: string;
+  requestDate: string;
+  status: MaintenanceRequestStatus;
+  maintenanceOrderId?: string;
+  maintenanceOrderNumber?: string;
 };
