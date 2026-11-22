@@ -23,7 +23,10 @@ const ROUTE_PERMISSIONS: {
     },
     { path: "/people", permissions: ["people.viewAll"] },
     { path: "/rooms", permissions: ["rooms.view"] },
-    { path: "/reservations", permissions: ["reservations.viewAll"] },
+    {
+      path: "/reservations",
+      permissions: ["reservations.viewOwn", "reservations.viewAll"],
+    },
     { path: "/calendar", permissions: ["calendar.view"] },
     { path: "/reports", permissions: ["reports.view"] },
   ];

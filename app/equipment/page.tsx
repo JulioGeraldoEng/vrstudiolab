@@ -118,12 +118,22 @@ export default function InventoryPage() {
   );
 
   function openNewForm() {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.create")) {
+      alert("Você não possui permissão para cadastrar equipamentos.");
+      return;
+    }
+
     setForm({ ...emptyForm });
     setEditingId(null);
     setShowForm(true);
   }
 
   function openEditForm(item: Equipment) {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")) {
+      alert("Você não possui permissão para editar equipamentos.");
+      return;
+    }
+
     setForm({
       name: item.name,
       category: item.category,
@@ -140,6 +150,14 @@ export default function InventoryPage() {
 
   function saveEquipment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const requiredPermission =
+      editingId !== null ? "equipment.edit" : "equipment.create";
+
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, requiredPermission)) {
+      alert("Você não possui permissão para realizar esta operação.");
+      return;
+    }
 
     const name = form.name.trim();
     if (!name) return;
@@ -176,6 +194,10 @@ export default function InventoryPage() {
   }
 
   function deactivateEquipment(item: Equipment) {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")) {
+      alert("Você não possui permissão para dar baixa em equipamentos.");
+      return;
+    }
     const confirmed = window.confirm(
       `Deseja dar baixa no equipamento "${item.name}"? Ele continuará registrado no histórico.`
     );

@@ -51,7 +51,7 @@ const navigation: {
       name: "Reservas",
       icon: "reservations",
       href: "/reservations",
-      permissions: ["reservations.viewAll"],
+      permissions: ["reservations.viewOwn", "reservations.viewAll"],
     },
     {
       name: "Calendário",

@@ -113,12 +113,21 @@ export default function PessoasPage() {
     }, [people, ready]);
 
     function openNewForm() {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.create")) {
+            alert("Você não possui permissão para cadastrar pessoas.");
+            return;
+        }
+
         setForm(emptyForm);
         setEditingId(null);
         setShowForm(true);
     }
 
     function openEditForm(person: Person) {
+        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")) {
+            alert("Você não possui permissão para editar pessoas.");
+            return;
+        }
         setForm({
             name: person.name,
             role: person.role,

@@ -87,6 +87,15 @@ export default function RelatoriosPage() {
     exportToPDF(equipment, orders, selectedFields, people);
   }
 
+  function handleExportBackup() {
+    if (!hasPermission(CURRENT_ACCESS_PROFILE, "settings.manage")) {
+      alert("Você não possui permissão para gerar backups.");
+      return;
+    }
+
+    exportBackup();
+  }
+
   async function handleImportBackup(file: File) {
     if (!hasPermission(CURRENT_ACCESS_PROFILE, "settings.manage")) {
       alert("Você não possui permissão para importar backups.");
@@ -294,7 +303,7 @@ export default function RelatoriosPage() {
 
                 <PermissionGate permission="settings.manage">
                   <BackupButton
-                    onClick={exportBackup}
+                    onClick={handleExportBackup}
                     disabled={!ready || !peopleReady}
                   />
                 </PermissionGate>
