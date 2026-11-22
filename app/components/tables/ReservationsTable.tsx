@@ -9,6 +9,7 @@ import CancelReservationButton from "../buttons/CancelReservationButton";
 import { Pagination } from "../Pagination";
 import { CURRENT_ACCESS_PROFILE } from "../../../lib/permissions/current-profile";
 import { hasPermission } from "../../../lib/permissions/has-permission";
+import { CURRENT_PERSON_ID } from "../../../lib/auth/current-user";
 
 export type DisplayReservationStatus =
   | "Agendada"
@@ -179,6 +180,8 @@ export default function ReservationsTable({
                 <td className="px-4 py-3">
                   {reservation.resourceType === "Equipamento" &&
                     hasPermission(CURRENT_ACCESS_PROFILE, "loans.registerReturn") &&
+                    (reservation.reservedByPersonId === CURRENT_PERSON_ID ||
+                      hasPermission(CURRENT_ACCESS_PROFILE, "loans.editAny")) &&
                     reservation.status !== "Cancelada" &&
                     reservation.returnStatus !== "Devolvida" &&
                     reservation.returnStatus !== "Devolução informada" && (
@@ -227,7 +230,8 @@ export default function ReservationsTable({
                       </div>
                     )}
 
-                  {(hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") ||
+                  {((hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") &&
+                    reservation.reservedByPersonId === CURRENT_PERSON_ID) ||
                     hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelAny")) &&
                     reservation.status === "Confirmada" &&
                     getReservationDisplayStatus(reservation) !== "Concluída" &&
