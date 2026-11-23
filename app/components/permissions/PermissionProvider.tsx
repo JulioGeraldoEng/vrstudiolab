@@ -151,9 +151,9 @@ export function PermissionProvider({
       setCurrentUser(
         fallbackUser
           ? {
-              personId: fallbackUser.personId,
-              profile: fallbackUser.profile,
-            }
+            personId: fallbackUser.personId,
+            profile: fallbackUser.profile,
+          }
           : null
       );
 
@@ -171,12 +171,27 @@ export function PermissionProvider({
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setProfileOverrides(loadProfilePermissionOverrides());
-      setIndividualOverrides(loadIndividualPermissionOverrides());
+      try {
+        setProfileOverrides(loadProfilePermissionOverrides());
+      } catch (error) {
+        console.error("Erro ao carregar permissões dos perfis:", error);
+        setProfileOverrides({});
+      }
 
-      refreshAvailableUsers();
+      try {
+        setIndividualOverrides(loadIndividualPermissionOverrides());
+      } catch (error) {
+        console.error("Erro ao carregar permissões individuais:", error);
+        setIndividualOverrides({});
+      }
 
-      setPermissionsLoaded(true);
+      try {
+        refreshAvailableUsers();
+      } catch (error) {
+        console.error("Erro ao carregar usuários disponíveis:", error);
+      } finally {
+        setPermissionsLoaded(true);
+      }
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
