@@ -1,15 +1,16 @@
+
 "use client";
 
 import { useState } from "react";
 import type { Reservation } from "../../../types/reservation";
 import type { Person } from "../../../types/person";
+import type { Permission } from "../../../types/permissions";
 import ReportReturnButton from "../buttons/ReportReturnButton";
 import ConfirmReturnButton from "../buttons/ConfirmReturnButton";
 import CancelReservationButton from "../buttons/CancelReservationButton";
 import { Pagination } from "../Pagination";
-import { CURRENT_ACCESS_PROFILE } from "../../../lib/permissions/current-profile";
 import { hasPermission } from "../../../lib/permissions/has-permission";
-import { CURRENT_PERSON_ID } from "../../../lib/auth/current-user";
+import { usePermissions } from "../permissions/PermissionProvider";
 
 export type DisplayReservationStatus =
   | "Agendada"
@@ -86,6 +87,26 @@ export default function ReservationsTable({
   onCancel,
   resetPageKey,
 }: ReservationsTableProps) {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  function can(permission: Permission): boolean {
+    if (!permissionsLoaded || !currentUser) return false;
+
+    return hasPermission(
+      currentUser.profile,
+      permission,
+      individualOverrides[currentUser.personId],
+      profileOverrides[currentUser.profile]
+    );
+  }
+
+  const currentPersonId = currentUser?.personId ?? null;
+
   const [pageState, setPageState] = useState({
     page: 1,
     resetKey: resetPageKey,
@@ -150,7 +171,7 @@ export default function ReservationsTable({
 
                     const statusColor =
                       displayStatus === "Cancelada" ||
-                        displayStatus === "Atraso na devolução"
+                      displayStatus === "Atraso na devolução"
                         ? "bg-red-400/10 text-red-300"
                         : displayStatus === "Concluída"
                           ? "bg-blue-400/10 text-blue-300"
@@ -171,17 +192,16 @@ export default function ReservationsTable({
 
                   {reservation.resourceType === "Equipamento" && (
                     <p className="mt-2 text-xs text-slate-400">
-                      Devolução:{" "}
-                      {reservation.returnStatus ?? "Não informada"}
+                      Devolução: {reservation.returnStatus ?? "Não informada"}
                     </p>
                   )}
                 </td>
 
                 <td className="px-4 py-3">
                   {reservation.resourceType === "Equipamento" &&
-                    hasPermission(CURRENT_ACCESS_PROFILE, "loans.registerReturn") &&
-                    (reservation.reservedByPersonId === CURRENT_PERSON_ID ||
-                      hasPermission(CURRENT_ACCESS_PROFILE, "loans.editAny")) &&
+                    can("loans.registerReturn") &&
+                    (reservation.reservedByPersonId === currentPersonId ||
+                      can("loans.editAny")) &&
                     reservation.status !== "Cancelada" &&
                     reservation.returnStatus !== "Devolvida" &&
                     reservation.returnStatus !== "Devolução informada" && (
@@ -191,7 +211,7 @@ export default function ReservationsTable({
                     )}
 
                   {reservation.resourceType === "Equipamento" &&
-                    hasPermission(CURRENT_ACCESS_PROFILE, "loans.confirmReturn") &&
+                    can("loans.confirmReturn") &&
                     reservation.returnStatus === "Devolução informada" && (
                       <div className="mb-2 flex min-w-48 flex-col gap-2">
                         <select
@@ -230,9 +250,9 @@ export default function ReservationsTable({
                       </div>
                     )}
 
-                  {((hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn") &&
-                    reservation.reservedByPersonId === CURRENT_PERSON_ID) ||
-                    hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelAny")) &&
+                  {((can("reservations.cancelOwn") &&
+                    reservation.reservedByPersonId === currentPersonId) ||
+                    can("reservations.cancelAny")) &&
                     reservation.status === "Confirmada" &&
                     getReservationDisplayStatus(reservation) !== "Concluída" &&
                     reservation.returnStatus !== "Devolvida" && (

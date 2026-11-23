@@ -1,29 +1,42 @@
+"use client";
+
 import type { ReactNode } from "react";
 
-import type {
-  IndividualPermissionOverrides,
-  Permission,
-} from "../../types/permissions";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import type { Permission } from "../../types/permissions";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import { usePermissions } from "./permissions/PermissionProvider";
 
 type PermissionGateProps = {
   permission: Permission;
   children: ReactNode;
   fallback?: ReactNode;
-  individualOverrides?: IndividualPermissionOverrides;
 };
 
 export default function PermissionGate({
   permission,
   children,
   fallback = null,
-  individualOverrides,
 }: PermissionGateProps) {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  if (!permissionsLoaded) {
+    return null;
+  }
+
+  if (!currentUser) {
+    return <>{fallback}</>;
+  }
+
   const allowed = hasPermission(
-    CURRENT_ACCESS_PROFILE,
+    currentUser.profile,
     permission,
-    individualOverrides
+    individualOverrides[currentUser.personId],
+    profileOverrides[currentUser.profile]
   );
 
   return allowed ? <>{children}</> : <>{fallback}</>;

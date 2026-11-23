@@ -1,3 +1,4 @@
+
 import type {
   AccessProfile,
   IndividualPermissionOverrides,
@@ -28,7 +29,8 @@ const ADMIN_ONLY_PERMISSIONS: Permission[] = [
 export function hasPermission(
   profile: AccessProfile,
   permission: Permission,
-  individualOverrides?: IndividualPermissionOverrides
+  individualOverrides?: IndividualPermissionOverrides,
+  profileOverrides?: IndividualPermissionOverrides
 ): boolean {
   const hasIndividualOverride =
     individualOverrides !== undefined &&
@@ -37,9 +39,18 @@ export function hasPermission(
       permission
     );
 
+  const hasProfileOverride =
+    profileOverrides !== undefined &&
+    Object.prototype.hasOwnProperty.call(
+      profileOverrides,
+      permission
+    );
+
   const allowed = hasIndividualOverride
     ? individualOverrides[permission] === true
-    : DEFAULT_PERMISSIONS[profile].includes(permission);
+    : hasProfileOverride
+      ? profileOverrides[permission] === true
+      : DEFAULT_PERMISSIONS[profile].includes(permission);
 
   if (!allowed) {
     return false;

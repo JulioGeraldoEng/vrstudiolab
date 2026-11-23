@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,9 +7,12 @@ import BackToDashboard from "../components/buttons/BackToDashboard";
 import PersonModal from "../components/modals/PersonModal";
 import PeopleTable from "../components/tables/PeopleTable";
 import type { Person, PersonRole } from "../../types/person";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
-import PermissionGate from "../components/PermissionGate";
+import type {
+    Permission,
+    AccessProfile,
+} from "../../types/permissions";
+import { usePermissions } from "../components/permissions/PermissionProvider";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
 
@@ -29,6 +33,7 @@ const inputClass =
 const emptyForm = {
     name: "",
     role: "Aluno" as PersonRole,
+    accessProfile: "user" as AccessProfile,
     sector: "",
     contact: "",
     phone: "",
@@ -36,6 +41,25 @@ const emptyForm = {
 };
 
 export default function PessoasPage() {
+    const {
+        profileOverrides,
+        individualOverrides,
+        permissionsLoaded,
+        currentUser,
+        refreshAvailableUsers,
+    } = usePermissions();
+
+    function can(permission: Permission): boolean {
+        if (!permissionsLoaded || !currentUser) return false;
+
+        return hasPermission(
+            currentUser.profile,
+            permission,
+            individualOverrides[currentUser.personId],
+            profileOverrides[currentUser.profile]
+        );
+    }
+
     const [people, setPeople] = useState<Person[]>([]);
     const [ready, setReady] = useState(false);
     const [search, setSearch] = useState("");
@@ -47,6 +71,7 @@ export default function PessoasPage() {
         page: 1,
         filterKey: "",
     });
+
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -60,12 +85,28 @@ export default function PessoasPage() {
                     if (Array.isArray(parsed)) {
                         const migratedPeople: Person[] = parsed.map((item) => {
                             const legacyContact =
-                                typeof item.contact === "string" ? item.contact.trim() : "";
+                                typeof item.contact === "string"
+                                    ? item.contact.trim()
+                                    : "";
+
+                            const validAccessProfile: AccessProfile =
+                                item.accessProfile === "user" ||
+                                item.accessProfile === "lab_manager" ||
+                                item.accessProfile === "administrator"
+                                    ? item.accessProfile
+                                    : "user";
 
                             return {
                                 ...item,
-                                sector: typeof item.sector === "string" ? item.sector : "",
-                                contact: typeof item.contact === "string" ? item.contact : "",
+                                accessProfile: validAccessProfile,
+                                sector:
+                                    typeof item.sector === "string"
+                                        ? item.sector
+                                        : "",
+                                contact:
+                                    typeof item.contact === "string"
+                                        ? item.contact
+                                        : "",
                                 phone:
                                     typeof item.phone === "string"
                                         ? item.phone
@@ -106,14 +147,16 @@ export default function PessoasPage() {
                 PEOPLE_STORAGE_KEY,
                 JSON.stringify(people)
             );
+
+            refreshAvailableUsers();
         } catch (error) {
             console.error("Erro ao salvar pessoas:", error);
             alert("Não foi possível salvar os cadastros neste navegador.");
         }
-    }, [people, ready]);
+    }, [people, ready, refreshAvailableUsers]);
 
     function openNewForm() {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.create")) {
+        if (!can("people.create")) {
             alert("Você não possui permissão para cadastrar pessoas.");
             return;
         }
@@ -124,28 +167,32 @@ export default function PessoasPage() {
     }
 
     function openEditForm(person: Person) {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")) {
+        if (!can("people.edit")) {
             alert("Você não possui permissão para editar pessoas.");
             return;
         }
+
         setForm({
             name: person.name,
             role: person.role,
+            accessProfile: person.accessProfile ?? "user",
             sector: person.sector ?? "",
             contact: person.contact ?? "",
             phone: person.phone ?? "",
             email: person.email ?? "",
         });
+
         setEditingId(person.id);
         setShowForm(true);
     }
 
     function savePerson(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+
         if (
             editingId
-                ? !hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")
-                : !hasPermission(CURRENT_ACCESS_PROFILE, "people.create")
+                ? !can("people.edit")
+                : !can("people.create")
         ) {
             alert("Você não possui permissão para realizar esta operação.");
             return;
@@ -169,6 +216,9 @@ export default function PessoasPage() {
             return;
         }
 
+        const canChangeAccessProfile =
+            can("permissions.manageProfiles");
+
         if (editingId) {
             setPeople((current) =>
                 current.map((person) =>
@@ -177,6 +227,9 @@ export default function PessoasPage() {
                             ...person,
                             name,
                             role: form.role,
+                            accessProfile: canChangeAccessProfile
+                                ? form.accessProfile
+                                : person.accessProfile ?? "user",
                             sector: form.sector.trim(),
                             contact: person.contact ?? "",
                             phone: form.phone.trim(),
@@ -190,6 +243,9 @@ export default function PessoasPage() {
                 id: crypto.randomUUID(),
                 name,
                 role: form.role,
+                accessProfile: canChangeAccessProfile
+                    ? form.accessProfile
+                    : "user",
                 sector: form.sector.trim(),
                 contact: "",
                 phone: form.phone.trim(),
@@ -206,10 +262,11 @@ export default function PessoasPage() {
     }
 
     function togglePersonStatus(id: string) {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")) {
+        if (!can("people.deactivate")) {
             alert("Você não possui permissão para alterar a situação desta pessoa.");
             return;
         }
+
         setPeople((current) =>
             current.map((person) =>
                 person.id === id
@@ -276,7 +333,6 @@ export default function PessoasPage() {
                     <BackToDashboard />
                 </header>
 
-                {/* Cards padronizados unificados */}
                 <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <Cards
                         title="Total de pessoas"
@@ -286,6 +342,7 @@ export default function PessoasPage() {
                         color="text-cyan-300"
                         bg="bg-cyan-400/10"
                     />
+
                     <Cards
                         title="Pessoas ativas"
                         value={activeCount}
@@ -294,6 +351,7 @@ export default function PessoasPage() {
                         color="text-emerald-300"
                         bg="bg-emerald-400/10"
                     />
+
                     <Cards
                         title="Pessoas inativas"
                         value={inactiveCount}
@@ -310,11 +368,11 @@ export default function PessoasPage() {
                             <h2 className="text-lg font-semibold">
                                 Cadastro de pessoas
                             </h2>
+
                             <p className="mt-1 text-sm text-slate-400">
                                 {filteredPeople.length} registro(s) encontrado(s)
                             </p>
                         </div>
-
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <input
@@ -336,7 +394,7 @@ export default function PessoasPage() {
                                 <option value="Inativas">Somente inativas</option>
                             </select>
 
-                            <PermissionGate permission="people.create">
+                            {can("people.create") && (
                                 <button
                                     type="button"
                                     onClick={openNewForm}
@@ -344,9 +402,8 @@ export default function PessoasPage() {
                                 >
                                     + Cadastrar pessoa
                                 </button>
-                            </PermissionGate>
+                            )}
                         </div>
-
                     </div>
 
                     {filteredPeople.length === 0 ? (
@@ -383,17 +440,15 @@ export default function PessoasPage() {
                                     })
                                 }
                                 showActions={
-                                    hasPermission(CURRENT_ACCESS_PROFILE, "people.edit") ||
-                                    hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")
+                                    can("people.edit") ||
+                                    can("people.deactivate")
                                 }
-                                canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "people.edit")}
-                                canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "people.deactivate")}
+                                canEdit={can("people.edit")}
+                                canToggleStatus={can("people.deactivate")}
                             />
                         </div>
                     )}
-
                 </section>
-
 
                 <PersonModal
                     open={showForm}
@@ -401,6 +456,7 @@ export default function PessoasPage() {
                     form={form}
                     roles={roles}
                     inputClass={inputClass}
+                    canManageAccessProfile={can("permissions.manageProfiles")}
                     onFormChange={(field, value) =>
                         setForm((current) => ({
                             ...current,

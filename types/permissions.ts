@@ -59,7 +59,11 @@ export type Permission =
   | "securityNotifications.view"
   | "securityNotifications.manage"
   | "seed.manage";
-    
+
 
 export type IndividualPermissionOverrides =
   Partial<Record<Permission, boolean>>;
+
+export type ProfilePermissionOverrides = Partial<
+  Record<AccessProfile, IndividualPermissionOverrides>
+>;

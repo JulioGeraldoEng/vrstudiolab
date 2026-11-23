@@ -1,11 +1,14 @@
+
 "use client";
 
 import type { PersonRole } from "../../../types/person";
+import type { AccessProfile } from "../../../types/permissions";
 import CloseModalButton from "../buttons/CloseModalButton";
 
 type PersonFormData = {
     name: string;
     role: PersonRole;
+    accessProfile: AccessProfile;
     sector: string;
     contact: string;
     phone: string;
@@ -18,6 +21,7 @@ type PersonModalProps = {
     form: PersonFormData;
     roles: PersonRole[];
     inputClass: string;
+    canManageAccessProfile: boolean;
     onFormChange: (field: keyof PersonFormData, value: string) => void;
     onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
     onClose: () => void;
@@ -38,12 +42,19 @@ function formatPhone(value: string) {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+const profileLabels: Record<AccessProfile, string> = {
+    user: "Usuário",
+    lab_manager: "Responsável pelo laboratório",
+    administrator: "Administrador",
+};
+
 export default function PersonModal({
     open,
     editing,
     form,
     roles,
     inputClass,
+    canManageAccessProfile,
     onFormChange,
     onSubmit,
     onClose,
@@ -70,7 +81,7 @@ export default function PersonModal({
 
                     <CloseModalButton
                         onClose={onClose}
-                        ariaLabel="Fechar formulário de reserva"
+                        ariaLabel="Fechar formulário de pessoa"
                     />
                 </div>
 
@@ -119,6 +130,36 @@ export default function PersonModal({
                                 placeholder="Ex.: Laboratório de informática"
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-sm text-slate-300">
+                            Perfil de acesso
+                        </label>
+
+                        {canManageAccessProfile ? (
+                            <select
+                                className={inputClass}
+                                value={form.accessProfile}
+                                onChange={(event) =>
+                                    onFormChange("accessProfile", event.target.value)
+                                }
+                            >
+                                {Object.entries(profileLabels).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <div className={`${inputClass} text-slate-400`}>
+                                {profileLabels[form.accessProfile]}
+                            </div>
+                        )}
+
+                        <p className="mt-2 text-xs text-slate-500">
+                            O perfil determina quais áreas e ações estarão disponíveis para a pessoa.
+                        </p>
                     </div>
 
                     <div className="grid gap-5 sm:grid-cols-2">

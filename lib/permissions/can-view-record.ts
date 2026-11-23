@@ -1,5 +1,7 @@
+
 import type {
   AccessProfile,
+  IndividualPermissionOverrides,
   Permission,
 } from "../../types/permissions";
 
@@ -11,6 +13,8 @@ type CanViewRecordParams = {
   recordPersonId?: string;
   viewOwnPermission: Permission;
   viewAllPermission: Permission;
+  individualOverrides?: IndividualPermissionOverrides;
+  profileOverrides?: IndividualPermissionOverrides;
 };
 
 export function canViewRecord({
@@ -19,8 +23,17 @@ export function canViewRecord({
   recordPersonId,
   viewOwnPermission,
   viewAllPermission,
+  individualOverrides,
+  profileOverrides,
 }: CanViewRecordParams): boolean {
-  if (hasPermission(profile, viewAllPermission)) {
+  if (
+    hasPermission(
+      profile,
+      viewAllPermission,
+      individualOverrides,
+      profileOverrides
+    )
+  ) {
     return true;
   }
 
@@ -30,6 +43,11 @@ export function canViewRecord({
 
   return (
     currentPersonId === recordPersonId &&
-    hasPermission(profile, viewOwnPermission)
+    hasPermission(
+      profile,
+      viewOwnPermission,
+      individualOverrides,
+      profileOverrides
+    )
   );
 }

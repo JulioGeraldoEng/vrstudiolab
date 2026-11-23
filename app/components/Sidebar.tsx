@@ -1,11 +1,12 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { Permission } from "../../types/permissions";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
 import Image from "next/image";
+import { usePermissions } from "./permissions/PermissionProvider";
 
 const navigation: {
   name: string;
@@ -13,59 +14,65 @@ const navigation: {
   href: string;
   permissions: Permission[];
 }[] = [
-    {
-      name: "Visão geral",
-      icon: "dashboard",
-      href: "/dashboard",
-      permissions: ["dashboard.view"],
-    },
-    {
-      name: "Equipamentos",
-      icon: "equipment",
-      href: "/equipment",
-      permissions: ["equipment.view"],
-    },
-    {
-      name: "Manutenção",
-      icon: "maintenance",
-      href: "/maintenance",
-      permissions: [
-        "maintenance.request",
-        "maintenance.viewOwn",
-        "maintenance.viewAll",
-      ],
-    },
-    {
-      name: "Pessoas",
-      icon: "people",
-      href: "/people",
-      permissions: ["people.viewAll"],
-    },
-    {
-      name: "Salas",
-      icon: "rooms",
-      href: "/rooms",
-      permissions: ["rooms.view"],
-    },
-    {
-      name: "Reservas",
-      icon: "reservations",
-      href: "/reservations",
-      permissions: ["reservations.viewOwn", "reservations.viewAll"],
-    },
-    {
-      name: "Calendário",
-      icon: "calendar",
-      href: "/calendar",
-      permissions: ["calendar.view"],
-    },
-    {
-      name: "Relatórios",
-      icon: "reports",
-      href: "/reports",
-      permissions: ["reports.view"],
-    },
-  ];
+  {
+    name: "Visão geral",
+    icon: "dashboard",
+    href: "/dashboard",
+    permissions: ["dashboard.view"],
+  },
+  {
+    name: "Equipamentos",
+    icon: "equipment",
+    href: "/equipment",
+    permissions: ["equipment.view"],
+  },
+  {
+    name: "Manutenção",
+    icon: "maintenance",
+    href: "/maintenance",
+    permissions: [
+      "maintenance.request",
+      "maintenance.viewOwn",
+      "maintenance.viewAll",
+    ],
+  },
+  {
+    name: "Pessoas",
+    icon: "people",
+    href: "/people",
+    permissions: ["people.viewAll"],
+  },
+  {
+    name: "Salas",
+    icon: "rooms",
+    href: "/rooms",
+    permissions: ["rooms.view"],
+  },
+  {
+    name: "Reservas",
+    icon: "reservations",
+    href: "/reservations",
+    permissions: ["reservations.viewOwn", "reservations.viewAll"],
+  },
+  {
+    name: "Calendário",
+    icon: "calendar",
+    href: "/calendar",
+    permissions: ["calendar.view"],
+  },
+  {
+    name: "Relatórios",
+    icon: "reports",
+    href: "/reports",
+    permissions: ["reports.view"],
+  },
+  {
+    name: "Permissões",
+    icon: "permissions",
+    href: "/permissions",
+    permissions: ["permissions.view"],
+  },
+];
 
 type SidebarProps = {
   activePage?: string;
@@ -160,9 +167,29 @@ function NavigationIcon({ name }: { name: string }) {
         </svg>
       );
 
+    case "permissions":
+      return (
+        <svg {...common}>
+          <path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      );
+
     default:
       return null;
   }
+}
+
+function getProfileLabel(profile: string) {
+  if (profile === "administrator") {
+    return "Administrador";
+  }
+
+  if (profile === "lab_manager") {
+    return "Responsável";
+  }
+
+  return "Usuário";
 }
 
 export default function Sidebar({
@@ -170,19 +197,47 @@ export default function Sidebar({
   mobileOpen,
   setMobileOpen,
 }: SidebarProps) {
-
   const router = useRouter();
   const pathname = usePathname();
-  const visibleNavigation = navigation.filter((item) =>
-    item.permissions.some((permission) =>
-      hasPermission(CURRENT_ACCESS_PROFILE, permission)
-    )
-  );
+
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+    availableUsers,
+    setCurrentPersonId,
+  } = usePermissions();
+
+  const currentProfileOverrides = currentUser
+    ? profileOverrides[currentUser.profile]
+    : undefined;
+
+  const currentIndividualOverrides = currentUser
+    ? individualOverrides[currentUser.personId]
+    : undefined;
+
+  const visibleNavigation =
+    permissionsLoaded && currentUser
+      ? navigation.filter((item) =>
+          item.permissions.some((permission) =>
+            hasPermission(
+              currentUser.profile,
+              permission,
+              currentIndividualOverrides,
+              currentProfileOverrides
+            )
+          )
+        )
+      : [];
+
   const [collapsed, setCollapsed] = useState(false);
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("vrstudiolab-sidebar-collapsed");
+    const saved = localStorage.getItem(
+      "vrstudiolab-sidebar-collapsed"
+    );
 
     const timeoutId = window.setTimeout(() => {
       if (saved !== null) {
@@ -214,16 +269,47 @@ export default function Sidebar({
     navigate(href);
   }
 
+  function renderUserSelector(mobile = false) {
+    if (!permissionsLoaded || availableUsers.length === 0) {
+      return null;
+    }
+
+    return (
+      <div
+        className={`mb-4 rounded-xl border border-white/10 bg-[#071326] p-3 ${
+          mobile ? "" : "mx-0"
+        }`}
+      >
+        <label className="mb-2 block text-xs font-medium text-slate-400">
+          Usuário de teste
+        </label>
+
+        <select
+          value={currentUser?.personId ?? ""}
+          onChange={(event) =>
+            setCurrentPersonId(event.target.value)
+          }
+          className="w-full rounded-lg border border-white/10 bg-[#0e1729] px-2 py-2 text-xs text-white outline-none focus:border-cyan-400"
+        >
+          {availableUsers.map((person) => (
+            <option key={person.personId} value={person.personId}>
+              {person.name} — {getProfileLabel(person.profile)}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
   function renderLink(
     item: (typeof navigation)[number],
-    mobile = false,
+    mobile = false
   ) {
     const active =
       pathname === item.href ||
       pathname === `${item.href}/` ||
       (activePage === item.name &&
         (item.name !== "Visão geral" || pathname === "/"));
-
 
     if (mobile) {
       return (
@@ -233,11 +319,13 @@ export default function Sidebar({
           onClick={() => navigateMobile(item.href)}
           title={item.name}
           aria-label={item.name}
-          className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${mobileOpen ? "gap-3 px-3" : "justify-center px-2"
-            } ${active
+          className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${
+            mobileOpen ? "gap-3 px-3" : "justify-center px-2"
+          } ${
+            active
               ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-red-300"
               : "text-slate-400 hover:bg-white/5 hover:text-white"
-            }`}
+          }`}
         >
           <span className="flex shrink-0 items-center justify-center">
             <NavigationIcon name={item.icon} />
@@ -248,18 +336,20 @@ export default function Sidebar({
       );
     }
 
-
     return (
       <button
         key={item.name}
+        type="button"
         onClick={() => navigate(item.href)}
         title={collapsed ? item.name : undefined}
         aria-label={item.name}
-        className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"
-          } ${active
+        className={`flex w-full items-center rounded-xl py-3 text-left text-sm transition ${
+          collapsed ? "justify-center px-2" : "gap-3 px-3"
+        } ${
+          active
             ? "border border-cyan-400/20 bg-cyan-400/10 font-medium text-red-300"
             : "text-slate-400 hover:bg-white/5 hover:text-white"
-          }`}
+        }`}
       >
         <span className="flex shrink-0 items-center justify-center">
           <NavigationIcon name={item.icon} />
@@ -273,18 +363,24 @@ export default function Sidebar({
   return (
     <>
       <div
-        className={`hidden shrink-0 lg:block ${preferenceLoaded
-          ? `transition-[width] duration-200 ${collapsed ? "w-16" : "w-56 xl:w-64"
-          }`
-          : "w-20"
-          }`}
-      >
+        className={`hidden shrink-0 lg:block ${
+          preferenceLoaded
+            ? `transition-[width] duration-200 ${
+                collapsed ? "w-16" : "w-56 xl:w-64"
+              }`
+            : "w-20"
+        }`}
+      />
 
-      </div>
       <aside
-        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] ${collapsed ? "p-2" : "p-4"} ${preferenceLoaded ? "transition-[width] duration-200" : ""} ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${collapsed ? "w-16" : "w-56 xl:w-64 xl:p-3"}`}
+        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#0e1729] ${
+          collapsed ? "p-2" : "p-4"
+        } ${
+          preferenceLoaded ? "transition-[width] duration-200" : ""
+        } ${preferenceLoaded ? "lg:flex" : "lg:hidden"} ${
+          collapsed ? "w-16" : "w-56 xl:w-64 xl:p-3"
+        }`}
       >
-
         <div className="mb-4">
           <button
             type="button"
@@ -299,16 +395,16 @@ export default function Sidebar({
                 ? "Expandir menu"
                 : "Recolher menu"
             }
-            className={`group flex w-full items-center rounded-xl text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${collapsed
-              ? "justify-center"
-              : "justify-start"
-              }`}
+            className={`group flex w-full items-center rounded-xl text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+              collapsed ? "justify-center" : "justify-start"
+            }`}
           >
             <span
-              className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 group-hover:shadow-cyan-500/20 ${collapsed
-                ? "aspect-square w-11"
-                : "aspect-[16/9] w-full"
-                }`}
+              className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 group-hover:shadow-cyan-500/20 ${
+                collapsed
+                  ? "aspect-square w-11"
+                  : "aspect-[16/9] w-full"
+              }`}
             >
               <Image
                 src="/vrstudiolab/animations/vr-studio-lab-sidebar.gif"
@@ -328,12 +424,12 @@ export default function Sidebar({
           </p>
         )}
 
+        {!collapsed && renderUserSelector()}
+
         <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
           {visibleNavigation.map((item) => renderLink(item))}
         </nav>
-
-      </aside >
-
+      </aside>
 
       <div className="lg:hidden">
         {mobileOpen && (
@@ -346,22 +442,28 @@ export default function Sidebar({
         )}
 
         <aside
-          className={`fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-white/10 bg-[#0e1729] p-2 shadow-2xl transition-all duration-300 ease-in-out ${mobileOpen ? "w-64" : "w-16"
-            }`}
+          className={`fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-white/10 bg-[#0e1729] p-2 shadow-2xl transition-all duration-300 ease-in-out ${
+            mobileOpen ? "w-64" : "w-16"
+          }`}
         >
           <div className="mb-4">
             <button
               type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label={
-                mobileOpen ? "Recolher menu lateral" : "Expandir menu lateral"
+                mobileOpen
+                  ? "Recolher menu lateral"
+                  : "Expandir menu lateral"
               }
               aria-expanded={mobileOpen}
               className="group flex w-full items-center justify-center rounded-xl transition-all duration-200"
             >
               <span
-                className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 ${mobileOpen ? "aspect-[16/9] w-full" : "aspect-square w-11"
-                  }`}
+                className={`relative block overflow-hidden rounded-xl border border-cyan-400/20 bg-[#071326] shadow-lg shadow-cyan-950/20 transition-all duration-200 group-hover:border-cyan-400/60 ${
+                  mobileOpen
+                    ? "aspect-[16/9] w-full"
+                    : "aspect-square w-11"
+                }`}
               >
                 <Image
                   src="/vrstudiolab/animations/vr-studio-lab-sidebar.gif"
@@ -381,12 +483,15 @@ export default function Sidebar({
             </p>
           )}
 
+          {mobileOpen && renderUserSelector(true)}
+
           <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-            {visibleNavigation.map((item) => renderLink(item, true))}
+            {visibleNavigation.map((item) =>
+              renderLink(item, true)
+            )}
           </nav>
         </aside>
       </div>
-
     </>
   );
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,19 +16,17 @@ import type {
   MaintenanceRequest,
 } from "../../types/maintenance";
 import PermissionGate from "../components/PermissionGate";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
-import { CURRENT_PERSON_ID } from "../../lib/auth/current-user";
 import { canViewRecord } from "../../lib/permissions/can-view-record";
 import {
   loadMaintenanceRequests,
   saveMaintenanceRequests,
 } from "../../lib/maintenance/requests-storage";
+import type { Permission } from "../../types/permissions";
+import { usePermissions } from "../components/permissions/PermissionProvider";
 
 const PEOPLE_STORAGE_KEY = "vrstudiolab-maintenance-people-v1";
-
 const STORAGE_KEY = "vrstudiolab-maintenance-v1";
-
 const activePage = "Manutenção";
 
 const initialOrders: MaintenanceOrder[] = [];
@@ -43,23 +42,45 @@ const statusStyles: Record<MaintenanceStatus, string> = {
 };
 
 export default function ManutencaoPage() {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  function can(permission: Permission): boolean {
+    if (!permissionsLoaded || !currentUser) return false;
+
+    return hasPermission(
+      currentUser.profile,
+      permission,
+      individualOverrides[currentUser.personId],
+      profileOverrides[currentUser.profile]
+    );
+  }
+
   const [orders, setOrders] =
     useState<MaintenanceOrder[]>(initialOrders);
+
   const [maintenanceRequests, setMaintenanceRequests] =
     useState<MaintenanceRequest[]>([]);
+
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [showForm, setShowForm] = useState(false);
+
   const [pageState, setPageState] = useState({
     page: 1,
     searchKey: "",
   });
+
   const itemsPerPage = 10;
 
   const [equipmentId, setEquipmentId] = useState("");
   const [problem, setProblem] = useState("");
-  // Estados do formulário de solicitação de manutenção
+
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestEquipmentId, setRequestEquipmentId] = useState("");
   const [requestProblem, setRequestProblem] = useState("");
@@ -68,13 +89,13 @@ export default function ManutencaoPage() {
   const [requestStatusFilter, setRequestStatusFilter] = useState("Todos");
   const [requestPage, setRequestPage] = useState(1);
   const requestItemsPerPage = 10;
-  const [inventory, setInventory] =
-    useState<Equipment[]>([]);
+
+  const [inventory, setInventory] = useState<Equipment[]>([]);
+
   const [requestBeingConvertedId, setRequestBeingConvertedId] =
     useState<string | null>(null);
 
-  const [historyEquipmentId, setHistoryEquipmentId] =
-    useState("");
+  const [historyEquipmentId, setHistoryEquipmentId] = useState("");
 
   const [people, setPeople] = useState<Person[]>([]);
 
@@ -86,11 +107,11 @@ export default function ManutencaoPage() {
   const [completionServiceNotes, setCompletionServiceNotes] = useState("");
   const [completionIsReleased, setCompletionIsReleased] = useState(false);
 
-
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       try {
         setMaintenanceRequests(loadMaintenanceRequests());
+
         const savedOrders = localStorage.getItem(STORAGE_KEY);
 
         if (savedOrders) {
@@ -209,9 +230,7 @@ export default function ManutencaoPage() {
   ) {
     event.preventDefault();
 
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.request")
-    ) {
+    if (!can("maintenance.request")) {
       alert("Seu perfil não possui permissão para solicitar manutenção.");
       return;
     }
@@ -300,9 +319,7 @@ export default function ManutencaoPage() {
   }
 
   function startRequestConversion(requestId: string) {
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
-    ) {
+    if (!can("maintenance.openOrder")) {
       alert("Seu perfil não possui permissão para abrir ordens de serviço.");
       return;
     }
@@ -325,9 +342,7 @@ export default function ManutencaoPage() {
   }
 
   function rejectMaintenanceRequest(requestId: string) {
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
-    ) {
+    if (!can("maintenance.openOrder")) {
       alert("Seu perfil não possui permissão para gerenciar solicitações.");
       return;
     }
@@ -361,14 +376,13 @@ export default function ManutencaoPage() {
   function createOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.openOrder")
-    ) {
+    if (!can("maintenance.openOrder")) {
       alert("Seu perfil não possui permissão para abrir ordens de serviço.");
       return;
     }
 
     const selectedId = Number(equipmentId);
+
     const savedInventory = localStorage.getItem(
       "vrstudiolab-inventory-v1"
     );
@@ -477,11 +491,11 @@ export default function ManutencaoPage() {
         current.map((request) =>
           request.id === requestBeingConvertedId
             ? {
-              ...request,
-              status: "Convertida em OS",
-              maintenanceOrderId: newOrder.id,
-              maintenanceOrderNumber: newOrder.orderNumber,
-            }
+                ...request,
+                status: "Convertida em OS",
+                maintenanceOrderId: newOrder.id,
+                maintenanceOrderNumber: newOrder.orderNumber,
+              }
             : request
         )
       );
@@ -499,7 +513,7 @@ export default function ManutencaoPage() {
 
   function updateStatus(id: string, status: MaintenanceStatus) {
     if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") &&
+      !can("maintenance.editOrder") &&
       status !== "Concluída"
     ) {
       alert("Você não possui permissão para alterar esta ordem.");
@@ -508,7 +522,7 @@ export default function ManutencaoPage() {
 
     if (
       status === "Concluída" &&
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+      !can("maintenance.completeOrder")
     ) {
       alert("Você não possui permissão para concluir esta ordem.");
       return;
@@ -539,9 +553,7 @@ export default function ManutencaoPage() {
   function confirmCompletion(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
-    ) {
+    if (!can("maintenance.completeOrder")) {
       alert("Você não possui permissão para concluir esta ordem.");
       return;
     }
@@ -598,7 +610,6 @@ export default function ManutencaoPage() {
     const updatedInventory = currentInventory.map((item) => {
       if (item.id !== targetOrder.equipmentId) return item;
 
-      // Equipamento baixado não pode ser reativado por uma ordem antiga.
       if (item.status === "Baixado") return item;
 
       if (!completionIsReleased || hasAnotherActiveOrder) {
@@ -651,9 +662,7 @@ export default function ManutencaoPage() {
   }
 
   function releaseEquipment(orderId: string) {
-    if (
-      !hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
-    ) {
+    if (!can("maintenance.completeOrder")) {
       alert("Você não possui permissão para liberar equipamentos.");
       return;
     }
@@ -762,10 +771,10 @@ export default function ManutencaoPage() {
     const updatedOrders = orders.map((order) =>
       order.id === orderId
         ? {
-          ...order,
-          releasedByPersonId: authorizer.id,
-          releasedByName: authorizer.name,
-        }
+            ...order,
+            releasedByPersonId: authorizer.id,
+            releasedByName: authorizer.name,
+          }
         : order
     );
 
@@ -790,26 +799,37 @@ export default function ManutencaoPage() {
     }
   }
 
-  const visibleOrders = orders.filter((order) =>
-    canViewRecord({
-      profile: CURRENT_ACCESS_PROFILE,
-      currentPersonId: CURRENT_PERSON_ID,
-      recordPersonId: order.requestedByPersonId,
-      viewOwnPermission: "maintenance.viewOwn",
-      viewAllPermission: "maintenance.viewAll",
-    })
-  );
+  const visibleOrders = currentUser
+    ? orders.filter((order) =>
+        canViewRecord({
+          profile: currentUser.profile,
+          currentPersonId: currentUser.personId,
+          recordPersonId: order.requestedByPersonId,
+          viewOwnPermission: "maintenance.viewOwn",
+          viewAllPermission: "maintenance.viewAll",
+          individualOverrides:
+            individualOverrides[currentUser.personId],
+          profileOverrides:
+            profileOverrides[currentUser.profile],
+        })
+      )
+    : [];
 
-  const visibleMaintenanceRequests = maintenanceRequests.filter(
-    (request) =>
-      canViewRecord({
-        profile: CURRENT_ACCESS_PROFILE,
-        currentPersonId: CURRENT_PERSON_ID,
-        recordPersonId: request.requestedByPersonId,
-        viewOwnPermission: "maintenance.viewOwn",
-        viewAllPermission: "maintenance.viewAll",
-      })
-  );
+  const visibleMaintenanceRequests = currentUser
+    ? maintenanceRequests.filter((request) =>
+        canViewRecord({
+          profile: currentUser.profile,
+          currentPersonId: currentUser.personId,
+          recordPersonId: request.requestedByPersonId,
+          viewOwnPermission: "maintenance.viewOwn",
+          viewAllPermission: "maintenance.viewAll",
+          individualOverrides:
+            individualOverrides[currentUser.personId],
+          profileOverrides:
+            profileOverrides[currentUser.profile],
+        })
+      )
+    : [];
 
   const filteredMaintenanceRequests = visibleMaintenanceRequests
     .filter((request) => {
@@ -860,9 +880,9 @@ export default function ManutencaoPage() {
   const currentPage =
     pageState.searchKey === search
       ? Math.min(
-        pageState.page,
-        Math.max(Math.ceil(filteredOrders.length / itemsPerPage), 1)
-      )
+          pageState.page,
+          Math.max(Math.ceil(filteredOrders.length / itemsPerPage), 1)
+        )
       : 1;
 
   const paginatedOrders = filteredOrders.slice(
@@ -879,10 +899,8 @@ export default function ManutencaoPage() {
 
     return (
       order.equipmentId === selectedHistoryEquipment.id ||
-      (
-        !order.equipmentId &&
-        order.equipment === selectedHistoryEquipment.name
-      )
+      (!order.equipmentId &&
+        order.equipment === selectedHistoryEquipment.name)
     );
   });
 
@@ -905,11 +923,9 @@ export default function ManutencaoPage() {
   const inputClass =
     "w-full rounded-xl border border-white/10 bg-[#111827] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-400";
 
-
   return (
     <section className="min-w-0 flex-1 p-4 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
-
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white sm:text-3xl">
@@ -1148,14 +1164,17 @@ export default function ManutencaoPage() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">                  <input
-              className={`${inputClass} sm:w-64 sm:flex-none`} value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar equipamento ou serviço..."
-            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <input
+                className={`${inputClass} sm:w-64 sm:flex-none`}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar equipamento ou serviço..."
+              />
 
               <select
-                className={`${inputClass} sm:w-64 sm:flex-none`} value={statusFilter}
+                className={`${inputClass} sm:w-64 sm:flex-none`}
+                value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
                 aria-label="Filtrar ordens por status"
               >
@@ -1176,19 +1195,20 @@ export default function ManutencaoPage() {
                     + Solicitar manutenção
                   </button>
                 </PermissionGate>
+
                 <PermissionGate permission="maintenance.openOrder">
                   <button
                     type="button"
                     onClick={() => {
                       setShowForm(true);
                     }}
-                    className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"                    >
+                    className="whitespace-nowrap rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#07111f] shadow-md shadow-cyan-400/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-400/30 active:translate-y-0 active:scale-95"
+                  >
                     + Nova ordem de serviço
                   </button>
                 </PermissionGate>
               </div>
             </div>
-
           </div>
 
           {filteredOrders.length === 0 ? (
@@ -1206,8 +1226,8 @@ export default function ManutencaoPage() {
               orders={paginatedOrders}
               statusStyles={statusStyles}
               onStatusChange={
-                hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.editOrder") ||
-                  hasPermission(CURRENT_ACCESS_PROFILE, "maintenance.completeOrder")
+                can("maintenance.editOrder") ||
+                can("maintenance.completeOrder")
                   ? updateStatus
                   : undefined
               }
@@ -1270,14 +1290,8 @@ export default function ManutencaoPage() {
             requests={paginatedMaintenanceRequests}
             onConvert={startRequestConversion}
             onReject={rejectMaintenanceRequest}
-            canConvert={hasPermission(
-              CURRENT_ACCESS_PROFILE,
-              "maintenance.openOrder"
-            )}
-            canReject={hasPermission(
-              CURRENT_ACCESS_PROFILE,
-              "maintenance.openOrder"
-            )}
+            canConvert={can("maintenance.openOrder")}
+            canReject={can("maintenance.openOrder")}
             currentPage={requestCurrentPage}
             itemsPerPage={requestItemsPerPage}
             totalItems={filteredMaintenanceRequests.length}
@@ -1339,9 +1353,9 @@ export default function ManutencaoPage() {
                       </p>
                       <h3 className="mt-1 font-semibold">{order.equipment}</h3>
                     </div>
+
                     <span
-                      className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]
-                        }`}
+                      className={`rounded-full border px-3 py-1 text-xs ${statusStyles[order.status]}`}
                     >
                       {order.status}
                     </span>
@@ -1396,22 +1410,21 @@ export default function ManutencaoPage() {
                           {order.releasedByName || "Não informado"}
                         </p>
 
-                        {order.status === "Concluída" &&
-                          inventory.some(
-                            (item) =>
-                              item.id === order.equipmentId &&
-                              item.status === "Manutenção"
-                          ) && (
-                            <PermissionGate permission="maintenance.completeOrder">
-                              <button
-                                type="button"
-                                onClick={() => releaseEquipment(order.id)}
-                                className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                              >
-                                Liberar equipamento
-                              </button>
-                            </PermissionGate>
-                          )}
+                        {inventory.some(
+                          (item) =>
+                            item.id === order.equipmentId &&
+                            item.status === "Manutenção"
+                        ) && (
+                          <PermissionGate permission="maintenance.completeOrder">
+                            <button
+                              type="button"
+                              onClick={() => releaseEquipment(order.id)}
+                              className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                            >
+                              Liberar equipamento
+                            </button>
+                          </PermissionGate>
+                        )}
                       </div>
                     </div>
                   )}
