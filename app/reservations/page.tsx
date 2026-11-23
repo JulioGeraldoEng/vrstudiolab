@@ -1,9 +1,13 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import type { Room } from "../../types/room";
 import type { Reservation } from "../../types/reservation";
-import { RESERVATIONS_STORAGE_KEY, hasReservationConflict } from "./storage";
+import {
+    RESERVATIONS_STORAGE_KEY,
+    hasReservationConflict,
+} from "./storage";
 import BackToDashboard from "../components/buttons/BackToDashboard";
 import Cards from "../components/cards/Cards";
 import { getReservationDisplayStatus } from "../components/tables/ReservationsTable";
@@ -11,16 +15,34 @@ import type { Equipment } from "../../types/equipment";
 import type { Person } from "../../types/person";
 import ReservationModal from "../components/modals/ReservationModal";
 import ReservationsSection from "../components/sections/ReservationsSection";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
-import { CURRENT_PERSON_ID } from "../../lib/auth/current-user";
 import { canViewRecord } from "../../lib/permissions/can-view-record";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import { usePermissions } from "../components/permissions/PermissionProvider";
+import type { Permission } from "../../types/permissions";
 
 const STORAGE_KEY = "vrstudiolab-rooms-v1";
 
 const activePage = "Reservas";
 
 export default function ReservasPage() {
+    const {
+        profileOverrides,
+        individualOverrides,
+        permissionsLoaded,
+        currentUser,
+    } = usePermissions();
+
+    function can(permission: Permission): boolean {
+        if (!permissionsLoaded || !currentUser) return false;
+
+        return hasPermission(
+            currentUser.profile,
+            permission,
+            individualOverrides[currentUser.personId],
+            profileOverrides[currentUser.profile]
+        );
+    }
+
     const [rooms, setRooms] = useState<Room[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -128,7 +150,7 @@ export default function ReservasPage() {
     }, [reservations, reservationsReady]);
 
     function createReservation() {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "reservations.request")) {
+        if (!can("reservations.request")) {
             alert("Você não possui permissão para solicitar reservas.");
             return;
         }
@@ -263,18 +285,15 @@ export default function ReservasPage() {
     }
 
     function cancelReservation(reservation: Reservation) {
-        const canCancelAny = hasPermission(
-            CURRENT_ACCESS_PROFILE,
-            "reservations.cancelAny"
-        );
+        const canCancelAny = can("reservations.cancelAny");
 
         const isOwnReservation =
-            !!CURRENT_PERSON_ID &&
-            reservation.reservedByPersonId === CURRENT_PERSON_ID;
+            currentUser !== null &&
+            reservation.reservedByPersonId === currentUser.personId;
 
         const canCancelOwn =
             isOwnReservation &&
-            hasPermission(CURRENT_ACCESS_PROFILE, "reservations.cancelOwn");
+            can("reservations.cancelOwn");
 
         if (!canCancelAny && !canCancelOwn) {
             alert("Você não possui permissão para cancelar esta reserva.");
@@ -297,19 +316,13 @@ export default function ReservasPage() {
     }
 
     function reportEquipmentReturn(reservation: Reservation) {
-        const canRegisterReturn = hasPermission(
-            CURRENT_ACCESS_PROFILE,
-            "loans.registerReturn"
-        );
+        const canRegisterReturn = can("loans.registerReturn");
 
         const isOwnReservation =
-            !!CURRENT_PERSON_ID &&
-            reservation.reservedByPersonId === CURRENT_PERSON_ID;
+            currentUser !== null &&
+            reservation.reservedByPersonId === currentUser.personId;
 
-        const canRegisterAnyReturn = hasPermission(
-            CURRENT_ACCESS_PROFILE,
-            "loans.editAny"
-        );
+        const canRegisterAnyReturn = can("loans.editAny");
 
         if (!canRegisterReturn || (!isOwnReservation && !canRegisterAnyReturn)) {
             alert("Você não possui permissão para registrar esta devolução.");
@@ -355,7 +368,7 @@ export default function ReservasPage() {
     }
 
     function confirmEquipmentReturn(reservation: Reservation, confirmerName: string) {
-        if (!hasPermission(CURRENT_ACCESS_PROFILE, "loans.confirmReturn")) {
+        if (!can("loans.confirmReturn")) {
             alert("Você não possui permissão para confirmar devoluções.");
             return;
         }
@@ -403,15 +416,19 @@ export default function ReservasPage() {
         window.alert("Devolução confirmada com sucesso!");
     }
 
-    const visibleReservations = reservations.filter((reservation) =>
-        canViewRecord({
-            profile: CURRENT_ACCESS_PROFILE,
-            currentPersonId: CURRENT_PERSON_ID,
+    const visibleReservations = reservations.filter((reservation) => {
+        if (!permissionsLoaded || !currentUser) return false;
+
+        return canViewRecord({
+            profile: currentUser.profile,
+            currentPersonId: currentUser.personId,
             recordPersonId: reservation.reservedByPersonId,
             viewOwnPermission: "reservations.viewOwn",
             viewAllPermission: "reservations.viewAll",
-        })
-    );
+            individualOverrides: individualOverrides[currentUser.personId],
+            profileOverrides: profileOverrides[currentUser.profile],
+        });
+    });
 
     const filteredReservations = visibleReservations.filter((reservation) => {
         const searchTerm = reservationSearch.trim().toLowerCase();

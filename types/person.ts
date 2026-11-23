@@ -1,3 +1,6 @@
+
+import type { AccessProfile } from "./permissions";
+
 export type PersonRole =
   | "Aluno"
   | "Técnico"
@@ -10,6 +13,7 @@ export type Person = {
   id: string;
   name: string;
   role: PersonRole;
+  accessProfile?: AccessProfile;
   sector?: string;
   contact?: string;
   phone?: string;

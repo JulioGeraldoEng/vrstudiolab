@@ -4,6 +4,7 @@ import "./globals.css";
 
 import SidebarLayout from "./components/SidebarLayout";
 import AccessGuard from "./components/AccessGuard";
+import { PermissionProvider } from "./components/permissions/PermissionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,13 +33,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-
-        <AccessGuard>
-          <SidebarLayout>
-            {children}
-          </SidebarLayout>
-        </AccessGuard>
-
+        <PermissionProvider>
+          <AccessGuard>
+            <SidebarLayout>
+              {children}
+            </SidebarLayout>
+          </AccessGuard>
+        </PermissionProvider>
       </body>
     </html>
   );

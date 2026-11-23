@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -9,8 +10,9 @@ import EquipmentTable from "../components/tables/EquipmentTable";
 import { categories, statuses } from "../../types/equipment";
 import type { Equipment, Status } from "../../types/equipment";
 import PermissionGate from "../components/PermissionGate";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import type { Permission } from "../../types/permissions";
+import { usePermissions } from "../components/permissions/PermissionProvider";
 
 const STORAGE_KEY = "vrstudiolab-inventory-v1";
 const activePage = "Equipamentos";
@@ -27,6 +29,24 @@ const emptyForm = {
 };
 
 export default function InventoryPage() {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  function can(permission: Permission): boolean {
+    if (!permissionsLoaded || !currentUser) return false;
+
+    return hasPermission(
+      currentUser.profile,
+      permission,
+      individualOverrides[currentUser.personId],
+      profileOverrides[currentUser.profile]
+    );
+  }
+
   const [items, setItems] = useState<Equipment[]>([]);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
@@ -118,7 +138,7 @@ export default function InventoryPage() {
   );
 
   function openNewForm() {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.create")) {
+    if (!can("equipment.create")) {
       alert("Você não possui permissão para cadastrar equipamentos.");
       return;
     }
@@ -129,7 +149,7 @@ export default function InventoryPage() {
   }
 
   function openEditForm(item: Equipment) {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")) {
+    if (!can("equipment.edit")) {
       alert("Você não possui permissão para editar equipamentos.");
       return;
     }
@@ -154,7 +174,7 @@ export default function InventoryPage() {
     const requiredPermission =
       editingId !== null ? "equipment.edit" : "equipment.create";
 
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, requiredPermission)) {
+    if (!can(requiredPermission)) {
       alert("Você não possui permissão para realizar esta operação.");
       return;
     }
@@ -194,10 +214,11 @@ export default function InventoryPage() {
   }
 
   function deactivateEquipment(item: Equipment) {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")) {
+    if (!can("equipment.deactivate")) {
       alert("Você não possui permissão para dar baixa em equipamentos.");
       return;
     }
+
     const confirmed = window.confirm(
       `Deseja dar baixa no equipamento "${item.name}"? Ele continuará registrado no histórico.`
     );
@@ -228,7 +249,6 @@ export default function InventoryPage() {
   return (
     <section className="min-w-0 flex-1 p-4 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
-
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white sm:text-3xl">
@@ -279,7 +299,6 @@ export default function InventoryPage() {
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-[#101c2e]">
-
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
               <div>
@@ -290,6 +309,7 @@ export default function InventoryPage() {
                   {filteredItems.length} registro(s) encontrado(s)
                 </p>
               </div>
+
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -338,12 +358,12 @@ export default function InventoryPage() {
             items={paginatedItems}
             ready={ready}
             onEdit={
-              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit")
+              can("equipment.edit")
                 ? openEditForm
                 : undefined
             }
             onDeactivate={
-              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+              can("equipment.deactivate")
                 ? deactivateEquipment
                 : undefined
             }
@@ -357,11 +377,10 @@ export default function InventoryPage() {
               })
             }
             showActions={
-              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.edit") ||
-              hasPermission(CURRENT_ACCESS_PROFILE, "equipment.deactivate")
+              can("equipment.edit") ||
+              can("equipment.deactivate")
             }
           />
-
         </section>
 
         <EquipmentModal

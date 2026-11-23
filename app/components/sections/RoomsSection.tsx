@@ -1,8 +1,10 @@
+
 import type { Room } from "../../../types/room";
+import type { Permission } from "../../../types/permissions";
 import RoomsTable from "../tables/RoomsTable";
 import PermissionGate from "../PermissionGate";
-import { CURRENT_ACCESS_PROFILE } from "../../../lib/permissions/current-profile";
 import { hasPermission } from "../../../lib/permissions/has-permission";
+import { usePermissions } from "../permissions/PermissionProvider";
 
 type RoomsSectionProps = {
   rooms: Room[];
@@ -19,6 +21,24 @@ export default function RoomsSection({
   onEditRoom,
   onToggleStatus,
 }: RoomsSectionProps) {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  function can(permission: Permission): boolean {
+    if (!permissionsLoaded || !currentUser) return false;
+
+    return hasPermission(
+      currentUser.profile,
+      permission,
+      individualOverrides[currentUser.personId],
+      profileOverrides[currentUser.profile]
+    );
+  }
+
   return (
     <section className="rounded-2xl border border-white/10 bg-[#101c2e] p-5 sm:p-6">
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -56,11 +76,11 @@ export default function RoomsSection({
           rooms={rooms}
           onEdit={onEditRoom}
           onToggleStatus={onToggleStatus}
-          canEdit={hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit")}
-          canToggleStatus={hasPermission(CURRENT_ACCESS_PROFILE, "rooms.deactivate")}
+          canEdit={can("rooms.edit")}
+          canToggleStatus={can("rooms.deactivate")}
           showActions={
-            hasPermission(CURRENT_ACCESS_PROFILE, "rooms.edit") ||
-            hasPermission(CURRENT_ACCESS_PROFILE, "rooms.deactivate")
+            can("rooms.edit") ||
+            can("rooms.deactivate")
           }
         />
       )}

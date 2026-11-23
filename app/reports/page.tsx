@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -18,8 +19,9 @@ import type {
   MaintenanceOrder,
   MaintenanceStatus,
 } from "../../types/maintenance";
-import { CURRENT_ACCESS_PROFILE } from "../../lib/permissions/current-profile";
+import type { Permission } from "../../types/permissions";
 import { hasPermission } from "../../lib/permissions/has-permission";
+import { usePermissions } from "../components/permissions/PermissionProvider";
 import PermissionGate from "../components/PermissionGate";
 
 const inventoryKey = "vrstudiolab-inventory-v1";
@@ -51,6 +53,26 @@ const exportFields = [
 type ExportFieldId = (typeof exportFields)[number]["id"];
 
 export default function RelatoriosPage() {
+  const {
+    profileOverrides,
+    individualOverrides,
+    permissionsLoaded,
+    currentUser,
+  } = usePermissions();
+
+  function can(permission: Permission): boolean {
+    if (!permissionsLoaded || !currentUser) {
+      return false;
+    }
+
+    return hasPermission(
+      currentUser.profile,
+      permission,
+      individualOverrides[currentUser.personId],
+      profileOverrides[currentUser.profile]
+    );
+  }
+
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [orders, setOrders] = useState<MaintenanceOrder[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
@@ -70,7 +92,7 @@ export default function RelatoriosPage() {
   const backupFileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExportCSV() {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "reports.export")) {
+    if (!can("reports.export")) {
       alert("Você não possui permissão para exportar relatórios.");
       return;
     }
@@ -79,7 +101,7 @@ export default function RelatoriosPage() {
   }
 
   function handleExportPDF() {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "reports.export")) {
+    if (!can("reports.export")) {
       alert("Você não possui permissão para exportar relatórios.");
       return;
     }
@@ -88,7 +110,7 @@ export default function RelatoriosPage() {
   }
 
   function handleExportBackup() {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "settings.manage")) {
+    if (!can("settings.manage")) {
       alert("Você não possui permissão para gerar backups.");
       return;
     }
@@ -97,10 +119,11 @@ export default function RelatoriosPage() {
   }
 
   async function handleImportBackup(file: File) {
-    if (!hasPermission(CURRENT_ACCESS_PROFILE, "settings.manage")) {
+    if (!can("settings.manage")) {
       alert("Você não possui permissão para importar backups.");
       return;
     }
+
     try {
       const imported = await importBackup(file);
 
@@ -218,7 +241,6 @@ export default function RelatoriosPage() {
   const completedOrders = orders.filter(
     (order) => order.status === "Concluída"
   ).length;
-
 
   const statusStyles: Record<MaintenanceStatus, string> = {
     Aberta: "bg-blue-500/10 text-blue-400 border-blue-500/20",

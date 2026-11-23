@@ -21,9 +21,9 @@ export default function RoomsTable({
   rooms,
   onEdit,
   onToggleStatus,
-  canEdit = true,
-  canToggleStatus = true,
-  showActions = true,
+  canEdit = false,
+  canToggleStatus = false,
+  showActions = false,
 }: RoomsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -79,10 +79,11 @@ export default function RoomsTable({
 
                 <td className="px-4 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${room.active
-                      ? "bg-emerald-500/10 text-emerald-400"
-                      : "bg-slate-700 text-slate-300"
-                      }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      room.active
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-slate-700 text-slate-300"
+                    }`}
                   >
                     {room.active ? "Ativa" : "Inativa"}
                   </span>
