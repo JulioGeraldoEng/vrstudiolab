@@ -57,7 +57,7 @@ export type SeedPerson = Person;
 export const seedPeople: SeedPerson[] = [
   { id: "seed-person-001", name: "Ana Souza", role: "Técnico", sector: "Suporte técnico", phone: "(18) 99100-0001", email: "ana.souza@example.com", active: true },
   { id: "seed-person-002", name: "Bruno Oliveira", role: "Técnico", sector: "Manutenção", phone: "(18) 99100-0002", email: "bruno.oliveira@example.com", active: true },
-  { id: "seed-person-003", name: "Carla Santos", role: "Responsável autorizado", sector: "Coordenação", phone: "(18) 99100-0003", email: "carla.santos@example.com", active: true },
+  { id: "seed-person-003", name: "Carla Santos", role: "Responsável autorizado", accessProfile: "lab_manager", sector: "Coordenação", phone: "(18) 99100-0003", email: "carla.santos@example.com", active: true },
   { id: "seed-person-004", name: "Diego Almeida", role: "Professor", sector: "Treinamento", phone: "(18) 99100-0004", email: "diego.almeida@example.com", active: true },
   { id: "seed-person-005", name: "Eduarda Lima", role: "Aluno", sector: "Turma VR 01", phone: "(18) 99100-0005", email: "eduarda.lima@example.com", active: true },
   { id: "seed-person-006", name: "Felipe Costa", role: "Aluno", sector: "Turma VR 01", phone: "(18) 99100-0006", email: "felipe.costa@example.com", active: true },
@@ -82,7 +82,7 @@ export const seedPeople: SeedPerson[] = [
   { id: "seed-person-025", name: "Elisa Rodrigues", role: "Responsável autorizado", sector: "Coordenação", phone: "(18) 99100-0025", email: "elisa.rodrigues@example.com", active: true },
   { id: "seed-person-026", name: "Fernando Almeida", role: "Colaborador", sector: "Produção audiovisual", phone: "(18) 99100-0026", email: "fernando.almeida@example.com", active: true },
   { id: "seed-person-027", name: "Giovana Carvalho", role: "Aluno", sector: "Turma VR 05", phone: "(18) 99100-0027", email: "giovana.carvalho@example.com", active: true },
-  { id: "seed-person-028", name: "Heitor Santos", role: "Gestor", sector: "Gestão do laboratório", phone: "(18) 99100-0028", email: "heitor.santos@example.com", active: true },
+  { id: "seed-person-028", name: "Heitor Santos", role: "Gestor", accessProfile: "administrator",   sector: "Gestão do laboratório", phone: "(18) 99100-0028", email: "heitor.santos@example.com", active: true },
   { id: "seed-person-029", name: "Isadora Lima", role: "Professor", sector: "Realidade virtual", phone: "(18) 99100-0029", email: "isadora.lima@example.com", active: true },
   { id: "seed-person-030", name: "João Victor Mendes", role: "Técnico", sector: "Manutenção", phone: "(18) 99100-0030", email: "joao.victor.mendes@example.com", active: true },
 ];

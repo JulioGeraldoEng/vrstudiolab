@@ -51,6 +51,11 @@ export default function SeedPage() {
       );
 
       localStorage.setItem(
+        "vrstudiolab-test-user-v1",
+        "seed-person-028"
+      );
+
+      localStorage.setItem(
         "vrstudiolab-maintenance-v1",
         JSON.stringify(seedMaintenanceOrders)
       );
